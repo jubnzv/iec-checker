@@ -1,0 +1,11 @@
+PROGRAM program0
+  VAR
+    FOR : INT;
+    NO_FALSE_POSITIVE : INT;
+    IF : INT;
+    TOF : INT;
+    OK_ALLOWED : INT;
+  END_VAR
+
+  FOR := IF / 1;
+END_PROGRAM

@@ -1,0 +1,15 @@
+PROGRAM program0
+  VAR
+    v1 : INT;
+  END_VAR
+  v1 := 42;
+END_PROGRAM
+
+CONFIGURATION config
+  RESOURCE resource1 ON PLC
+    (* TASK t0(INTERVAL := T#20ms,PRIORITY := 0); *)
+
+    PROGRAM i01 : program0;
+    PROGRAM i02 WITH t0 : program0;
+  END_RESOURCE
+END_CONFIGURATION

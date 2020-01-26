@@ -1,0 +1,5 @@
+(library
+ (name IECCheckerCore)
+ (public_name iec_checker.core)
+ (synopsis "The core data structures for iec-checker")
+ (libraries core))

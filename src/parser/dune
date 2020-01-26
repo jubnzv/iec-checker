@@ -1,0 +1,15 @@
+(library
+ (name IECCheckerParser)
+ (public_name iec_checker.parser)
+ (synopsis "Provides an interface for parsing IEC61131-3 code")
+ (libraries core menhirLib iec_checker.core))
+
+(menhir
+ (modules parser)
+ (flags ("--dump" "--explain")))
+
+(ocamllex
+ (modules lexer))
+
+; Make warnings non-fatal. This is required while parser is WIP.
+(env (dev (flags (:standard -warn-error -A))))

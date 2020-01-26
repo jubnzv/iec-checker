@@ -1,0 +1,19 @@
+# Build files
+.merlin
+*.install
+
+# Parser files
+*.conflicts
+*.automaton
+*messages_complete.txt
+
+.#*
+
+src/lexer*.ml
+src/parser.ml
+src/parser.mli
+iec_checker.native
+
+doc/grammar.html
+
+_build/
