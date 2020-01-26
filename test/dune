@@ -1,0 +1,5 @@
+(test
+ (name test_parser)
+ (libraries alcotest iec_checker.core iec_checker.parser iec_checker.lib)
+ (deps
+  (source_tree data)))
