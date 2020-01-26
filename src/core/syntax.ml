@@ -237,6 +237,27 @@ type function_decl = {
   statements : expr list;
 }
 
+module FunctionBlock = struct
+  type t = { name: string; ti: TI.t; is_std: bool }
+
+  let create name ti =
+   let is_std = false in
+   { name; ti; is_std }
+
+  let get_name fb = fb.name
+
+  let get_ti fb = fb.ti
+
+  let is_std fb = fb.is_std
+end
+
+type fb_decl = {
+  id : FunctionBlock.t;
+  variables : VariableDecl.t list;
+  statements : expr list;
+  (* return_ty : iec_data_type; *)
+}
+
 type program_decl = {
   is_retain : bool;
   name : string;
@@ -297,5 +318,6 @@ type configuration_decl = {
 
 type iec_library_element =
   | IECFunction of function_decl
+  | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl

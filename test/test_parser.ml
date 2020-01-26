@@ -67,10 +67,78 @@ let test_program_declaration () =
   in
   do_all [ programs1 ]
 
+let test_fb_declaration () =
+  let fbs1 =
+    Driver.parse_string
+    "
+    FUNCTION_BLOCK fb0
+    END_FUNCTION_BLOCK
+
+    FUNCTION_BLOCK fb1
+      VAR
+        v1 : DINT;
+      END_VAR
+    END_FUNCTION_BLOCK
+
+    FUNCTION_BLOCK fb2
+      VAR
+        v1 : DINT;
+      END_VAR
+      v1 := 0;
+    END_FUNCTION_BLOCK
+
+    FUNCTION_BLOCK fb3
+      VAR_INPUT
+        vi1 : DINT;
+      END_VAR
+      VAR_OUTPUT
+        vo1 : DINT;
+      END_VAR
+      VAR_IN_OUT
+        vio1 : DINT;
+      END_VAR
+      VAR
+        v1 : DINT;
+      END_VAR
+      VAR_TEMP
+        vt1 : DINT;
+      END_VAR
+      VAR RETAIN
+        vr1 : DINT;
+      END_VAR
+      VAR NON_RETAIN
+        vnr1 : DINT;
+      END_VAR
+      v1 := 42;
+    END_FUNCTION_BLOCK
+    "
+  in
+  let do_check els =
+    Alcotest.(check int) "number of fbs" 4 (List.length els);
+    Alcotest.(check string)
+      "name of first fb" "fb0"
+      ( match els with
+      | e1 :: _ -> (
+          match e1 with S.IECFunctionBlock fb0 -> (
+              S.FunctionBlock.get_name fb0.id)
+          | _ -> "error" )
+      | _ -> "error" )
+  in
+  let rec do_all fbs =
+    match fbs with
+    | [] -> ()
+    | h :: t ->
+        do_check h;
+        do_all t
+  in
+  do_all [ fbs1 ]
+
 let () =
   let open Alcotest in
   run "Parser"
     [
       ( "test-program-declaration",
         [ test_case " " `Quick test_program_declaration ] );
+      ( "test-fb-declaration",
+        [ test_case " " `Quick test_fb_declaration ] );
     ]

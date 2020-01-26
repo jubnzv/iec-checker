@@ -61,6 +61,8 @@
 %token T_END_PROGRAM
 %token T_FUNCTION
 %token T_END_FUNCTION
+%token T_FUNCTION_BLOCK
+%token T_END_FUNCTION_BLOCK
 %token T_CONFIGURATION
 %token T_END_CONFIGURATION
 %token T_RESOURCE
@@ -143,7 +145,7 @@ main:
     | T_EOF
     { [] }
     | dl = library_element_declaration_list; T_EOF
-    { dl }
+    { List.rev dl }
 
 (* Programming model *)
 library_element_declaration:
@@ -151,6 +153,8 @@ library_element_declaration:
     { S.IECProgram(p) }
     | f = func_decl
     { S.IECFunction(f) }
+    | fb = fb_decl
+    { S.IECFunctionBlock(fb) }
     | c = config_decl
     { S.IECConfiguration(c) }
 
@@ -733,7 +737,12 @@ variable_list:
 
 (* fb_decl_init: *)
 
-(* fb_name: *)
+fb_name:
+  | id = T_IDENTIFIER
+  {
+    let (name, ti) = id in
+    S.FunctionBlock.create name ti
+  }
 
 (* fb_instance_name: *)
 
@@ -809,7 +818,15 @@ var_decls:
     )) vdsr
   }
 
-(* retain_var_decls: *)
+retain_var_decls:
+  | T_VAR T_RETAIN vds = var_decl_init_list T_END_VAR
+  {
+    let vdsr = List.rev vds in
+    List.map ~f:(fun v -> (
+      let s = S.VarSpec(Some S.VarQRetain) in
+        S.VariableDecl.create v s
+    )) vdsr
+  }
 
 (* loc_var_decls: *)
 
@@ -1058,20 +1075,10 @@ io_var_decls:
   { vs }
 
 func_var_decls:
-  | T_VAR vl = func_var_decls_list T_END_VAR
-  { List.rev vl }
-  (* | T_VAR T_CONSTANT vl = func_var_decls_list T_END_VAR
-  {
-    let vlr = List.rev vl in
-    List.map (fun v -> S.Variable.set_qualifier S.VarQConstant) vlr
-  } *)
-
-(* Helper symbol for func_var_decls *)
-func_var_decls_list:
-  | vs = var2_init_decl T_SEMICOLON
-  { vs }
-  | vss = func_var_decls_list; vs = var2_init_decl T_SEMICOLON
-  { List.append vss vs }
+  | vds = external_var_decls
+  { vds }
+  | vds = var_decls
+  { vds }
 
 func_body:
   | sl = stmt_list
@@ -1079,41 +1086,83 @@ func_body:
 (* }}} *)
 
 (* {{{ Table 40 -- Function block definition / Table 41 -- Function block instantiation *)
-(* fb_type_name: *)
+(* fb_type_name:
+  | f = fb_name
+  { f } *)
 
 (* fb_type_access: *)
 
 (* std_fb_name: *)
 
-(* derived_fb_name: *)
+derived_fb_name:
+  | id = T_IDENTIFIER
+  {
+    let (name, ti) = id in
+    S.FunctionBlock.create name ti
+  }
 
-(* fb_decl: *)
+fb_decl:
+  | T_FUNCTION_BLOCK id = derived_fb_name; T_END_FUNCTION_BLOCK
+  { { S.id = id; S.variables = []; S.statements = [] } }
+  | T_FUNCTION_BLOCK id = derived_fb_name; vds = fb_var_decls_list; T_END_FUNCTION_BLOCK
+  { { S.id = id; S.variables = vds; S.statements = [] } }
+  | T_FUNCTION_BLOCK id = derived_fb_name; ss = fb_body; T_END_FUNCTION_BLOCK
+  { { S.id = id; S.variables = []; S.statements = ss } }
+  | T_FUNCTION_BLOCK id = derived_fb_name; vds = fb_var_decls_list; ss = fb_body; T_END_FUNCTION_BLOCK
+  { { S.id = id; S.variables = vds; S.statements = ss } }
 
-(* fb_io_var_decls: *)
+(* Helper symbol for fb_decl *)
+fb_var_decls_list:
+  | vds = fb_io_var_decls
+  { vds }
+  | vds = func_var_decls;
+  { vds }
+  | vds = temp_var_decls;
+  { vds }
+  | vds = other_var_decls;
+  { vds }
+  | vdss = fb_var_decls_list; vds = fb_io_var_decls
+  { List.append vdss vds }
+  | vdss = fb_var_decls_list; vds = func_var_decls
+  { List.append vdss vds }
+  | vdss = fb_var_decls_list; vds = temp_var_decls
+  { List.append vdss vds }
+  | vdss = fb_var_decls_list; vds = other_var_decls
+  { List.append vdss vds }
+
+(* Reuse input_decls and output_decls defined in Table 13.
+   These grammar rules are actually the same as fb_input_decls
+   and fb_output_decls. *)
+fb_io_var_decls:
+  | vds = input_decls
+  { vds }
+  | vds = output_decls
+  { vds }
+  | vds = in_out_decls
+  { vds }
 
 (* fb_input_decls: *)
-
 (* fb_input_decl: *)
-
 (* fb_output_decls: *)
-
 (* fb_output_decl: *)
 
 other_var_decls:
-    | vs = external_var_decls
-    { vs }
-    | vs = var_decls
-    { vs }
-    (* | vs = retentive_var_decls
-    { vs }
-    | vs = non_retentive_var_decls
-    { vs } *)
-    | vs = temp_var_decls
-    { vs }
-    | vs = loc_partly_var_decl
-    { vs }
+    | vds = retain_var_decls
+    { vds }
+    | vds = no_retain_var_decls
+    { vds }
+    | vds = loc_partly_var_decl
+    { vds }
 
-(* no_retain_var_decls: *)
+no_retain_var_decls:
+  | T_VAR T_NON_RETAIN vds = var_decl_init_list T_END_VAR
+  {
+    let vdsr = List.rev vds in
+    List.map ~f:(fun v -> (
+      let s = S.VarSpec(Some S.VarQNonRetain) in
+        S.VariableDecl.create v s
+    )) vdsr
+  }
 
 fb_body:
     | sl = stmt_list
@@ -1164,20 +1213,30 @@ prog_decl:
 
 (* Helper for prog_decl *)
 program_var_decls_list:
-  | vss = program_var_decls_list vs = io_var_decls
-  { List.append vss vs }
-  | vs = io_var_decls
-  { vs }
-  | vss = program_var_decls_list vs = other_var_decls
-  { List.append vss vs }
-  | vs = other_var_decls
-  { vs }
+  | vds = io_var_decls
+  { vds }
+  | vds = func_var_decls
+  { vds }
+  | vds = temp_var_decls
+  { vds }
+  | vds = other_var_decls
+  { vds }
+  (* | vds = loc_var_decls
+  { vds } *)
+  | vds = prog_access_decls
+  { vds }
+  | vdss = program_var_decls_list vds = io_var_decls
+  { List.append vdss vds }
+  | vdss = program_var_decls_list vds = func_var_decls
+  { List.append vdss vds }
+  | vdss = program_var_decls_list vds = temp_var_decls
+  { List.append vdss vds }
+  | vdss = program_var_decls_list vds = other_var_decls
+  { List.append vdss vds }
   (* | vars = located_vars_declaration *)
       (* {vars} *)
-  | vss = program_var_decls_list vs = prog_access_decls
-  { List.append vss vs }
-  | vs = prog_access_decls
-  { vs }
+  | vdss = program_var_decls_list vds = prog_access_decls
+  { List.append vdss vds }
 
 prog_type_name:
   | id = T_IDENTIFIER

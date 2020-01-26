@@ -219,13 +219,30 @@ module Function : sig
   (** Returns true if function declared in standard library. *)
 end
 
+(** Function declaration *)
 type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
   variables : VariableDecl.t list;
   statements : expr list;
 }
-(** Function declaration *)
+
+(* Function blocj identifier *)
+module FunctionBlock : sig
+  type t
+  val create : string -> TI.t -> t
+  val get_name : t -> string
+  val get_ti : t -> TI.t
+  val is_std : t -> bool
+end
+
+(** Function block declaration *)
+type fb_decl = {
+  id : FunctionBlock.t;
+  variables : VariableDecl.t list;
+  statements : expr list;
+  (* return_ty : iec_data_type; *)
+}
 
 type program_decl = {
   is_retain : bool;
@@ -277,5 +294,6 @@ type configuration_decl = {
 
 type iec_library_element =
   | IECFunction of function_decl
+  | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
