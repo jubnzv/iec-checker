@@ -4,45 +4,31 @@ open IECCheckerParser
 module S = Syntax
 module TI = Tok_info
 
-module Driver = struct
-  let print_position outx (lexbuf : Lexing.lexbuf) =
-    let pos = lexbuf.lex_curr_p in
-    Printf.fprintf outx "%s:%d:%d" pos.pos_fname pos.pos_lnum
-      (pos.pos_cnum - pos.pos_bol + 1)
+module Driver : sig
+  val parse_file : string -> S.iec_library_element list
+  (** Parse content of a file with given path. *)
 
-  let parse_with_error lexbuf =
+  val parse_string : string -> S.iec_library_element list
+  (** Parse content of a given string. *)
+end = struct
+  (* Parse lexbuf using given Parser rule. *)
+  let parse ?(parser_rule = Parser.main) lexbuf =
     let tokinfo lexbuf = TI.create lexbuf in
     let l = Lexer.initial tokinfo in
-    try Parser.main l lexbuf with
-    | Lexer.SyntaxError msg ->
-        fprintf stderr "%a: %s\n" print_position lexbuf msg;
-        []
-    | Parser.Error ->
-        Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf;
-        []
-    | Failure msg ->
-        Printf.fprintf stderr "%a: %s-n" print_position lexbuf msg;
-        []
+    parser_rule l lexbuf
 
-  let parse lexbuf =
-    let tokinfo lexbuf = TI.create lexbuf in
-    let l = Lexer.initial tokinfo in
-    Parser.main l lexbuf
-
-  let parse_and_print lexbuf : S.iec_library_element list = parse lexbuf
-
-  let parse_file (filename : string) : S.iec_library_element list =
-    let inx = In_channel.create filename in
+  let parse_file fpath =
+    let inx = In_channel.create fpath in
     let lexbuf = Lexing.from_channel inx in
-    lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
-    let els = parse_and_print lexbuf in
+    lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = fpath };
+    let els = parse lexbuf in
     In_channel.close inx;
     els
 
-  let parse_string (text : string) : S.iec_library_element list =
-    let lexbuf = Lexing.from_string text in
+  let parse_string str =
+    let lexbuf = Lexing.from_string str in
     lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = "" };
-    parse_and_print lexbuf
+    parse lexbuf
 end
 
 let test_program_declaration () =
@@ -70,48 +56,45 @@ let test_program_declaration () =
 let test_fb_declaration () =
   let fbs1 =
     Driver.parse_string
-    "
-    FUNCTION_BLOCK fb0
-    END_FUNCTION_BLOCK
-
-    FUNCTION_BLOCK fb1
-      VAR
-        v1 : DINT;
-      END_VAR
-    END_FUNCTION_BLOCK
-
-    FUNCTION_BLOCK fb2
-      VAR
-        v1 : DINT;
-      END_VAR
-      v1 := 0;
-    END_FUNCTION_BLOCK
-
-    FUNCTION_BLOCK fb3
-      VAR_INPUT
-        vi1 : DINT;
-      END_VAR
-      VAR_OUTPUT
-        vo1 : DINT;
-      END_VAR
-      VAR_IN_OUT
-        vio1 : DINT;
-      END_VAR
-      VAR
-        v1 : DINT;
-      END_VAR
-      VAR_TEMP
-        vt1 : DINT;
-      END_VAR
-      VAR RETAIN
-        vr1 : DINT;
-      END_VAR
-      VAR NON_RETAIN
-        vnr1 : DINT;
-      END_VAR
-      v1 := 42;
-    END_FUNCTION_BLOCK
-    "
+      "\n\
+      \    FUNCTION_BLOCK fb0\n\
+      \    END_FUNCTION_BLOCK\n\n\
+      \    FUNCTION_BLOCK fb1\n\
+      \      VAR\n\
+      \        v1 : DINT;\n\
+      \      END_VAR\n\
+      \    END_FUNCTION_BLOCK\n\n\
+      \    FUNCTION_BLOCK fb2\n\
+      \      VAR\n\
+      \        v1 : DINT;\n\
+      \      END_VAR\n\
+      \      v1 := 0;\n\
+      \    END_FUNCTION_BLOCK\n\n\
+      \    FUNCTION_BLOCK fb3\n\
+      \      VAR_INPUT\n\
+      \        vi1 : DINT;\n\
+      \      END_VAR\n\
+      \      VAR_OUTPUT\n\
+      \        vo1 : DINT;\n\
+      \      END_VAR\n\
+      \      VAR_IN_OUT\n\
+      \        vio1 : DINT;\n\
+      \      END_VAR\n\
+      \      VAR\n\
+      \        v1 : DINT;\n\
+      \      END_VAR\n\
+      \      VAR_TEMP\n\
+      \        vt1 : DINT;\n\
+      \      END_VAR\n\
+      \      VAR RETAIN\n\
+      \        vr1 : DINT;\n\
+      \      END_VAR\n\
+      \      VAR NON_RETAIN\n\
+      \        vnr1 : DINT;\n\
+      \      END_VAR\n\
+      \      v1 := 42;\n\
+      \    END_FUNCTION_BLOCK\n\
+      \    "
   in
   let do_check els =
     Alcotest.(check int) "number of fbs" 4 (List.length els);
@@ -119,8 +102,8 @@ let test_fb_declaration () =
       "name of first fb" "fb0"
       ( match els with
       | e1 :: _ -> (
-          match e1 with S.IECFunctionBlock fb0 -> (
-              S.FunctionBlock.get_name fb0.id)
+          match e1 with
+          | S.IECFunctionBlock fb0 -> S.FunctionBlock.get_name fb0.id
           | _ -> "error" )
       | _ -> "error" )
   in
@@ -139,6 +122,5 @@ let () =
     [
       ( "test-program-declaration",
         [ test_case " " `Quick test_program_declaration ] );
-      ( "test-fb-declaration",
-        [ test_case " " `Quick test_fb_declaration ] );
+      ("test-fb-declaration", [ test_case " " `Quick test_fb_declaration ]);
     ]
