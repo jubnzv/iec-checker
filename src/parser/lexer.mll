@@ -1,10 +1,8 @@
-(*
- Based on IEC61131-3 2nd edition ANNEX B - Formal specification of language elements.
- See also Table C.2 (ANNEX C) with complete list of keywords.
-*)
+(* Based on IEC61131-3 3rd edition ANNEX A - Formal specification of language elements. *)
 {
   open Parser
   open Lexing
+  open Core_kernel
 
   exception SyntaxError of string
 
@@ -27,9 +25,13 @@ let digit		= ['0'-'9']
 let octal_digit	= ['0'-'7']
 let hex_digit   = digit | ['A'-'F']
 
+let integer = digit+(('_')?digit)*
+let bit = ['0' '1']
+let binary_integer = '2' '#' (('_')?bit)+
+let octal_integer = '8' '#' (('_')?octal_digit)+
+let hex_integer = '1' '6' '#' (('_')?hex_digit)+
+
 let identifier  = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
-(*TODO: _ syntax*)
-let integer = digit+
 
 rule initial tokinfo =
   parse
@@ -156,10 +158,31 @@ rule initial tokinfo =
   }
   | integer as i
   {
-      (* Printf.printf "INTEGER: %s\n" i; *)
       let v = int_of_string i in
+      (* Printf.printf "INTEGER: %s -> %d\n" i v; *)
       let ti = tokinfo lexbuf in
       T_INTEGER(v, ti)
+  }
+  | binary_integer as i
+  {
+      let v = int_of_string ("0b" ^ (String.slice i 2 (String.length i))) in
+      (* Printf.printf "BINARY_INTEGER: %s -> %d\n" i v; *)
+      let ti = tokinfo lexbuf in
+      T_BINARY_INTEGER(v, ti)
+  }
+  | octal_integer as i
+  {
+      let v = int_of_string ("0o" ^ (String.slice i 2 (String.length i))) in
+      (* Printf.printf "OCTAL_INTEGER: %s -> %d\n" i v; *)
+      let ti = tokinfo lexbuf in
+      T_BINARY_INTEGER(v, ti)
+  }
+  | hex_integer as i
+  {
+      let v = int_of_string ("0x" ^ (String.slice i 3 (String.length i))) in
+      (* Printf.printf "HEX_INTEGER: %s -> %d\n" i v; *)
+      let ti = tokinfo lexbuf in
+      T_BINARY_INTEGER(v, ti)
   }
   | eof              { T_EOF }
   | "(*" {comment tokinfo 1 lexbuf} (* start of a comment *)

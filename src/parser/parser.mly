@@ -132,9 +132,12 @@
 %token T_AND            "AND"
 %token T_EQU            "EQU"
 
-(* Parametrized tokens *)
 %token <string * IECCheckerCore.Tok_info.t> T_IDENTIFIER
+
 %token <int * IECCheckerCore.Tok_info.t> T_INTEGER
+%token <int * IECCheckerCore.Tok_info.t> T_BINARY_INTEGER
+%token <int * IECCheckerCore.Tok_info.t> T_OCTAL_INTEGER
+%token <int * IECCheckerCore.Tok_info.t> T_HEX_INTEGER
 
 (* Parser entry point. *)
 %start <IECCheckerCore.Syntax.iec_library_element list> main
@@ -165,67 +168,97 @@ library_element_declaration_list:
     | el = library_element_declaration_list; e = library_element_declaration
     { e :: el }
 
+(* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
+(* Implemented in lexer. *)
+(* }}} *)
+
 (* {{{ Table 4 -- Pragmas *)
 (* pragma: *)
 (* }}} *)
 
 (* {{{ Table 5 -- Numeric literals *)
-(* In Annex B any external representation of data are designated as "constant".
+(* In Annex A any external representation of data are designated as "constant".
  * So literally constant is just a literal value. *)
 constant:
-    | res = numeric_literal
-    {
-        S.Constant(res)
-    }
-    (* | res = character_string *)
-    (* | { res } *)
-    (* | res = time_literal *)
-    (* | { res } *)
-    (* | res = bit_string_literal *)
-    (* | { res } *)
-    (* | res = boolean_literal *)
-    (* | { res } *)
+  | c = numeric_literal
+  { S.Constant(c) }
+  (* | c = char_literal
+  | { c } *)
+  (* | c = time_literal
+  { S.Constant(c) } *)
+  (* | c = bit_str_literal
+  { c } *)
+  (* | c = bool_literal
+  { c } *)
 
 numeric_literal:
-    | res = int_literal
-    { res }
-    (* | res = real_integer *)
-    (* { res } *)
+  | res = int_literal
+  { res }
+  (* | res = real_integer *)
+  (* { res } *)
 
 int_literal:
-    (* | tn = int_type_name SHARP v = int_literal_value *)
-    (* { tn, v } *)
-    | res = int_literal_value
-    { res }
+  | int_type_name T_SHARP v = signed_int
+  { v }
+  | int_type_name T_SHARP v = binary_int
+  { v }
+  | int_type_name T_SHARP v = octal_int
+  { v }
+  | int_type_name T_SHARP v = hex_int
+  { v }
+  | v = signed_int
+  { v }
+  | v = binary_int
+  { v }
+  | v = octal_int
+  { v }
+  | v = hex_int
+  { v }
 
-(* Helper symbol for int_literal *)
-int_literal_value:
-    | res = signed_int
-    { res }
-    (* | v = binary_integer *)
-    (* { v } *)
-    (* | v = octal_integer *)
-    (* { v } *)
-    (* | v = hex_integer *)
-    (* { v } *)
+unsigned_int:
+  | vi = T_INTEGER
+  {
+    let (v, ti) = vi in
+    S.CInteger(v, ti)
+  }
 
 signed_int:
-    | i = integer
-    { i }
-    | T_PLUS i = integer
-    { i }
-    | T_MINUS res = T_INTEGER
-    {
-        let (v, ti) = res in
-        S.CInteger(-v, ti)
-    }
+  | i = unsigned_int
+  { i }
+  | T_PLUS i = unsigned_int
+  { i }
+  | T_MINUS res = T_INTEGER
+  {
+    let (v, ti) = res in
+    S.CInteger(-v, ti)
+  }
 
-integer:
-    | res = T_INTEGER
-    {
-        let (v, ti) = res in
-        S.CInteger(v, ti)
-    }
+binary_int:
+  | vi = T_BINARY_INTEGER
+  {
+    let (v, ti) = vi in
+    S.CInteger(v, ti)
+  }
+
+octal_int:
+  | vi = T_OCTAL_INTEGER
+  {
+    let (v, ti) = vi in
+    S.CInteger(v, ti)
+  }
+
+hex_int:
+  | vi = T_HEX_INTEGER
+  {
+    let (v, ti) = vi in
+    S.CInteger(v, ti)
+  }
+
+(* real_literal: *)
+
+(* bit_str_literal: *)
+
+(* bool_literal: *)
 
 (* }}} *)
 
@@ -246,16 +279,57 @@ integer:
 (* }}} *)
 
 (* {{{ Table 8 -- Diration literals / Table 9 -- Datetime literals *)
-(* time_literal: *)
+(* time_literal:
+  | v = duration
+  { v }
+  | v = time_of_day
+  { v }
+  | v = date
+  { v }
+  | v = date_and_time
+  { v } *)
 
-(* duration: *)
+(* duration:
+  | ttn = time_type_helper; T_SHARP v = interval
+  { }
+  | ttn = time_type_helper; T_SHARP T_PLUS v = interval
+  {  }
+  | ttn = time_type_helper; T_SHARP T_MINUS v = interval
+  {  } *)
+
+(* Helper symbol for duration *)
+(* time_type_helper:
+  | v = time_type_name
+  { v }
+  | v = T_T
+  { v }
+  | v = T_LTT
+  { v } *)
 
 (* fix_point: *)
 
-(* interval: *)
+(* interval:
+  | v = day
+  { v }
+  | v = hours
+  { v }
+  | v = minutes
+  { v }
+  | v = seconds
+  { v }
+  | v = miliseconds
+  { v }
+  | v = microseconds
+  { v }
+  | v = nanoseconds
+  { v } *)
 
-(* day: *)
-
+(* day:
+  | v = fix_point; 'd'
+  {  }
+  | v = unsigned_int; 'd'
+  {  }
+ *)
 (* hours: *)
 
 (* minutes: *)
@@ -306,8 +380,6 @@ elem_type_name:
   { S.STRING }
   | T_WSTRING
   { S.WSTRING }
-  | T_TIME
-  { S.TIME }
   | t = numeric_type_name
   { t }
   | t = date_type_name
@@ -601,7 +673,7 @@ struct_elem_name_list:
 
 (* {{{ Table 16 -- Direct variables *)
 direct_variable:
-  | T_PERCENT loc = location_prefix; sz = size_prefix; pcs = integers;
+  | T_PERCENT loc = location_prefix; sz = size_prefix; pcs = unsigned_int_list;
   {
     let get_int_val = function
       | S.CInteger (v, _) -> v
@@ -613,10 +685,10 @@ direct_variable:
 
 (* Helper symbol for direct_variable.
  * Return int list. *)
-integers:
-  | ci = integer;
+unsigned_int_list:
+  | ci = unsigned_int;
   { ci :: [] }
-  | cil = integers; ci = integer;
+  | cil = unsigned_int_list; ci = unsigned_int;
   { ci :: cil }
 (* }}} *)
 
@@ -1433,13 +1505,13 @@ task_name:
     }
 
 task_init:
-    | T_LBRACE T_SINGLE s = data_source; T_COMMA T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = integer; T_RBRACE
+    | T_LBRACE T_SINGLE s = data_source; T_COMMA T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
     { (Some s, Some i, Some p) }
-    | T_LBRACE T_SINGLE s = data_source; T_COMMA T_PRIORITY T_ASSIGN p = integer; T_RBRACE
+    | T_LBRACE T_SINGLE s = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
     { (Some s, None, Some p) }
-    | T_LBRACE T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = integer; T_RBRACE
+    | T_LBRACE T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
     { (None, Some i, Some p) }
-    | T_LBRACE T_PRIORITY T_ASSIGN p = integer; T_RBRACE
+    | T_LBRACE T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
     { (None, None, Some p) }
 
 data_source:
@@ -1769,4 +1841,4 @@ unary_operator:
     { S.NEG }
 (* }}} *)
 
-(* vim: set foldmethod=marker foldlevel=0 nofoldenable sw=2 tw=120 : *)
+(* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)
