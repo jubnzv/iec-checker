@@ -139,6 +139,8 @@
 %token <int * IECCheckerCore.Tok_info.t> T_OCTAL_INTEGER
 %token <int * IECCheckerCore.Tok_info.t> T_HEX_INTEGER
 
+%token <bool * IECCheckerCore.Tok_info.t> T_BOOL_VALUE
+
 (* Parser entry point. *)
 %start <IECCheckerCore.Syntax.iec_library_element list> main
 
@@ -188,8 +190,8 @@ constant:
   { S.Constant(c) } *)
   (* | c = bit_str_literal
   { c } *)
-  (* | c = bool_literal
-  { c } *)
+  | c = bool_literal
+  { S.Constant(c) }
 
 numeric_literal:
   | res = int_literal
@@ -258,7 +260,13 @@ hex_int:
 
 (* bit_str_literal: *)
 
-(* bool_literal: *)
+bool_literal:
+  (* BOOL#<value> rules are implemented in lexer *)
+  | vb = T_BOOL_VALUE
+  {
+    let (v, ti) = vb in
+    S.CBool(v, ti)
+  }
 
 (* }}} *)
 
@@ -385,7 +393,7 @@ elem_type_name:
   | t = date_type_name
   { t }
   | t = bit_str_type_name
-    { t }
+  { t }
 
 numeric_type_name:
   | t = int_type_name
@@ -407,7 +415,7 @@ sign_int_type_name:
   | T_DINT
   { S.DINT }
   | T_LINT
-    { S.LINT }
+  { S.LINT }
 
 unsign_int_type_name:
   | T_USINT
@@ -444,7 +452,7 @@ date_type_name:
   | T_DATE_AND_TIME
   { S.DATE_AND_TIME }
   | T_DT
-    { S.DT }
+  { S.DT }
 
 (* tod_type_name: *)
 
@@ -460,7 +468,7 @@ bit_str_type_name:
   | T_DWORD
   { S.DWORD }
   | T_LWORD
-    { S.LWORD }
+  { S.LWORD }
 
 bool_type_name:
   | T_BOOL

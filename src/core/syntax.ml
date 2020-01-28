@@ -100,29 +100,30 @@ and single_element_ty_spec =
   | SETyElementaryTy of elementary_ty
   | SETySETy of string
 
-(***************
- * AST
- ***************)
 type constant =
   | CInteger of int * TI.t
+  | CBool of bool * TI.t
   | CFloat of float * TI.t
   | CString of string * TI.t
 
 let c_is_zero c =
   match c with
   | CInteger (v, _) -> phys_equal v 0
+  | CBool (v, _) -> phys_equal v false
   | CFloat (v, _) -> phys_equal v 0.0
   | CString _ -> false
 
 let c_get_str_value c =
   match c with
   | CInteger (v, _) -> string_of_int v
+  | CBool (v, _) -> string_of_bool v
   | CFloat (v, _) -> string_of_float v
   | CString (v, _) -> v
 
 let c_get_ti c =
   match c with
   | CInteger (_, ti) -> ti
+  | CBool (_, ti) -> ti
   | CFloat (_, ti) -> ti
   | CString (_, ti) -> ti
 

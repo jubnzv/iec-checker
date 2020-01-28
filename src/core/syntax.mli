@@ -101,19 +101,17 @@ and iec_string_type_spec = { capacity : int }
 (* Single element types is user defined tys which works like typedefs in C. *)
 and single_element_ty_spec =
   | SETyElementaryTy of elementary_ty
-  | SETySETy of string
-
-(* derived ty name *)
+  | SETySETy of string (* derived ty name *)
 
 (***************
  * Data representation
  ***************)
 
 (* Constants *)
-
 (** See: 2.2 Exernal representation of data *)
 type constant =
   | CInteger of int * TI.t
+  | CBool of bool * TI.t
   | CFloat of float * TI.t
   | CString of string * TI.t
 
