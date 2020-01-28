@@ -44,6 +44,7 @@ rule initial tokinfo =
   | ":="                 { T_ASSIGN }
   | "=>"                 { T_SENDTO }
   | "."                  { T_DOT }
+  | "^"                  { T_DEREF }
   | ">="                 { T_GE }
   | "<="                 { T_LE }
   | ">"                  { T_GT }
@@ -111,7 +112,8 @@ rule initial tokinfo =
   | "END_VAR"            { T_END_VAR }
   | "TYPE"               { T_TYPE }
   | "END_TYPE"           { T_END_TYPE }
-  (* B.1.3.1 - Elementary data types *)
+
+  (* Elementary data types *)
   | "SINT"           { T_SINT }
   | "BYTE"           { T_BYTE }
   | "WORD"           { T_WORD }
@@ -136,7 +138,8 @@ rule initial tokinfo =
   | "DT"             { T_DT }
   | "TIME_OF_DAY"    { T_TIME_OF_DAY }
   | "TOD"            { T_TOD }
-  (* B.1.3.2 - Generic data types *)
+
+  (* Generic data types *)
   | "ANY"            { T_ANY }
   | "ANY_DERIVED"    { T_ANY_DERIVED }
   | "ANY_ELEMENTARY" { T_ANY_ELEMENTARY }
@@ -147,12 +150,13 @@ rule initial tokinfo =
   | "ANY_BIT"        { T_ANY_BIT }
   | "ANY_STRING"     { T_ANY_STRING }
   | "ANY_DATE"       { T_ANY_DATE }
-  (* B.2.2 Operators *)
+
+  (* Operators *)
   | "OR"             { T_OR }
   | "XOR"            { T_XOR }
   | "AND" | "&"      { T_AND }
   | "EQU"            { T_EQU }
-  (* B.1.3.3 - Derived data types *)
+
   | identifier as id
   {
       (* Printf.printf "ID: %s\n" id; *)

@@ -16,10 +16,12 @@
         raise (InternalError "Unknown datatype\n") *)
 %}
 
+(* {{{ Tokens *)
 %token<IECCheckerCore.Tok_info.t> T_NIL
 %token T_ASSIGN    ":="
 %token T_SENDTO    "=>"
 %token T_DOT       "."
+%token T_DEREF     "^"
 %token T_GT        ">"
 %token T_LT        "<"
 %token T_GE        ">="
@@ -57,12 +59,6 @@
 %token T_WITH
 %token T_RETAIN
 %token T_NON_RETAIN
-%token T_PROGRAM
-%token T_END_PROGRAM
-%token T_FUNCTION
-%token T_END_FUNCTION
-%token T_FUNCTION_BLOCK
-%token T_END_FUNCTION_BLOCK
 %token T_CONFIGURATION
 %token T_END_CONFIGURATION
 %token T_RESOURCE
@@ -75,21 +71,31 @@
 %token T_READ_ONLY
 %token T_TASK
 %token T_CONSTANT
-%token T_VAR
+%token T_EOF
+
+(* {{{ Picture 30 -- Common elements for textual languages *)
+%token T_TYPE T_END_TYPE
+%token T_VAR T_END_VAR
 %token T_VAR_INPUT
 %token T_VAR_OUTPUT
 %token T_VAR_IN_OUT
-%token T_VAR_TEMP
 %token T_VAR_EXTERNAL
+%token T_VAR_TEMP
 %token T_VAR_ACCESS
-%token T_VAR_CONFIG
 %token T_VAR_GLOBAL
-%token T_END_VAR
-%token T_TYPE
-%token T_END_TYPE
-%token T_EOF
+%token T_VAR_CONFIG
+%token T_FUNCTION T_END_FUNCTION
+%token T_FUNCTION_BLOCK T_END_FUNCTION_BLOCK
+%token T_PROGRAM T_END_PROGRAM
+(* %token T_METHOD T_END_METHOD *)
+(* %token T_STEP T_END_STEP *)
+(* %token T_TRANSITION T_END_TRANSITION *)
+(* %token T_ACTION T_END_ACTION *)
+(* %token T_NAMESPACE T_END_NAMESPACE *)
+(* }}} *)
 
-(* B.1.3.1 - Elementary data types *)
+
+(* {{{ Elementary data types *)
 %token T_BYTE          "BYTE"
 %token T_WORD          "WORD"
 %token T_DWORD         "DWORD"
@@ -113,8 +119,9 @@
 %token T_DT            "DT"
 %token T_TIME_OF_DAY   "TIME_OF_DAY"
 %token T_TOD           "TOD"
+(* }}} *)
 
-(* B.1.3.2 - Generic data types *)
+(* {{{ Generic data types *)
 %token T_ANY            "ANY"
 %token T_ANY_DERIVED    "ANY_DERIVED"
 %token T_ANY_ELEMENTARY "ANY_ELEMENTARY"
@@ -125,12 +132,14 @@
 %token T_ANY_BIT        "ANY_BIT"
 %token T_ANY_STRING     "ANY_STRING"
 %token T_ANY_DATE       "ANY_DATE"
+(* }}} *)
 
-(* B.2.2 Operators *)
+(* {{{ Operators *)
 %token T_OR             "OR"
 %token T_XOR            "XOR"
 %token T_AND            "AND"
 %token T_EQU            "EQU"
+(* }}} *)
 
 %token <string * IECCheckerCore.Tok_info.t> T_IDENTIFIER
 
@@ -140,6 +149,7 @@
 %token <int * IECCheckerCore.Tok_info.t> T_HEX_INTEGER
 
 %token <bool * IECCheckerCore.Tok_info.t> T_BOOL_VALUE
+(* }}} *)
 
 (* Parser entry point. *)
 %start <IECCheckerCore.Syntax.iec_library_element list> main
@@ -152,7 +162,7 @@ main:
     | dl = library_element_declaration_list; T_EOF
     { List.rev dl }
 
-(* Programming model *)
+(* {{{ Programming model *)
 library_element_declaration:
     | p = prog_decl
     { S.IECProgram(p) }
@@ -169,6 +179,7 @@ library_element_declaration_list:
     { e :: [] }
     | el = library_element_declaration_list; e = library_element_declaration
     { e :: el }
+(* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
 (* Implemented in lexer. *)
@@ -1075,18 +1086,6 @@ var_spec:
     { ty }
 
 (* }}} *)
-
-(* B.1.5 Program organization units *)
-(* B.1.5.1 Functions *)
-var2_init_decl:
-  | vs = var1_init_decl
-  {
-    let vss = List.rev vs in
-    List.map ~f:(fun v -> (
-      let s = S.VarSpec(None) in
-      S.VariableDecl.create v s
-    )) vss
-  }
 
 (* {{{ Table 19 -- Function declaration *)
 func_name:
