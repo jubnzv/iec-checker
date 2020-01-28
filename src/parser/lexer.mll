@@ -19,7 +19,7 @@ let comment_end  = "*)"
 
 let whitespace = ['\r' '\t' ' ']
 
-(* B.1.1 Letters, digits and identifiers *)
+(* Letters, digits and identifiers *)
 let letter	    = ['A'-'Z' 'a'-'z']
 let digit		= ['0'-'9']
 let octal_digit	= ['0'-'7']
@@ -33,6 +33,21 @@ let hex_integer = '1' '6' '#' (('_')?hex_digit)+
 
 let bool_false = "FALSE" | "BOOL#FALSE" | "BOOL#0"
 let bool_true = "TRUE" | "BOOL#TRUE" | "BOOL#1"
+
+let exponent = 'E' (['+' '-'])? integer
+
+(* The correct definition for real would be:
+   let real = integer '.' integer (exponent)?
+
+   But there is also definition of fix_point in Table 8 / Table 9:
+   integer '.' integer
+
+   This means that parser should be able to figure out what kind of token we
+   have based on the current context.
+ *)
+let real = integer '.' integer exponent
+
+let fix_point = integer '.' integer
 
 let identifier  = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
 
@@ -157,12 +172,6 @@ rule initial tokinfo =
   | "AND" | "&"      { T_AND }
   | "EQU"            { T_EQU }
 
-  | identifier as id
-  {
-      (* Printf.printf "ID: %s\n" id; *)
-      let ti = tokinfo lexbuf in
-      T_IDENTIFIER(id, ti)
-  }
   | integer as i
   {
       let v = int_of_string i in
@@ -203,6 +212,29 @@ rule initial tokinfo =
       let ti = tokinfo lexbuf in
       T_BOOL_VALUE(false, ti)
   }
+
+  | real as r
+  {
+      let v = float_of_string r in
+      Printf.printf "REAL_VALUE: %s -> %f\n" r v;
+      let ti = tokinfo lexbuf in
+      T_REAL_VALUE(v, ti)
+  }
+
+  | fix_point as fp
+  {
+      Printf.printf "FIX_POINT_VALUE: %s\n" fp;
+      let ti = tokinfo lexbuf in
+      T_FIX_POINT_VALUE(fp, ti)
+  }
+
+  | identifier as id
+  {
+      (* Printf.printf "ID: %s\n" id; *)
+      let ti = tokinfo lexbuf in
+      T_IDENTIFIER(id, ti)
+  }
+
   | eof              { T_EOF }
   | "(*" {comment tokinfo 1 lexbuf} (* start of a comment *)
   | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }

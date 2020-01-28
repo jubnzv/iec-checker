@@ -3,6 +3,7 @@ PROGRAM program0
   VAR
     a : ULINT;
     b : BOOL;
+    r : REAL;
   END_VAR
 
   (* integer *)
@@ -43,6 +44,21 @@ PROGRAM program0
   b := BOOL#0;
   b := BOOL#FALSE;
   b := BOOL#TRUE;
+
+  (* real_lieral *)
+  r := 1.0;
+  r := 0.0;
+  r := 3.000_300;
+  r := +3.2;
+  r := 3.2E1;
+  r := +3.2E1;
+  r := -3.2E1;
+  r := -3.2E+1;
+  r := -3.2E-1;
+  r := REAL#2.0;
+  r := REAL#-2.0;
+  r := REAL#-2.0E8;
+  r := REAL#-2.0E-8;
 
 END_PROGRAM
 

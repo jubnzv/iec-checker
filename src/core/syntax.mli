@@ -112,7 +112,7 @@ and single_element_ty_spec =
 type constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
-  | CFloat of float * TI.t
+  | CReal of float * TI.t
   | CString of string * TI.t
 
 val c_is_zero : constant -> bool

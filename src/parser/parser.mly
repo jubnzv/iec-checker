@@ -8,16 +8,24 @@
   exception InternalError of string
   exception SemanticError of string
 
-  (* Return known derived type from current context or raise exception. *)
-  (* let get_derived_type (name: string) : S.iec_derived_data_type =
-    if Context.is_derived_type_access name then
-        Context.get_derived_type name
-    else
-        raise (InternalError "Unknown datatype\n") *)
+  let creal_inv (vr, ti) =
+    let vv = -1.0 *. vr in
+    (vv, ti)
+
+  let creal_conv_fp (vfp, ti) =
+    let vv = float_of_string vfp in
+    (vv, ti)
+
+  let creal_mk t =
+    let (v, ti) = t in
+    S.CReal(v, ti)
+
 %}
 
 (* {{{ Tokens *)
 %token<IECCheckerCore.Tok_info.t> T_NIL
+
+(* {{{ Common *)
 %token T_ASSIGN    ":="
 %token T_SENDTO    "=>"
 %token T_DOT       "."
@@ -72,6 +80,7 @@
 %token T_TASK
 %token T_CONSTANT
 %token T_EOF
+(* }}} *)
 
 (* {{{ Picture 30 -- Common elements for textual languages *)
 %token T_TYPE T_END_TYPE
@@ -93,7 +102,6 @@
 (* %token T_ACTION T_END_ACTION *)
 (* %token T_NAMESPACE T_END_NAMESPACE *)
 (* }}} *)
-
 
 (* {{{ Elementary data types *)
 %token T_BYTE          "BYTE"
@@ -141,14 +149,17 @@
 %token T_EQU            "EQU"
 (* }}} *)
 
+(* {{{ Non-terminal symbols *)
 %token <string * IECCheckerCore.Tok_info.t> T_IDENTIFIER
-
 %token <int * IECCheckerCore.Tok_info.t> T_INTEGER
 %token <int * IECCheckerCore.Tok_info.t> T_BINARY_INTEGER
 %token <int * IECCheckerCore.Tok_info.t> T_OCTAL_INTEGER
 %token <int * IECCheckerCore.Tok_info.t> T_HEX_INTEGER
-
 %token <bool * IECCheckerCore.Tok_info.t> T_BOOL_VALUE
+%token <float * IECCheckerCore.Tok_info.t> T_REAL_VALUE
+%token <string * IECCheckerCore.Tok_info.t> T_FIX_POINT_VALUE
+(* }}} *)
+
 (* }}} *)
 
 (* Parser entry point. *)
@@ -207,8 +218,8 @@ constant:
 numeric_literal:
   | res = int_literal
   { res }
-  (* | res = real_integer *)
-  (* { res } *)
+  | res = real_literal
+  { res }
 
 int_literal:
   | int_type_name T_SHARP v = signed_int
@@ -267,7 +278,33 @@ hex_int:
     S.CInteger(v, ti)
   }
 
-(* real_literal: *)
+real_literal:
+  (* With exponent *)
+  | real_type_name T_SHARP vr = T_REAL_VALUE
+  { creal_mk vr }
+  | real_type_name T_SHARP T_PLUS vr = T_REAL_VALUE
+  { creal_mk vr }
+  | real_type_name T_SHARP T_MINUS vr = T_REAL_VALUE
+  { creal_mk (creal_inv vr) }
+  | vr = T_REAL_VALUE
+  { creal_mk vr }
+  | T_PLUS vr = T_REAL_VALUE
+  { creal_mk vr }
+  | T_MINUS vr = T_REAL_VALUE
+  { creal_mk (creal_inv vr) }
+  (* Conversion from fixed-point token *)
+  | real_type_name T_SHARP vr = T_FIX_POINT_VALUE
+  { creal_mk (creal_conv_fp vr) }
+  | real_type_name T_SHARP T_PLUS vr = T_FIX_POINT_VALUE
+  { creal_mk (creal_conv_fp vr) }
+  | real_type_name T_SHARP T_MINUS vr = T_FIX_POINT_VALUE
+  { creal_mk (creal_inv (creal_conv_fp vr)) }
+  | vr = T_FIX_POINT_VALUE
+  { creal_mk (creal_conv_fp vr) }
+  | T_PLUS vr = T_FIX_POINT_VALUE
+  { creal_mk (creal_conv_fp vr) }
+  | T_MINUS vr = T_FIX_POINT_VALUE
+  { creal_mk (creal_inv (creal_conv_fp vr)) }
 
 (* bit_str_literal: *)
 
