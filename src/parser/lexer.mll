@@ -4,7 +4,7 @@
   open Lexing
   open Core_kernel
 
-  exception SyntaxError of string
+  exception LexingError of string
 
   let incr_linenum lexbuf =
     let pos = lexbuf.Lexing.lex_curr_p in
@@ -49,10 +49,20 @@ let real = integer '.' integer exponent
 
 let fix_point = integer '.' integer
 
+(* Time literals *)
+let fix_point_d = (integer | (integer '.' integer)) 'd'
+let fix_point_h = (integer | (integer '.' integer)) 'h'
+let fix_point_m = (integer | (integer '.' integer)) 'm'
+let fix_point_s = (integer | (integer '.' integer)) 's'
+let fix_point_ms = (integer | (integer '.' integer)) "ms"
+let fix_point_us = (integer | (integer '.' integer)) "us"
+let fix_point_ns = (integer | (integer '.' integer)) "ns"
+
 let identifier  = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
 
 rule initial tokinfo =
   parse
+  (* {{{ Common *)
   | whitespace+          { initial tokinfo lexbuf }
   | '\n'                 { incr_linenum lexbuf; initial tokinfo lexbuf }
   | "NIL"                { T_NIL(tokinfo lexbuf) }
@@ -127,8 +137,9 @@ rule initial tokinfo =
   | "END_VAR"            { T_END_VAR }
   | "TYPE"               { T_TYPE }
   | "END_TYPE"           { T_END_TYPE }
+  (* }}} *)
 
-  (* Elementary data types *)
+  (* {{{ Elementary data types *)
   | "SINT"           { T_SINT }
   | "BYTE"           { T_BYTE }
   | "WORD"           { T_WORD }
@@ -148,13 +159,18 @@ rule initial tokinfo =
   | "STRING"         { T_STRING }
   | "BOOL"           { T_BOOL }
   | "TIME"           { T_TIME }
+  | "LTIME"          { T_LTIME }
   | "DATE"           { T_DATE }
+  | "LDATE"          { T_LDATE }
   | "DATE_AND_TIME"  { T_DATE_AND_TIME }
   | "DT"             { T_DT }
+  | "LDT"            { T_LDT }
   | "TIME_OF_DAY"    { T_TIME_OF_DAY }
   | "TOD"            { T_TOD }
+  | "LTOD"           { T_LTOD }
+  (* }}} *)
 
-  (* Generic data types *)
+  (* {{{ Generic data types *)
   | "ANY"            { T_ANY }
   | "ANY_DERIVED"    { T_ANY_DERIVED }
   | "ANY_ELEMENTARY" { T_ANY_ELEMENTARY }
@@ -165,13 +181,16 @@ rule initial tokinfo =
   | "ANY_BIT"        { T_ANY_BIT }
   | "ANY_STRING"     { T_ANY_STRING }
   | "ANY_DATE"       { T_ANY_DATE }
+  (* }}} *)
 
-  (* Operators *)
+  (* {{{ ST operators *)
   | "OR"             { T_OR }
   | "XOR"            { T_XOR }
   | "AND" | "&"      { T_AND }
   | "EQU"            { T_EQU }
+  (* }}} *)
 
+  (* {{{ Integer literals *)
   | integer as i
   {
       let v = int_of_string i in
@@ -212,37 +231,98 @@ rule initial tokinfo =
       let ti = tokinfo lexbuf in
       T_BOOL_VALUE(false, ti)
   }
+  (* }}} *)
 
+  (* {{{ Real literal *)
   | real as r
   {
       let v = float_of_string r in
-      Printf.printf "REAL_VALUE: %s -> %f\n" r v;
+      (* Printf.printf "REAL_VALUE: %s -> %f\n" r v; *)
       let ti = tokinfo lexbuf in
       T_REAL_VALUE(v, ti)
   }
+  (* }}} *)
 
+  (* {{{ Fixed point literal *)
   | fix_point as fp
   {
-      Printf.printf "FIX_POINT_VALUE: %s\n" fp;
+      (* Printf.printf "FIX_POINT_VALUE: %s\n" fp; *)
       let ti = tokinfo lexbuf in
       T_FIX_POINT_VALUE(fp, ti)
   }
+  (* }}} *)
 
+  (* {{{ Time intervals *)
+  | fix_point_d as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 1)) in
+      (* Printf.printf "TIME_D: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_D(vf, ti)
+  }
+  | fix_point_h as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 1)) in
+      (* Printf.printf "TIME_H: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_H(vf, ti)
+  }
+  | fix_point_m as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 1)) in
+      (* Printf.printf "TIME_M: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_M(vf, ti)
+  }
+  | fix_point_s as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 1)) in
+      (* Printf.printf "TIME_S: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_S(vf, ti)
+  }
+  | fix_point_ms as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 2)) in
+      (* Printf.printf "TIME_MS: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_MS(vf, ti)
+  }
+  | fix_point_us as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 2)) in
+      (* Printf.printf "TIME_US: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_US(vf, ti)
+  }
+  | fix_point_ns as v
+  {
+      let vf = float_of_string (String.slice v 0 ((String.length v) - 2)) in
+      (* Printf.printf "TIME_NS: %s -> %f\n" v vf; *)
+      let ti = tokinfo lexbuf in
+      T_TIME_INTERVAL_NS(vf, ti)
+  }
+  (* }}} *)
+
+  (* {{{ Identifiers *)
   | identifier as id
   {
       (* Printf.printf "ID: %s\n" id; *)
       let ti = tokinfo lexbuf in
       T_IDENTIFIER(id, ti)
   }
+  (* }}} *)
 
+  (* {{{ etc. *)
   | eof              { T_EOF }
   | "(*" {comment tokinfo 1 lexbuf} (* start of a comment *)
-  | _ { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
+  | _ { raise (LexingError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 and comment tokinfo depth  = parse
   | "(*" {comment tokinfo (depth + 1) lexbuf}
   | "*)" {if depth = 1 then initial tokinfo lexbuf else comment tokinfo (depth-1) lexbuf} (*Nested comments are allowed*)
   | '\n' {let () = new_line lexbuf in comment tokinfo depth lexbuf}
   | _ {comment tokinfo depth lexbuf}
+  (* }}} *)
 
 {
   let read_file parser (filename: string) =
@@ -263,3 +343,5 @@ and comment tokinfo depth  = parse
     Printf.printf "Error while reading file\n" ;
     raise err
 }
+
+(* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)

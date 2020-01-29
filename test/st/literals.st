@@ -4,6 +4,7 @@ PROGRAM program0
     a : ULINT;
     b : BOOL;
     r : REAL;
+    t : TIME;
   END_VAR
 
   (* integer *)
@@ -60,5 +61,20 @@ PROGRAM program0
   r := REAL#-2.0E8;
   r := REAL#-2.0E-8;
 
-END_PROGRAM
+  (* time_literal *)
+  t := TIME#3.0d;
+  t := TIME#3d;
+  t := TIME#3.0h;
+  t := TIME#3.0m;
+  t := TIME#3.0s;
+  t := TIME#3.0ms;
+  t := TIME#3.0us;
+  t := TIME#3.0ns;
+  t := TIME#3.0d 4.0h;
+  t := TIME#3.0h3m;
+  t := T#3.0d;
+  t := LT#3.0d;
+  t := TIME#3.0d;
 
+END_PROGRAM
+(* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)

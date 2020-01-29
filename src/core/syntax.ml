@@ -3,9 +3,8 @@
 open Core_kernel
 module TI = Tok_info
 
-(***************
- * Common elements
- ***************)
+exception InternalError of string
+
 type operator =
   | NEG
   | NOT
@@ -26,9 +25,6 @@ type operator =
   | NEQ (* <> *)
   | ASSIGN
 
-(***************
- * Types
- ***************)
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -39,6 +35,7 @@ and elementary_ty =
   | STRING
   | WSTRING
   | TIME
+  | LTIME
   | SINT
   | INT
   | DINT
@@ -50,10 +47,13 @@ and elementary_ty =
   | REAL
   | LREAL
   | DATE
+  | LDATE
   | TIME_OF_DAY
   | TOD
+  | LTOD
   | DATE_AND_TIME
   | DT
+  | LDT
   | BOOL
   | BYTE
   | WORD
@@ -100,11 +100,54 @@ and single_element_ty_spec =
   | SETyElementaryTy of elementary_ty
   | SETySETy of string
 
+module TimeValue = struct
+  type t = {
+    d : float;
+    h : float;
+    m : float;
+    s : float;
+    ms : float;
+    us : float;
+    ns : float;
+  }
+  [@@deriving fields]
+
+  let mk_d v =
+    { d = v; h = 0.0; m = 0.0; s = 0.0; ms = 0.0; us = 0.0; ns = 0.0 }
+
+  let mk_h v =
+    { d = 0.0; h = v; m = 0.0; s = 0.0; ms = 0.0; us = 0.0; ns = 0.0 }
+
+  let mk_m v =
+    { d = 0.0; h = 0.0; m = v; s = 0.0; ms = 0.0; us = 0.0; ns = 0.0 }
+
+  let mk_s v =
+    { d = 0.0; h = 0.0; m = 0.0; s = v; ms = 0.0; us = 0.0; ns = 0.0 }
+
+  let mk_ms v =
+    { d = 0.0; h = 0.0; m = 0.0; s = 0.0; ms = v; us = 0.0; ns = 0.0 }
+
+  let mk_us v =
+    { d = 0.0; h = 0.0; m = 0.0; s = 0.0; ms = 0.0; us = v; ns = 0.0 }
+
+  let mk_ns v =
+    { d = 0.0; h = 0.0; m = 0.0; s = 0.0; ms = 0.0; us = 0.0; ns = v }
+
+  let ( + ) lhs rhs = { lhs with d = rhs.d +. lhs.d }
+
+  let inv tv = { tv with d = tv.d *. -1.0 }
+
+  let to_string tv = string_of_float tv.d
+
+  let is_zero tv = phys_equal tv.d 0.0
+end
+
 type constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
   | CReal of float * TI.t
   | CString of string * TI.t
+  | CTimeValue of TimeValue.t * TI.t
 
 let c_is_zero c =
   match c with
@@ -112,6 +155,7 @@ let c_is_zero c =
   | CBool (v, _) -> phys_equal v false
   | CReal (v, _) -> phys_equal v 0.0
   | CString _ -> false
+  | CTimeValue (tv, _) -> TimeValue.is_zero tv
 
 let c_get_str_value c =
   match c with
@@ -119,6 +163,7 @@ let c_get_str_value c =
   | CBool (v, _) -> string_of_bool v
   | CReal (v, _) -> string_of_float v
   | CString (v, _) -> v
+  | CTimeValue (v, _) -> TimeValue.to_string v
 
 let c_get_ti c =
   match c with
@@ -126,6 +171,26 @@ let c_get_ti c =
   | CBool (_, ti) -> ti
   | CReal (_, ti) -> ti
   | CString (_, ti) -> ti
+  | CTimeValue (_, ti) -> ti
+
+let c_add c1 c2 =
+  match (c1, c2) with
+  | CInteger (v1, ti), CInteger (v2, _) ->
+      let v = v1 + v2 in
+      CInteger (v, ti)
+  | CBool (v1, ti), CBool (v2, _) ->
+      let v = v1 || v2 in
+      CBool (v, ti)
+  | CReal (v1, ti), CReal (v2, _) ->
+      let v = v1 +. v2 in
+      CReal (v, ti)
+  | CString (v1, ti), CString (v2, _) ->
+      let v = v1 ^ v2 in
+      CString (v, ti)
+  | CTimeValue (v1, ti), CTimeValue (v2, _) ->
+      let v = TimeValue.( + ) v1 v2 in
+      CTimeValue (v, ti)
+  | _ -> raise @@ InternalError "Incompatible types"
 
 module Variable = struct
   type direction = Input | Output
@@ -186,27 +251,19 @@ and var_spec =
 (* fb name *)
 
 module VariableDecl = struct
-    type t = { var: Variable.t; spec: var_spec }
+  type t = { var : Variable.t; spec : var_spec }
 
-    let create var spec =
-        {var; spec}
+  let create var spec = { var; spec }
 
-    let get_var d = d.var
+  let get_var d = d.var
 
-    let set_qualifier d qa =
-        match d.spec with
-        | VarSpec _
-        | VarSpecDirect _
-        | VarSpecOut _
-        | VarSpecIn _
-        | VarSpecExternal _
-        | VarSpecGlobal _ ->
-            let s = VarSpec(Some qa) in
-            { d with spec = s }
-        | VarSpecInOut
-        | VarSpecAccess _
-        | VarSpecTemp
-        | VarSpecConfig _ -> d
+  let set_qualifier d qa =
+    match d.spec with
+    | VarSpec _ | VarSpecDirect _ | VarSpecOut _ | VarSpecIn _
+    | VarSpecExternal _ | VarSpecGlobal _ ->
+        let s = VarSpec (Some qa) in
+        { d with spec = s }
+    | VarSpecInOut | VarSpecAccess _ | VarSpecTemp | VarSpecConfig _ -> d
 end
 
 (* Arbitrary expressions of ST language *)
@@ -239,11 +296,11 @@ type function_decl = {
 }
 
 module FunctionBlock = struct
-  type t = { name: string; ti: TI.t; is_std: bool }
+  type t = { name : string; ti : TI.t; is_std : bool }
 
   let create name ti =
-   let is_std = false in
-   { name; ti; is_std }
+    let is_std = false in
+    { name; ti; is_std }
 
   let get_name fb = fb.name
 
@@ -255,8 +312,7 @@ end
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VariableDecl.t list;
-  statements : expr list;
-  (* return_ty : iec_data_type; *)
+  statements : expr list; (* return_ty : iec_data_type; *)
 }
 
 type program_decl = {
@@ -299,8 +355,7 @@ module ProgramConfig = struct
 
   let set_task pc t = { pc with task = Some t }
 
-  let set_conn_vars pc conn_vars =
-      { pc with conn_vars = conn_vars }
+  let set_conn_vars pc conn_vars = { pc with conn_vars }
 end
 
 type resource_decl = {

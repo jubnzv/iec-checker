@@ -1,9 +1,8 @@
 module TI = Tok_info
 
-(***************
- * Common elements
- ***************)
-(* See Table 55 - Operators f the ST language *)
+exception InternalError of string
+
+(* Operators of the ST language *)
 type operator =
   | NEG
   | NOT
@@ -24,9 +23,7 @@ type operator =
   | NEQ (* <> *)
   | ASSIGN
 
-(***************
- * Types
- ***************)
+(* Types *)
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -37,6 +34,7 @@ and elementary_ty =
   | STRING
   | WSTRING
   | TIME
+  | LTIME
   | SINT
   | INT
   | DINT
@@ -48,10 +46,13 @@ and elementary_ty =
   | REAL
   | LREAL
   | DATE
+  | LDATE
   | TIME_OF_DAY
   | TOD
+  | LTOD
   | DATE_AND_TIME
   | DT
+  | LDT
   | BOOL
   | BYTE
   | WORD
@@ -101,19 +102,45 @@ and iec_string_type_spec = { capacity : int }
 (* Single element types is user defined tys which works like typedefs in C. *)
 and single_element_ty_spec =
   | SETyElementaryTy of elementary_ty
-  | SETySETy of string (* derived ty name *)
+  | SETySETy of string
 
-(***************
- * Data representation
- ***************)
+(* derived ty name *)
+
+(* Representation of time interval *)
+module TimeValue : sig
+  type t
+
+  val mk_d : float -> t
+
+  val mk_h : float -> t
+
+  val mk_m : float -> t
+
+  val mk_s : float -> t
+
+  val mk_ms : float -> t
+
+  val mk_us : float -> t
+
+  val mk_ns : float -> t
+
+  val ( + ) : t -> t -> t
+
+  val inv : t -> t
+  (* Invert time value to represent a negative duration. *)
+
+  val to_string : t -> string
+
+  val is_zero : t -> bool
+end
 
 (* Constants *)
-(** See: 2.2 Exernal representation of data *)
 type constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
   | CReal of float * TI.t
   | CString of string * TI.t
+  | CTimeValue of TimeValue.t * TI.t
 
 val c_is_zero : constant -> bool
 (** Return true if constant value is zero, false otherwise *)
@@ -123,6 +150,9 @@ val c_get_str_value : constant -> string
 
 val c_get_ti : constant -> TI.t
 (** Return token info of a given constant *)
+
+val c_add : constant -> constant -> constant
+(** Add value to existing constant. *)
 
 (* Variable identifier *)
 module Variable : sig
@@ -217,30 +247,33 @@ module Function : sig
   (** Returns true if function declared in standard library. *)
 end
 
-(** Function declaration *)
 type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
   variables : VariableDecl.t list;
   statements : expr list;
 }
+(** Function declaration *)
 
 (* Function blocj identifier *)
 module FunctionBlock : sig
   type t
+
   val create : string -> TI.t -> t
+
   val get_name : t -> string
+
   val get_ti : t -> TI.t
+
   val is_std : t -> bool
 end
 
-(** Function block declaration *)
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VariableDecl.t list;
-  statements : expr list;
-  (* return_ty : iec_data_type; *)
+  statements : expr list; (* return_ty : iec_data_type; *)
 }
+(** Function block declaration *)
 
 type program_decl = {
   is_retain : bool;

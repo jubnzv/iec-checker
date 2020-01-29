@@ -5,8 +5,8 @@
   module S = Syntax
   module TI = Tok_info
 
+  exception SyntaxError of string
   exception InternalError of string
-  exception SemanticError of string
 
   let creal_inv (vr, ti) =
     let vv = -1.0 *. vr in
@@ -20,6 +20,10 @@
     let (v, ti) = t in
     S.CReal(v, ti)
 
+  let ctime_mk fn t =
+    let (v, ti) = t in
+    let tv = (fn v) in
+    S.CTimeValue(tv, ti)
 %}
 
 (* {{{ Tokens *)
@@ -122,11 +126,15 @@
 %token T_STRING        "STRING"
 %token T_BOOL          "BOOL"
 %token T_TIME          "TIME"
+%token T_LTIME         "LTIME"
 %token T_DATE          "DATE"
+%token T_LDATE         "LDATE"
 %token T_DATE_AND_TIME "DATE_AND_TIME"
 %token T_DT            "DT"
+%token T_LDT           "LDT"
 %token T_TIME_OF_DAY   "TIME_OF_DAY"
 %token T_TOD           "TOD"
+%token T_LTOD          "LTOD"
 (* }}} *)
 
 (* {{{ Generic data types *)
@@ -158,6 +166,14 @@
 %token <bool * IECCheckerCore.Tok_info.t> T_BOOL_VALUE
 %token <float * IECCheckerCore.Tok_info.t> T_REAL_VALUE
 %token <string * IECCheckerCore.Tok_info.t> T_FIX_POINT_VALUE
+
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_D
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_H
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_M
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_S
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_MS
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_US
+%token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_NS
 (* }}} *)
 
 (* }}} *)
@@ -208,8 +224,8 @@ constant:
   { S.Constant(c) }
   (* | c = char_literal
   | { c } *)
-  (* | c = time_literal
-  { S.Constant(c) } *)
+  | c = time_literal
+  { S.Constant(c) }
   (* | c = bit_str_literal
   { c } *)
   | c = bool_literal
@@ -335,36 +351,53 @@ bool_literal:
 (* }}} *)
 
 (* {{{ Table 8 -- Diration literals / Table 9 -- Datetime literals *)
-(* time_literal:
+time_literal:
   | v = duration
   { v }
-  | v = time_of_day
-  { v }
-  | v = date
-  { v }
-  | v = date_and_time
+  (* | v = time_of_day
+  { v } *)
+  (* | v = date
+  { v } *)
+  (* | v = date_and_time
   { v } *)
 
-(* duration:
-  | ttn = time_type_helper; T_SHARP v = interval
-  { }
-  | ttn = time_type_helper; T_SHARP T_PLUS v = interval
-  {  }
-  | ttn = time_type_helper; T_SHARP T_MINUS v = interval
-  {  } *)
+duration:
+  | time_type_helper; T_SHARP v = interval
+  { v }
+  | time_type_helper; T_SHARP T_PLUS v = interval
+  { v }
+  | time_type_helper; T_SHARP T_MINUS v = interval
+  {
+    match v with
+    | S.CTimeValue(tv, ti) ->
+        S.CTimeValue((S.TimeValue.inv tv), ti)
+    | _ -> raise @@ InternalError ("InternalError")
+  }
 
-(* Helper symbol for duration *)
-(* time_type_helper:
+(* Helper symbol for duration.
+   According standard T and LT are not keywords, so we need to
+   distinguish them from regular identifiers. *)
+time_type_helper:
   | v = time_type_name
   { v }
-  | v = T_T
-  { v }
-  | v = T_LTT
-  { v } *)
+  | vt = T_IDENTIFIER
+  {
+    let (v, _) = vt in
+    if String.equal v "T" then
+      S.TIME
+    else if String.equal v "LT" then
+      S.LTIME
+    else
+      raise @@ SyntaxError ("SyntaxError: Unknown time type name: " ^ v)
+  }
 
-(* fix_point: *)
+fix_point:
+  | fp = T_FIX_POINT_VALUE
+  { fp }
+  | fp = T_INTEGER
+  { fp }
 
-(* interval:
+interval:
   | v = day
   { v }
   | v = hours
@@ -378,25 +411,47 @@ bool_literal:
   | v = microseconds
   { v }
   | v = nanoseconds
-  { v } *)
+  { v }
 
-(* day:
-  | v = fix_point; 'd'
-  {  }
-  | v = unsigned_int; 'd'
-  {  }
- *)
-(* hours: *)
+day:
+  | vt = T_TIME_INTERVAL_D
+  { ctime_mk S.TimeValue.mk_d vt }
+  | vt = T_TIME_INTERVAL_D; v = hours
+  { ctime_mk S.TimeValue.mk_d vt |> S.c_add v } 
 
-(* minutes: *)
+hours:
+  | vt = T_TIME_INTERVAL_H
+  { ctime_mk S.TimeValue.mk_h vt }
+  | vt = T_TIME_INTERVAL_H; v = minutes
+  { ctime_mk S.TimeValue.mk_h vt |> S.c_add v } 
 
-(* seconds: *)
+minutes:
+  | vt = T_TIME_INTERVAL_M
+  { ctime_mk S.TimeValue.mk_m vt }
+  | vt = T_TIME_INTERVAL_M; v = seconds
+  { ctime_mk S.TimeValue.mk_m vt |> S.c_add v } 
 
-(* miliseconds: *)
+seconds:
+  | vt = T_TIME_INTERVAL_S
+  { ctime_mk S.TimeValue.mk_s vt }
+  | vt = T_TIME_INTERVAL_S; v = miliseconds
+  { ctime_mk S.TimeValue.mk_s vt |> S.c_add v } 
 
-(* microseconds: *)
+miliseconds:
+  | vt = T_TIME_INTERVAL_MS
+  { ctime_mk S.TimeValue.mk_ms vt }
+  | vt = T_TIME_INTERVAL_MS; v = microseconds
+  { ctime_mk S.TimeValue.mk_ms vt |> S.c_add v } 
 
-(* nanoseconds: *)
+microseconds:
+  | vt = T_TIME_INTERVAL_US
+  { ctime_mk S.TimeValue.mk_us vt }
+  | vt = T_TIME_INTERVAL_US; v = nanoseconds;
+  { ctime_mk S.TimeValue.mk_us vt |> S.c_add v } 
+
+nanoseconds:
+  | vt = T_TIME_INTERVAL_NS
+  { ctime_mk S.TimeValue.mk_ns vt }
 
 (* time_of_day: *)
 
@@ -436,12 +491,14 @@ elem_type_name:
   { S.STRING }
   | T_WSTRING
   { S.WSTRING }
-  | t = numeric_type_name
-  { t }
-  | t = date_type_name
-  { t }
-  | t = bit_str_type_name
-  { t }
+  | ty = numeric_type_name
+  { ty }
+  | ty = bit_str_type_name
+  { ty }
+  | ty = date_type_name
+  { ty }
+  | ty = time_type_name
+  { ty }
 
 numeric_type_name:
   | t = int_type_name
@@ -488,23 +545,33 @@ string_type_name:
     name
   }
 
-(* time_type_name: *)
+time_type_name:
+  | T_TIME
+  { S.TIME }
+  | T_LTIME
+  { S.LTIME }
 
 date_type_name:
   | T_DATE
   { S.DATE }
+  | T_LDATE
+  { S.LDATE }
+
+tod_type_name:
   | T_TIME_OF_DAY
   { S.TIME_OF_DAY }
   | T_TOD
   { S.TOD }
+  | T_LTOD
+  { S.LTOD }
+
+dt_type_name:
   | T_DATE_AND_TIME
   { S.DATE_AND_TIME }
   | T_DT
   { S.DT }
-
-(* tod_type_name: *)
-
-(* dt_type_name: *)
+  | T_LDT
+  { S.LDT }
 
 bit_str_type_name:
   | ty = bool_type_name

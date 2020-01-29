@@ -26,7 +26,7 @@ let parse_with_error lexbuf =
   let tokinfo lexbuf = TI.create lexbuf in
   let l = Lexer.initial tokinfo in
   try Parser.main l lexbuf with
-  | Lexer.SyntaxError msg ->
+  | Lexer.LexingError msg ->
       fprintf stderr "%a: %s\n" print_position lexbuf msg;
       []
   | Parser.Error ->
