@@ -5,6 +5,7 @@ PROGRAM program0
     b : BOOL;
     r : REAL;
     t : TIME;
+    td : TOD;
   END_VAR
 
   (* integer *)
@@ -75,6 +76,13 @@ PROGRAM program0
   t := T#3.0d;
   t := LT#3.0d;
   t := TIME#3.0d;
+
+  (* time_of_day *)
+  td := TOD#03:12:20;
+  td := LTOD#03:12:20;
+  td := TIME_OF_DAY#03:12:20;
+  td := LTIME_OF_DAY#03:12:20;
+  td := LTIME_OF_DAY#03:12:20.5;
 
 END_PROGRAM
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)

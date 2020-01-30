@@ -24,6 +24,18 @@
     let (v, ti) = t in
     let tv = (fn v) in
     S.CTimeValue(tv, ti)
+
+  let cget_int_val = function
+    | S.CInteger (v, _) -> v
+    | _ -> E.raise E.InternalError "Unknown constant type"
+
+  let cdate_of_timevals ch cm ss =
+    let ti = S.c_get_ti ch in
+    let hf = float_of_int (cget_int_val ch) in
+    let mf = float_of_int (cget_int_val cm) in
+    let sf = float_of_string ss in
+    let tv = S.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
+    S.CTimeValue(tv, ti)
 %}
 
 (* {{{ Tokens *)
@@ -133,6 +145,7 @@
 %token T_DT            "DT"
 %token T_LDT           "LDT"
 %token T_TIME_OF_DAY   "TIME_OF_DAY"
+%token T_LTIME_OF_DAY  "LTIME_OF_DAY"
 %token T_TOD           "TOD"
 %token T_LTOD          "LTOD"
 (* }}} *)
@@ -354,8 +367,8 @@ bool_literal:
 time_literal:
   | v = duration
   { v }
-  (* | v = time_of_day
-  { v } *)
+  | v = time_of_day
+  { v }
   (* | v = date
   { v } *)
   (* | v = date_and_time
@@ -391,11 +404,16 @@ time_type_helper:
       raise @@ SyntaxError ("SyntaxError: Unknown time type name: " ^ v)
   }
 
+(* Return string * TI.t *)
 fix_point:
   | fp = T_FIX_POINT_VALUE
   { fp }
   | fp = T_INTEGER
-  { fp }
+  {
+    let (vi, ti) = fp in
+    let vs = string_of_int vi in
+    (vs, ti)
+  }
 
 interval:
   | v = day
@@ -453,15 +471,30 @@ nanoseconds:
   | vt = T_TIME_INTERVAL_NS
   { ctime_mk (fun v -> S.TimeValue.mk ~ns:v ()) vt }
 
-(* time_of_day: *)
+time_of_day:
+  | tod_type_name; T_SHARP vt = daytime
+  { vt }
+  | T_LTIME_OF_DAY; T_SHARP vt = daytime
+  { vt }
 
-(* daytime: *)
+daytime:
+  | hi = day_hour T_COLON mi = day_minute T_COLON ss = day_second
+  { cdate_of_timevals hi mi ss }
 
-(* day_hour: *)
+day_hour:
+  | v = unsigned_int
+  { v }
 
-(* day_minute: *)
+day_minute:
+  | v = unsigned_int
+  { v }
 
-(* day_second: *)
+day_second:
+  | fp = fix_point
+  {
+    let (fps, _) = fp in
+    fps
+  }
 
 (* date: *)
 
@@ -499,6 +532,14 @@ elem_type_name:
   { ty }
   | ty = time_type_name
   { ty }
+  (* NOTE: TOD and DT types are not defined as part of elem_type_name in 3rd edition of IEC61131-3
+     standard. This seems like a typo because 2nd edition includes these types in date_type which
+     has been splitted to few rules in new standard after introducing long types. *)
+  | ty = tod_type_name
+  { ty }
+  | ty = dt_type_name
+  { ty }
+
 
 numeric_type_name:
   | t = int_type_name
@@ -798,11 +839,7 @@ struct_elem_name_list:
 direct_variable:
   | T_PERCENT loc = location_prefix; sz = size_prefix; pcs = unsigned_int_list;
   {
-    let get_int_val = function
-      | S.CInteger (v, _) -> v
-      | _ -> E.raise E.InternalError "Unknown constant type"
-    in
-    let pvals = List.map ~f:(fun c -> get_int_val c) pcs in
+    let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
     S.VarSpecDirect(loc, Some sz, pvals, None)
   }
 

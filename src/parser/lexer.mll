@@ -166,6 +166,7 @@ rule initial tokinfo =
   | "DT"             { T_DT }
   | "LDT"            { T_LDT }
   | "TIME_OF_DAY"    { T_TIME_OF_DAY }
+  | "LTIME_OF_DAY"   { T_LTIME_OF_DAY }
   | "TOD"            { T_TOD }
   | "LTOD"           { T_LTOD }
   (* }}} *)
