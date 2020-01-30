@@ -2,11 +2,11 @@
   open Core_kernel
   open IECCheckerCore
 
+  module E = Error
   module S = Syntax
   module TI = Tok_info
 
   exception SyntaxError of string
-  exception InternalError of string
 
   let creal_inv (vr, ti) =
     let vv = -1.0 *. vr in
@@ -371,7 +371,7 @@ duration:
     match v with
     | S.CTimeValue(tv, ti) ->
         S.CTimeValue((S.TimeValue.inv tv), ti)
-    | _ -> raise @@ InternalError ("InternalError")
+    | _ -> E.raise E.InternalError "Unknown constant type"
   }
 
 (* Helper symbol for duration.
@@ -800,7 +800,7 @@ direct_variable:
   {
     let get_int_val = function
       | S.CInteger (v, _) -> v
-      | _ -> -1 (* FIXME: How should I handle this? *)
+      | _ -> E.raise E.InternalError "Unknown constant type"
     in
     let pvals = List.map ~f:(fun c -> get_int_val c) pcs in
     S.VarSpecDirect(loc, Some sz, pvals, None)

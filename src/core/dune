@@ -1,6 +1,6 @@
 (library
  (name IECCheckerCore)
  (public_name iec_checker.core)
- (synopsis "The core data structures for iec-checker")
+ (synopsis "The core of iec-checker")
  (libraries core)
  (preprocess (pps ppxlib ppx_fields_conv)))
