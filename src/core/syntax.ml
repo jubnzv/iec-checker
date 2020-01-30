@@ -112,26 +112,9 @@ module TimeValue = struct
   }
   [@@deriving fields]
 
-  let mk_d v =
-    { d = v; h = 0.0; m = 0.0; s = 0.0; ms = 0.0; us = 0.0; ns = 0.0 }
-
-  let mk_h v =
-    { d = 0.0; h = v; m = 0.0; s = 0.0; ms = 0.0; us = 0.0; ns = 0.0 }
-
-  let mk_m v =
-    { d = 0.0; h = 0.0; m = v; s = 0.0; ms = 0.0; us = 0.0; ns = 0.0 }
-
-  let mk_s v =
-    { d = 0.0; h = 0.0; m = 0.0; s = v; ms = 0.0; us = 0.0; ns = 0.0 }
-
-  let mk_ms v =
-    { d = 0.0; h = 0.0; m = 0.0; s = 0.0; ms = v; us = 0.0; ns = 0.0 }
-
-  let mk_us v =
-    { d = 0.0; h = 0.0; m = 0.0; s = 0.0; ms = 0.0; us = v; ns = 0.0 }
-
-  let mk_ns v =
-    { d = 0.0; h = 0.0; m = 0.0; s = 0.0; ms = 0.0; us = 0.0; ns = v }
+  let mk ?(d = 0.) ?(h = 0.) ?(m = 0.) ?(s = 0.) ?(ms = 0.) ?(us = 0.)
+      ?(ns = 0.) () =
+    { d; h; m; s; ms; us; ns }
 
   let ( + ) lhs rhs = { lhs with d = rhs.d +. lhs.d }
 

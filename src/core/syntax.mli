@@ -110,24 +110,21 @@ and single_element_ty_spec =
 module TimeValue : sig
   type t
 
-  val mk_d : float -> t
-
-  val mk_h : float -> t
-
-  val mk_m : float -> t
-
-  val mk_s : float -> t
-
-  val mk_ms : float -> t
-
-  val mk_us : float -> t
-
-  val mk_ns : float -> t
+  val mk :
+    ?d:float ->
+    ?h:float ->
+    ?m:float ->
+    ?s:float ->
+    ?ms:float ->
+    ?us:float ->
+    ?ns:float ->
+    unit ->
+    t
 
   val ( + ) : t -> t -> t
 
   val inv : t -> t
-  (* Invert time value to represent a negative duration. *)
+  (** Invert time value to represent a negative duration. *)
 
   val to_string : t -> string
 
@@ -198,7 +195,7 @@ and var_spec =
       direct_var_location
       * direct_var_size option
       * int list
-      (* address *)
+  (* address *)
       * var_qualifier option
   | VarSpecOut of var_qualifier option
   | VarSpecIn of var_qualifier option

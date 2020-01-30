@@ -415,43 +415,43 @@ interval:
 
 day:
   | vt = T_TIME_INTERVAL_D
-  { ctime_mk S.TimeValue.mk_d vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~d:v ()) vt }
   | vt = T_TIME_INTERVAL_D; v = hours
-  { ctime_mk S.TimeValue.mk_d vt |> S.c_add v } 
+  { ctime_mk (fun v -> S.TimeValue.mk ~d:v ()) vt |> S.c_add v }
 
 hours:
   | vt = T_TIME_INTERVAL_H
-  { ctime_mk S.TimeValue.mk_h vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~h:v ()) vt }
   | vt = T_TIME_INTERVAL_H; v = minutes
-  { ctime_mk S.TimeValue.mk_h vt |> S.c_add v } 
+  { ctime_mk (fun v -> S.TimeValue.mk ~h:v ()) vt |> S.c_add v }
 
 minutes:
   | vt = T_TIME_INTERVAL_M
-  { ctime_mk S.TimeValue.mk_m vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~m:v ()) vt }
   | vt = T_TIME_INTERVAL_M; v = seconds
-  { ctime_mk S.TimeValue.mk_m vt |> S.c_add v } 
+  { ctime_mk (fun v -> S.TimeValue.mk ~m:v ()) vt |> S.c_add v }
 
 seconds:
   | vt = T_TIME_INTERVAL_S
-  { ctime_mk S.TimeValue.mk_s vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~s:v ()) vt }
   | vt = T_TIME_INTERVAL_S; v = miliseconds
-  { ctime_mk S.TimeValue.mk_s vt |> S.c_add v } 
+  { ctime_mk (fun v -> S.TimeValue.mk ~s:v ()) vt |> S.c_add v }
 
 miliseconds:
   | vt = T_TIME_INTERVAL_MS
-  { ctime_mk S.TimeValue.mk_ms vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~ms:v ()) vt }
   | vt = T_TIME_INTERVAL_MS; v = microseconds
-  { ctime_mk S.TimeValue.mk_ms vt |> S.c_add v } 
+  { ctime_mk (fun v -> S.TimeValue.mk ~ms:v ()) vt |> S.c_add v }
 
 microseconds:
   | vt = T_TIME_INTERVAL_US
-  { ctime_mk S.TimeValue.mk_us vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~us:v ()) vt }
   | vt = T_TIME_INTERVAL_US; v = nanoseconds;
-  { ctime_mk S.TimeValue.mk_us vt |> S.c_add v } 
+  { ctime_mk (fun v -> S.TimeValue.mk ~us:v ()) vt |> S.c_add v }
 
 nanoseconds:
   | vt = T_TIME_INTERVAL_NS
-  { ctime_mk S.TimeValue.mk_ns vt }
+  { ctime_mk (fun v -> S.TimeValue.mk ~ns:v ()) vt }
 
 (* time_of_day: *)
 
