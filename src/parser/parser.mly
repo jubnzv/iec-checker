@@ -28,14 +28,6 @@
   let cget_int_val = function
     | S.CInteger (v, _) -> v
     | _ -> E.raise E.InternalError "Unknown constant type"
-
-  let cdate_of_timevals ch cm ss =
-    let ti = S.c_get_ti ch in
-    let hf = float_of_int (cget_int_val ch) in
-    let mf = float_of_int (cget_int_val cm) in
-    let sf = float_of_string ss in
-    let tv = S.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
-    S.CTimeValue(tv, ti)
 %}
 
 (* {{{ Tokens *)
@@ -168,6 +160,18 @@
 %token T_XOR            "XOR"
 %token T_AND            "AND"
 %token T_EQU            "EQU"
+(* }}} *)
+
+(* {{{ Helpers for date and time literals
+
+   According standard T, LT, D and DT are not keywords, so we need to
+   define an extra terminal symbols to distinguish them from regular
+   identifiers.
+ *)
+%token T_TSHARP     "T#"
+%token T_LTSHARP    "LT#"
+%token T_DSHARP     "D#"
+%token T_LDSHARP    "LD#"
 (* }}} *)
 
 (* {{{ Non-terminal symbols *)
@@ -369,17 +373,17 @@ time_literal:
   { v }
   | v = time_of_day
   { v }
-  (* | v = date
-  { v } *)
+  | v = date
+  { v }
   (* | v = date_and_time
   { v } *)
 
 duration:
-  | time_type_helper; T_SHARP v = interval
+  | time_type_helper v = interval
   { v }
-  | time_type_helper; T_SHARP T_PLUS v = interval
+  | time_type_helper T_PLUS v = interval
   { v }
-  | time_type_helper; T_SHARP T_MINUS v = interval
+  | time_type_helper T_MINUS v = interval
   {
     match v with
     | S.CTimeValue(tv, ti) ->
@@ -387,22 +391,14 @@ duration:
     | _ -> E.raise E.InternalError "Unknown constant type"
   }
 
-(* Helper symbol for duration.
-   According standard T and LT are not keywords, so we need to
-   distinguish them from regular identifiers. *)
+(* Helper symbol for duration. *)
 time_type_helper:
-  | v = time_type_name
+  | v = time_type_name T_SHARP
   { v }
-  | vt = T_IDENTIFIER
-  {
-    let (v, _) = vt in
-    if String.equal v "T" then
-      S.TIME
-    else if String.equal v "LT" then
-      S.LTIME
-    else
-      raise @@ SyntaxError ("SyntaxError: Unknown time type name: " ^ v)
-  }
+  | v = T_TSHARP
+  { S.TIME }
+  | v = T_LTSHARP
+  { S.LTIME }
 
 (* Return string * TI.t *)
 fix_point:
@@ -416,7 +412,7 @@ fix_point:
   }
 
 interval:
-  | v = day
+  | v = days
   { v }
   | v = hours
   { v }
@@ -431,7 +427,7 @@ interval:
   | v = nanoseconds
   { v }
 
-day:
+days:
   | vt = T_TIME_INTERVAL_D
   { ctime_mk (fun v -> S.TimeValue.mk ~d:v ()) vt }
   | vt = T_TIME_INTERVAL_D; v = hours
@@ -479,7 +475,17 @@ time_of_day:
 
 daytime:
   | hi = day_hour T_COLON mi = day_minute T_COLON ss = day_second
-  { cdate_of_timevals hi mi ss }
+  {
+    let ctime_of_timevals ch cm ss =
+      let ti = S.c_get_ti ch in
+      let hf = float_of_int (cget_int_val ch) in
+      let mf = float_of_int (cget_int_val cm) in
+      let sf = float_of_string ss in
+      let tv = S.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
+      S.CTimeValue(tv, ti)
+    in
+    ctime_of_timevals hi mi ss
+  }
 
 day_hour:
   | v = unsigned_int
@@ -491,20 +497,41 @@ day_minute:
 
 day_second:
   | fp = fix_point
+  { let (fps, _) = fp in fps }
+
+date:
+  | date_type_name; T_SHARP dt = date_literal
+  { dt }
+  | T_DSHARP dt = date_literal
+  { dt }
+  | T_LDSHARP dt = date_literal
+  { dt }
+
+date_literal:
+  | cy = year T_MINUS cmo = month T_MINUS cd = day
   {
-    let (fps, _) = fp in
-    fps
+    let cdate_of_timevals cy cmo cd =
+      let ti = S.c_get_ti cy in
+      let yi = (cget_int_val cy) in
+      let moi = (cget_int_val cmo) in
+      let df = float_of_int (cget_int_val cd) in
+      let tv = S.TimeValue.mk ~y:yi ~mo:moi ~d:df () in
+      S.CTimeValue(tv, ti)
+    in
+    cdate_of_timevals cy cmo cd
   }
 
-(* date: *)
+year:
+  | v = unsigned_int
+  { v }
 
-(* date_literal: *)
+month:
+  | v = unsigned_int
+  { v }
 
-(* year: *)
-
-(* month: *)
-
-(* day: *)
+day:
+  | v = unsigned_int
+  { v }
 
 (* date_and_time: *)
 (* }}} *)
@@ -1936,6 +1963,7 @@ var1_init_decl:
     | vs = variable_list; T_COLON; simple_spec_init;
     { vs }
 
+(* TODO: They are not reserved keywords. *)
 location_prefix:
     | T_I
     { S.DirVarLocI }
@@ -1944,6 +1972,7 @@ location_prefix:
     | T_M
     { S.DirVarLocM }
 
+(* TODO: They are not reserved keywords. *)
 size_prefix:
     | T_NIL
     { S.DirVarSizeNone }

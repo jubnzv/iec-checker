@@ -106,11 +106,16 @@ and single_element_ty_spec =
 
 (* derived ty name *)
 
-(* Representation of time interval *)
+(* Representation of time interval
+   According the IEC61131-3 3rd edition grammar, all interval values defined as
+   fix_point. That means that these values could be represented as float values.
+ *)
 module TimeValue : sig
   type t
 
   val mk :
+    ?y:int ->
+    ?mo:int ->
     ?d:float ->
     ?h:float ->
     ?m:float ->

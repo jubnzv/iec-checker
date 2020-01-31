@@ -3,4 +3,4 @@
  (public_name iec_checker.core)
  (synopsis "The core of iec-checker")
  (libraries core)
- (preprocess (pps ppxlib ppx_fields_conv)))
+ (preprocess (pps ppxlib ppx_fields_conv ppx_deriving.std)))

@@ -139,6 +139,13 @@ rule initial tokinfo =
   | "END_TYPE"           { T_END_TYPE }
   (* }}} *)
 
+  (* {{{ Helpers for datetime types *)
+  | "T#"  { T_TSHARP }
+  | "LT#" { T_LTSHARP }
+  | "D#"  { T_DSHARP }
+  | "LD#" { T_LDSHARP }
+  (* }}} *)
+
   (* {{{ Elementary data types *)
   | "SINT"           { T_SINT }
   | "BYTE"           { T_BYTE }

@@ -102,6 +102,8 @@ and single_element_ty_spec =
 
 module TimeValue = struct
   type t = {
+    y : int;
+    mo : int;
     d : float;
     h : float;
     m : float;
@@ -110,19 +112,42 @@ module TimeValue = struct
     us : float;
     ns : float;
   }
-  [@@deriving fields]
+  [@@deriving show, fields]
 
-  let mk ?(d = 0.) ?(h = 0.) ?(m = 0.) ?(s = 0.) ?(ms = 0.) ?(us = 0.)
-      ?(ns = 0.) () =
-    { d; h; m; s; ms; us; ns }
+  let mk ?(y = 0) ?(mo = 0) ?(d = 0.) ?(h = 0.) ?(m = 0.) ?(s = 0.) ?(ms = 0.)
+      ?(us = 0.) ?(ns = 0.) () =
+    { y; mo; d; h; m; s; ms; us; ns }
 
-  let ( + ) lhs rhs = { lhs with d = rhs.d +. lhs.d }
+  let ( + ) lhs rhs =
+    {
+      y = rhs.y + lhs.y;
+      mo = rhs.mo + lhs.mo;
+      d = rhs.d +. lhs.d;
+      h = rhs.h +. lhs.h;
+      m = rhs.m +. lhs.m;
+      s = rhs.s +. lhs.s;
+      ms = rhs.ms +. lhs.ms;
+      us = rhs.us +. lhs.us;
+      ns = rhs.ns +. lhs.ns;
+    }
 
-  let inv tv = { tv with d = tv.d *. -1.0 }
+  let inv tv =
+    {
+      y = tv.y * -1;
+      mo = tv.mo * -1;
+      d = tv.d *. -1.0;
+      h = tv.h *. -1.0;
+      m = tv.m *. -1.0;
+      s = tv.s *. -1.0;
+      ms = tv.ms *. -1.0;
+      us = tv.us *. -1.0;
+      ns = tv.ns *. -1.0;
+    }
 
-  let to_string tv = string_of_float tv.d
+  let to_string tv = show tv
 
-  let is_zero tv = phys_equal tv.d 0.0
+  let is_zero tv = phys_equal tv.d 0.
+  (* TODO: List.map ~f(fun fv -> phys_equal fv 0.) ???Fields *)
 end
 
 type constant =

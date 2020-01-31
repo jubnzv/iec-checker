@@ -1,4 +1,4 @@
-(* Test lexing/parsing of integer literals defined in Table 5. *)
+(* Test lexing/parsing of literals. *)
 PROGRAM program0
   VAR
     a : ULINT;
@@ -6,6 +6,14 @@ PROGRAM program0
     r : REAL;
     t : TIME;
     td : TOD;
+    d : DATE;
+
+    (* The following identifiers are not defined as reserved keywords in the standard.
+       So they could be used as a regular identifiers. *)
+    T : INT;
+    LT : INT;
+    (* TODO: D : INT; *)
+    LD : INT;
   END_VAR
 
   (* integer *)
@@ -73,6 +81,7 @@ PROGRAM program0
   t := TIME#3.0ns;
   t := TIME#3.0d 4.0h;
   t := TIME#3.0h3m;
+  t := LTIME#3.0d;
   t := T#3.0d;
   t := LT#3.0d;
   t := TIME#3.0d;
@@ -83,6 +92,12 @@ PROGRAM program0
   td := TIME_OF_DAY#03:12:20;
   td := LTIME_OF_DAY#03:12:20;
   td := LTIME_OF_DAY#03:12:20.5;
+
+  (* date *)
+  d := DATE#2020-01-30;
+  d := LDATE#2020-01-30;
+  d := D#2020-01-30;
+  d := LD#2020-01-30;
 
 END_PROGRAM
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)
