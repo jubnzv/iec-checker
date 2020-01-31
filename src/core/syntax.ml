@@ -52,6 +52,7 @@ and elementary_ty =
   | TOD
   | LTOD
   | DATE_AND_TIME
+  | LDATE_AND_TIME
   | DT
   | LDT
   | BOOL

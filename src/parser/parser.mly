@@ -112,34 +112,35 @@
 (* }}} *)
 
 (* {{{ Elementary data types *)
-%token T_BYTE          "BYTE"
-%token T_WORD          "WORD"
-%token T_DWORD         "DWORD"
-%token T_LWORD         "LWORD"
-%token T_LREAL         "LREAL"
-%token T_REAL          "REAL"
-%token T_SINT          "SINT"
-%token T_INT           "INT"
-%token T_DINT          "DINT"
-%token T_LINT          "LINT"
-%token T_USINT         "USINT"
-%token T_UINT          "UINT"
-%token T_UDINT         "UDINT"
-%token T_ULINT         "ULINT"
-%token T_WSTRING       "WSTRING"
-%token T_STRING        "STRING"
-%token T_BOOL          "BOOL"
-%token T_TIME          "TIME"
-%token T_LTIME         "LTIME"
-%token T_DATE          "DATE"
-%token T_LDATE         "LDATE"
-%token T_DATE_AND_TIME "DATE_AND_TIME"
-%token T_DT            "DT"
-%token T_LDT           "LDT"
-%token T_TIME_OF_DAY   "TIME_OF_DAY"
-%token T_LTIME_OF_DAY  "LTIME_OF_DAY"
-%token T_TOD           "TOD"
-%token T_LTOD          "LTOD"
+%token T_BYTE           "BYTE"
+%token T_WORD           "WORD"
+%token T_DWORD          "DWORD"
+%token T_LWORD          "LWORD"
+%token T_LREAL          "LREAL"
+%token T_REAL           "REAL"
+%token T_SINT           "SINT"
+%token T_INT            "INT"
+%token T_DINT           "DINT"
+%token T_LINT           "LINT"
+%token T_USINT          "USINT"
+%token T_UINT           "UINT"
+%token T_UDINT          "UDINT"
+%token T_ULINT          "ULINT"
+%token T_WSTRING        "WSTRING"
+%token T_STRING         "STRING"
+%token T_BOOL           "BOOL"
+%token T_TIME           "TIME"
+%token T_LTIME          "LTIME"
+%token T_DATE           "DATE"
+%token T_LDATE          "LDATE"
+%token T_DATE_AND_TIME  "DATE_AND_TIME"
+%token T_LDATE_AND_TIME "LDATE_AND_TIME"
+%token T_DT             "DT"
+%token T_LDT            "LDT"
+%token T_TIME_OF_DAY    "TIME_OF_DAY"
+%token T_LTIME_OF_DAY   "LTIME_OF_DAY"
+%token T_TOD            "TOD"
+%token T_LTOD           "LTOD"
 (* }}} *)
 
 (* {{{ Generic data types *)
@@ -375,8 +376,8 @@ time_literal:
   { v }
   | v = date
   { v }
-  (* | v = date_and_time
-  { v } *)
+  | v = date_and_time
+  { v }
 
 duration:
   | time_type_helper v = interval
@@ -533,7 +534,11 @@ day:
   | v = unsigned_int
   { v }
 
-(* date_and_time: *)
+date_and_time:
+  | dt_type_name; T_SHARP; d = date_literal; T_MINUS dt = daytime
+  { S.c_add d dt }
+  | T_LDATE_AND_TIME T_SHARP; d = date_literal; T_MINUS dt = daytime
+  { S.c_add d dt }
 (* }}} *)
 
 (* {{{ Table 10 -- Elementary data types *)
@@ -636,6 +641,8 @@ tod_type_name:
 dt_type_name:
   | T_DATE_AND_TIME
   { S.DATE_AND_TIME }
+  | T_LDATE_AND_TIME
+  { S.LDATE_AND_TIME }
   | T_DT
   { S.DT }
   | T_LDT

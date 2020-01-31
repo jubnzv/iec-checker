@@ -170,6 +170,7 @@ rule initial tokinfo =
   | "DATE"           { T_DATE }
   | "LDATE"          { T_LDATE }
   | "DATE_AND_TIME"  { T_DATE_AND_TIME }
+  | "LDATE_AND_TIME" { T_LDATE_AND_TIME }
   | "DT"             { T_DT }
   | "LDT"            { T_LDT }
   | "TIME_OF_DAY"    { T_TIME_OF_DAY }

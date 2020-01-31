@@ -7,6 +7,7 @@ PROGRAM program0
     t : TIME;
     td : TOD;
     d : DATE;
+    dtv : DATE_AND_TIME;
 
     (* The following identifiers are not defined as reserved keywords in the standard.
        So they could be used as a regular identifiers. *)
@@ -98,6 +99,13 @@ PROGRAM program0
   d := LDATE#2020-01-30;
   d := D#2020-01-30;
   d := LD#2020-01-30;
+
+  (* date_and_time *)
+  dtv := LDT#2020-01-30-18:01:38;
+  dtv := LDT#2020-01-30-18:01:38.33;
+  dtv := DT#2020-01-30-18:01:38;
+  dtv := DATE_AND_TIME#2020-01-30-18:01:38;
+  dtv := LDATE_AND_TIME#2020-01-30-18:01:38;
 
 END_PROGRAM
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)
