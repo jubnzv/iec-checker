@@ -1,4 +1,4 @@
-(* This module describes all common elements that which make up programming
+(** This module describes all common elements that which make up programming
    model of Structured Text language. See Annex B of IEC61131-3 for reference. *)
 open Core_kernel
 module TI = Tok_info
@@ -12,17 +12,17 @@ type operator =
   | MUL
   | DIV
   | MOD
-  | AND (* & AND *)
-  | ADD (* + *)
-  | SUB (* - *)
-  | OR (* OR *)
-  | XOR (* XOR *)
-  | GT (* > *)
-  | LT (* < *)
-  | GE (* >= *)
-  | LE (* <= *)
-  | EQ (* = *)
-  | NEQ (* <> *)
+  | AND
+  | ADD
+  | SUB
+  | OR
+  | XOR
+  | GT
+  | LT
+  | GE
+  | LE
+  | EQ
+  | NEQ
   | ASSIGN
 
 type iec_data_type =
@@ -73,24 +73,20 @@ and generic_ty =
   | ANY_STRING
   | ANY_DATE
 
-and ty_decl = DTyDecl of string (* name *) * derived_ty
+and ty_decl = DTyDecl of string * derived_ty
 
-(* Specification of derived ty *)
 and derived_ty =
   | DTySingleElementTy of single_element_ty_spec
-  (* | ArrayType of string * iec_array_type_spec *)
-  (* | StructureType of string * iec_structure_type_spec *)
-  (* | StringType of string * iec_string_type_spec *)
   | DTyStringTy of string * int
 
 and iec_array_size = Capacity of int | Range of int * int
 
 and iec_array_type_spec = {
-  (* TODO: array_type: iec_data_type; *) size : iec_array_size;
+ size : iec_array_size;
 }
 
 and iec_structure_type_element = {
-  name : string; (* TODO: element_type : iec_data_type; *)
+  name : string;
 }
 
 and iec_structure_type_spec = { elements : iec_structure_type_element list }
@@ -219,33 +215,24 @@ module Variable = struct
   let set_direction var d = { var with dir = Some d }
 end
 
-(* Qualifier of IEC variable. *)
 type var_qualifier = VarQRetain | VarQNonRetain | VarQConstant
 
-(* Location prefixes for directly represented variables.
-   See 2.4.1.1 and Table 15 for explaination. *)
 type direct_var_location = DirVarLocI | DirVarLocQ | DirVarLocM
 
-(* Size prefixes for directly represented variables.
-   See 2.4.1.1 and Table 15 for explaination. *)
 and direct_var_size =
-  | DirVarSizeX (* single bit *)
-  | DirVarSizeNone (* single bit *)
-  | DirVarSizeB (* byte *)
-  | DirVarSizeW (* word (16 bits) *)
-  | DirVarSizeD (* double word (32 bits) *)
+  | DirVarSizeX
+  | DirVarSizeNone
+  | DirVarSizeB
+  | DirVarSizeW
+  | DirVarSizeD
   | DirVarSizeL
 
-(* quad word (64 bits) *)
-
-(* Variable specification *)
 and var_spec =
   | VarSpec of var_qualifier option
   | VarSpecDirect of
       direct_var_location
       * direct_var_size option
       * int list
-  (* address *)
       * var_qualifier option
   | VarSpecOut of var_qualifier option
   | VarSpecIn of var_qualifier option
@@ -255,9 +242,7 @@ and var_spec =
   | VarSpecAccess of string (* access name *)
   | VarSpecTemp
   | VarSpecConfig of
-      string (* resource name *) * string (* program name *) * string
-
-(* fb name *)
+      string * string * string
 
 module VariableDecl = struct
   type t = { var : Variable.t; spec : var_spec }
@@ -275,7 +260,6 @@ module VariableDecl = struct
     | VarSpecInOut | VarSpecAccess _ | VarSpecTemp | VarSpecConfig _ -> d
 end
 
-(* Arbitrary expressions of ST language *)
 type expr =
   | Nil of TI.t
   | Variable of Variable.t
@@ -329,7 +313,7 @@ end
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VariableDecl.t list;
-  statements : expr list; (* return_ty : iec_data_type; *)
+  statements : expr list;
 }
 
 type program_decl = {
@@ -348,7 +332,6 @@ module Task = struct
     single : data_source option;
     priority : int option;
   }
-  (** Data sources used in task configruation *)
   and data_source =
     | DSConstant of constant
     | DSGlobalVar of Variable.t
@@ -375,7 +358,7 @@ module ProgramConfig = struct
     ti : TI.t;
     qual : var_qualifier option;
     task : Task.t option;
-    conn_vars : Variable.t list; (* Variables connected to program data flow. *)
+    conn_vars : Variable.t list; (** Variables connected to program data flow. *)
   }
 
   let create name ti =

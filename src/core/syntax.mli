@@ -2,7 +2,7 @@ module TI = Tok_info
 
 exception InternalError of string
 
-(* Operators of the ST language *)
+(** Operators of the ST language *)
 type operator =
   | NEG
   | NOT
@@ -10,20 +10,20 @@ type operator =
   | MUL
   | DIV
   | MOD
-  | AND (* & AND *)
-  | ADD (* + *)
-  | SUB (* - *)
-  | OR (* OR *)
-  | XOR (* XOR *)
-  | GT (* > *)
-  | LT (* < *)
-  | GE (* >= *)
-  | LE (* <= *)
-  | EQ (* = *)
-  | NEQ (* <> *)
+  | AND (** & AND *)
+  | ADD (** + *)
+  | SUB (** - *)
+  | OR (** OR *)
+  | XOR (** XOR *)
+  | GT (** > *)
+  | LT (** < *)
+  | GE (** >= *)
+  | LE (** <= *)
+  | EQ (** = *)
+  | NEQ (** <> *)
   | ASSIGN
 
-(* Types *)
+(** Types *)
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -72,10 +72,10 @@ and generic_ty =
   | ANY_STRING
   | ANY_DATE
 
-(* Declaration of derived ty *)
+(** Declaration of derived type *)
 and ty_decl = DTyDecl of string (* name *) * derived_ty
 
-(* Specification of derived ty *)
+(** Specification of derived type *)
 and derived_ty =
   | DTySingleElementTy of single_element_ty_spec
   (* | ArrayType of string * iec_array_type_spec *)
@@ -83,33 +83,32 @@ and derived_ty =
   (* | StringType of string * iec_string_type_spec *)
   | DTyStringTy of string * int
 
-(* Arrays*)
+(** Arrays *)
 and iec_array_size = Capacity of int | Range of int * int
 
 and iec_array_type_spec = {
   (* TODO: array_type: iec_data_type; *) size : iec_array_size;
 }
 
-(* Structures*)
+(** Structures *)
 and iec_structure_type_element = {
   name : string; (* TODO: element_type : iec_data_type; *)
 }
 
 and iec_structure_type_spec = { elements : iec_structure_type_element list }
 
-(* String literals *)
+(** String literals *)
 and iec_string_type_spec = { capacity : int }
 
-(* Single element types is user defined tys which works like typedefs in C. *)
+(** Single element types is user defined tys which works like typedefs in C. *)
 and single_element_ty_spec =
   | SETyElementaryTy of elementary_ty
-  | SETySETy of string
+  | SETySETy of string (** derived ty name *)
 
-(* derived ty name *)
+(** Representation of time interval
 
-(* Representation of time interval
-   According the IEC61131-3 3rd edition grammar, all interval values defined as
-   fix_point. That means that these values could be represented as float values.
+    According the IEC61131-3 3rd edition grammar, all interval values defined as
+    fix_point. That means that these values could be represented as float values.
 *)
 module TimeValue : sig
   type t
@@ -137,7 +136,7 @@ module TimeValue : sig
   val is_zero : t -> bool
 end
 
-(* Constants *)
+(** Constants *)
 type constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
@@ -157,11 +156,11 @@ val c_get_ti : constant -> TI.t
 val c_add : constant -> constant -> constant
 (** Add value to existing constant. *)
 
-(* Variable identifier *)
+(** Variable identifier *)
 module Variable : sig
   type t
 
-  (* Variable could be connected to input/output data flow of POU. *)
+  (** Variable could be connected to input/output data flow of POU. *)
   type direction = Input | Output
 
   val create : string -> TI.t -> t
@@ -175,24 +174,24 @@ module Variable : sig
   val set_direction : t -> direction -> t
 end
 
-(* Qualifier of IEC variable *)
+(** Qualifier of IEC variable *)
 type var_qualifier = VarQRetain | VarQNonRetain | VarQConstant
 
-(* Location prefixes for directly represented variables.
-   See 2.4.1.1 and Table 15 for explaination. *)
+(** Location prefixes for directly represented variables.
+    See 2.4.1.1 and Table 15 for explaination. *)
 type direct_var_location = DirVarLocI | DirVarLocQ | DirVarLocM
 
-(* Size prefixes for directly represented variables.
-   See 2.4.1.1 and Table 15 for explaination. *)
+(** Size prefixes for directly represented variables.
+    See 2.4.1.1 and Table 15 for explaination. *)
 and direct_var_size =
-  | DirVarSizeX (* single bit *)
-  | DirVarSizeNone (* single bit *)
-  | DirVarSizeB (* byte *)
-  | DirVarSizeW (* word (16 bits) *)
-  | DirVarSizeD (* double word (32 bits) *)
+  | DirVarSizeX (** single bit *)
+  | DirVarSizeNone (** single bit *)
+  | DirVarSizeB (** byte *)
+  | DirVarSizeW (** word (16 bits) *)
+  | DirVarSizeD (** double word (32 bits) *)
   | DirVarSizeL  (** quad word (64 bits) *)
 
-(* Variable specification *)
+(** Variable specification *)
 and var_spec =
   | VarSpec of var_qualifier option
   | VarSpecDirect of
@@ -205,12 +204,12 @@ and var_spec =
   | VarSpecInOut
   | VarSpecExternal of var_qualifier option
   | VarSpecGlobal of var_qualifier option
-  | VarSpecAccess of string (* access name *)
+  | VarSpecAccess of string (** access name *)
   | VarSpecTemp
   | VarSpecConfig of
-      string (* resource name *) * string (* program name *) * string (* fb name *)
+      string (** resource name *) * string (** program name *) * string (** fb name *)
 
-(* Declaration of IEC variable *)
+(** Declaration of IEC variable *)
 module VariableDecl : sig
   type t
 
@@ -219,11 +218,10 @@ module VariableDecl : sig
   val get_var : t -> Variable.t
 
   val set_qualifier : t -> var_qualifier -> t
-
-  (* Set qualifier for variable. Do nothing if variable can't accept qualifier. *)
+  (** Set qualifier for variable. Do nothing if variable can't accept qualifier. *)
 end
 
-(* Arbitrary expressions of ST language *)
+(** Arbitrary expressions of ST language *)
 type expr =
   | Nil of TI.t
   | Variable of Variable.t
@@ -237,7 +235,7 @@ val c_from_expr : expr -> constant option
 val c_from_expr_exn : expr -> constant
 (** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
 
-(* Function identifier *)
+(** Function identifier *)
 module Function : sig
   type t
 
@@ -251,15 +249,15 @@ module Function : sig
   (** Returns true if function declared in standard library. *)
 end
 
+(** Function declaration *)
 type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
   variables : VariableDecl.t list;
   statements : expr list;
 }
-(** Function declaration *)
 
-(* Function blocj identifier *)
+(** Function Block identifier *)
 module FunctionBlock : sig
   type t
 
@@ -272,22 +270,23 @@ module FunctionBlock : sig
   val is_std : t -> bool
 end
 
+(** Function block declaration *)
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VariableDecl.t list;
-  statements : expr list; (* return_ty : iec_data_type; *)
+  statements : expr list;
 }
-(** Function block declaration *)
 
 type program_decl = {
   is_retain : bool;
   name : string;
   variables : VariableDecl.t list;
-  (* Variables declared in this program *)
+  (** Variables declared in this program *)
   statements : expr list;
 }
 
-(* See: 6.8.2 Tasks *)
+(** Task configuration.
+    See: 6.8.2 Tasks *)
 module Task : sig
   type t
 
@@ -329,20 +328,18 @@ module ProgramConfig : sig
 end
 
 type resource_decl = {
-  name : string option;
-  (* Resource name is skipped in case of single resource *)
+  name : string option; (** Resource name. Can be is skipped in case of single resource *)
   tasks : Task.t list;
-  variables : VariableDecl.t list;
-  (* Global variables *)
-  programs : ProgramConfig.t list; (* Configuration of program instances. *)
+  variables : VariableDecl.t list; (** Global variables *)
+  programs : ProgramConfig.t list; (** Configuration of program instances. *)
 }
 
-(* See: 2.7 Configuration elements *)
+(** Configuration element.
+    See: 2.7 Configuration elements *)
 type configuration_decl = {
   name : string;
   resources : resource_decl list;
-  variables : VariableDecl.t list;
-  (* Global variables and access lists *)
+  variables : VariableDecl.t list; (** Global variables and access lists *)
   access_paths : string list;
 }
 
