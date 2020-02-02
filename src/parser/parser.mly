@@ -1461,9 +1461,6 @@ fb_body:
 prog_decl:
   | T_PROGRAM; n = prog_type_name; vdl = program_var_decls_list; ss = fb_body; T_END_PROGRAM;
   { {S.is_retain = false; S.name = n; S.variables = vdl; S.statements = ss} }
-  (* TODO: Generate an error *)
-  (* | PROGRAM n = prog_type_name END_PROGRAM; *)
-  (* { {S.is_retain = false; S.name = n; S.variables = []} } *)
 
 (* Helper for prog_decl *)
 program_var_decls_list:
@@ -1577,10 +1574,10 @@ resource_decl_list:
 
 (* Return S.resource_decl *)
 single_resource_decl:
-    | pis = prog_config_list
-    { { S.name = None; S.tasks = []; S.variables = []; S.programs = pis } }
     | ts = task_config_list; pis = prog_config_list
     { { S.name = None; S.tasks = ts; S.variables = []; S.programs = pis } }
+    | pis = prog_config_list
+    { { S.name = None; S.tasks = []; S.variables = []; S.programs = pis } }
 
 resource_name:
     | id = T_IDENTIFIER
@@ -1618,15 +1615,16 @@ access_path:
     {  }
     (* | dv = direct_variable
     {  } *)
-    (* | resource_name; T_DOT; pn = program_name; T_DOT fn = fb_name; T_DOT; v = symbolic_variable
+    (* | resource_name; T_DOT; pn = prog_name; T_DOT fn = fb_name; T_DOT; v = symbolic_variable
     {  } *)
-    | resource_name; T_DOT; program_name; T_DOT; symbolic_variable
+    | resource_name; T_DOT; prog_name; T_DOT; symbolic_variable
     {  }
-    (* | pn = program_name; T_DOT fn = fb_name; T_DOT; v = symbolic_variable
+    (* | pn = prog_name; T_DOT fn = fb_name; T_DOT; v = symbolic_variable
     {  } *)
-    | program_name; T_DOT; symbolic_variable
+    | prog_name; T_DOT; symbolic_variable
     {  }
 
+(* Return S.Variable.t *)
 global_var_access:
     | v = global_var_name;
     { v }
@@ -1644,23 +1642,25 @@ access_name:
         name
     }
 
-(* prog_output_access: *)
+prog_output_access:
+  | p = prog_name T_DOT v = symbolic_variable
+  { let n = S.ProgramConfig.get_name p in (n, v) }
 
-program_name:
-    | id = T_IDENTIFIER
-    {
-        let (name, ti) = id in
-        S.ProgramConfig.create name ti
-    }
+prog_name:
+  | id = T_IDENTIFIER
+  {
+    let (name, ti) = id in
+    S.ProgramConfig.create name ti
+  }
 
-(* Helper symbol for program_name *)
-program_name_qual:
-    | p = program_name;
-    { p }
-    | p = program_name; T_RETAIN
-    { S.ProgramConfig.set_qualifier p S.VarQRetain }
-    | p = program_name; T_NON_RETAIN
-    { S.ProgramConfig.set_qualifier p S.VarQNonRetain }
+(* Helper symbol for prog_name *)
+prog_name_qual:
+  | p = prog_name;
+  { p }
+  | p = prog_name; T_RETAIN
+  { S.ProgramConfig.set_qualifier p S.VarQRetain }
+  | p = prog_name; T_NON_RETAIN
+  { S.ProgramConfig.set_qualifier p S.VarQNonRetain }
 
 access_direction:
     | T_READ_WRITE
@@ -1669,14 +1669,16 @@ access_direction:
     {  }
 
 task_config:
-    | T_TASK t = task_name; task_init;
-    { t }
+    | T_TASK t = task_name; i = task_init;
+    {
+      t
+    }
 
 (* Helper symbol for task_config *)
 task_config_list:
-    | t = task_config;
+    | t = task_config; T_SEMICOLON
     { t :: [] }
-    | ts = task_config_list; t = task_config;
+    | ts = task_config_list; t = task_config; T_SEMICOLON
     { t :: ts }
 
 task_name:
@@ -1687,39 +1689,43 @@ task_name:
     }
 
 task_init:
-    | T_LBRACE T_SINGLE s = data_source; T_COMMA T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
+    | T_LPAREN T_SINGLE s = data_source; T_COMMA T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RPAREN
     { (Some s, Some i, Some p) }
-    | T_LBRACE T_SINGLE s = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
+    | T_LPAREN T_SINGLE T_ASSIGN s = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RPAREN
     { (Some s, None, Some p) }
-    | T_LBRACE T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
+    | T_LPAREN T_INTERVAL T_ASSIGN i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RPAREN
     { (None, Some i, Some p) }
-    | T_LBRACE T_PRIORITY T_ASSIGN p = unsigned_int; T_RBRACE
+    | T_LPAREN T_PRIORITY T_ASSIGN p = unsigned_int; T_RPAREN
     { (None, None, Some p) }
 
 data_source:
     | v = constant
-    { v }
-    (* | v = global_var_access
-    { v } *)
-    (* | v = program_output_reference
-    { v } *)
+    { let c = S.c_from_expr_exn v in S.Task.DSConstant(c) }
+    | v = global_var_access
+    { S.Task.DSGlobalVar(v) }
+    | out = prog_output_access
+    {
+      let (prog_name, var) = out in
+      S.Task.DSProgOutput(prog_name, var)
+    }
+    (* TODO: Need refactor direct_variable rule to return Variable.t. *)
     (* | v = direct_variable
-    { v } *)
+    { S.Task.DSGlobalVar(v) } *)
 
 prog_config:
-    | T_PROGRAM pc = program_name_qual; T_COLON prog_type_access;
+    | T_PROGRAM pc = prog_name_qual; T_COLON prog_type_access;
     { pc }
-    | T_PROGRAM pc = program_name_qual; T_COLON prog_type_access; T_LBRACE; cvs = prog_conf_elems; T_RBRACE
+    | T_PROGRAM pc = prog_name_qual; T_COLON prog_type_access; T_LBRACE; cvs = prog_conf_elems; T_RBRACE
     {
         let pc = S.ProgramConfig.set_conn_vars pc cvs in
         pc
     }
-    | T_PROGRAM pc = program_name_qual; T_WITH; t = task_name; T_COLON ty = prog_type_name;
+    | T_PROGRAM pc = prog_name_qual; T_WITH; t = task_name; T_COLON ty = prog_type_name;
     {
         let pc = S.ProgramConfig.set_task pc t in
         pc
     }
-    | T_PROGRAM pc = program_name_qual; T_WITH; t = task_name; T_COLON ty = prog_type_name; T_LBRACE; cvs = prog_conf_elems; T_RBRACE
+    | T_PROGRAM pc = prog_name_qual; T_WITH; t = task_name; T_COLON ty = prog_type_name; T_LBRACE; cvs = prog_conf_elems; T_RBRACE
     {
         let pc = S.ProgramConfig.set_conn_vars pc cvs in
         let pc = S.ProgramConfig.set_task pc t in
@@ -1779,9 +1785,9 @@ config_init:
     { is }
 
 config_inst_init:
-    | resource_name; T_DOT; program_name; T_DOT;
+    | resource_name; T_DOT; prog_name; T_DOT;
     {  }
-    (* | resource_name; T_DOT; program_name; T_DOT; fn = fb_name T_DOT;
+    (* | resource_name; T_DOT; prog_name; T_DOT; fn = fb_name T_DOT;
     {  } *)
 
 (* Helper symbol for config_inst_init *)

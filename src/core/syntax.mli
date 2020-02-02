@@ -110,7 +110,7 @@ and single_element_ty_spec =
 (* Representation of time interval
    According the IEC61131-3 3rd edition grammar, all interval values defined as
    fix_point. That means that these values could be represented as float values.
- *)
+*)
 module TimeValue : sig
   type t
 
@@ -190,9 +190,7 @@ and direct_var_size =
   | DirVarSizeB (* byte *)
   | DirVarSizeW (* word (16 bits) *)
   | DirVarSizeD (* double word (32 bits) *)
-  | DirVarSizeL
-
-(* quad word (64 bits) *)
+  | DirVarSizeL  (** quad word (64 bits) *)
 
 (* Variable specification *)
 and var_spec =
@@ -201,7 +199,6 @@ and var_spec =
       direct_var_location
       * direct_var_size option
       * int list
-  (* address *)
       * var_qualifier option
   | VarSpecOut of var_qualifier option
   | VarSpecIn of var_qualifier option
@@ -211,9 +208,7 @@ and var_spec =
   | VarSpecAccess of string (* access name *)
   | VarSpecTemp
   | VarSpecConfig of
-      string (* resource name *) * string (* program name *) * string
-
-(* fb name *)
+      string (* resource name *) * string (* program name *) * string (* fb name *)
 
 (* Declaration of IEC variable *)
 module VariableDecl : sig
@@ -235,6 +230,12 @@ type expr =
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
+
+val c_from_expr : expr -> constant option
+(** Convert given expr to const. *)
+
+val c_from_expr_exn : expr -> constant
+(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
 
 (* Function identifier *)
 module Function : sig
@@ -286,11 +287,27 @@ type program_decl = {
   statements : expr list;
 }
 
-(* See: 2.7.2 Tasks *)
+(* See: 6.8.2 Tasks *)
 module Task : sig
   type t
 
+  (** Data sources used in task configruation *)
+  type data_source =
+    | DSConstant of constant
+    | DSGlobalVar of Variable.t
+    | DSDirectVar of Variable.t
+    | DSProgOutput of string (** program name *) * Variable.t
+
   val create : string -> TI.t -> t
+
+  val set_interval : t -> data_source -> t
+  (** Set task interval input. *)
+
+  val set_single : t -> data_source -> t
+  (** Set task single input. *)
+
+  val set_priority : t -> int -> t
+  (** Set task priority value. *)
 end
 
 module ProgramConfig : sig
@@ -306,6 +323,9 @@ module ProgramConfig : sig
 
   val set_conn_vars : t -> Variable.t list -> t
   (** Set connected variables. *)
+
+  val get_name : t -> string
+  (** Get name of a program. *)
 end
 
 type resource_decl = {

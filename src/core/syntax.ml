@@ -185,20 +185,20 @@ let c_get_ti c =
 let c_add c1 c2 =
   match (c1, c2) with
   | CInteger (v1, ti), CInteger (v2, _) ->
-      let v = v1 + v2 in
-      CInteger (v, ti)
+    let v = v1 + v2 in
+    CInteger (v, ti)
   | CBool (v1, ti), CBool (v2, _) ->
-      let v = v1 || v2 in
-      CBool (v, ti)
+    let v = v1 || v2 in
+    CBool (v, ti)
   | CReal (v1, ti), CReal (v2, _) ->
-      let v = v1 +. v2 in
-      CReal (v, ti)
+    let v = v1 +. v2 in
+    CReal (v, ti)
   | CString (v1, ti), CString (v2, _) ->
-      let v = v1 ^ v2 in
-      CString (v, ti)
+    let v = v1 ^ v2 in
+    CString (v, ti)
   | CTimeValue (v1, ti), CTimeValue (v2, _) ->
-      let v = TimeValue.( + ) v1 v2 in
-      CTimeValue (v, ti)
+    let v = TimeValue.( + ) v1 v2 in
+    CTimeValue (v, ti)
   | _ -> raise @@ InternalError "Incompatible types"
 
 module Variable = struct
@@ -245,7 +245,7 @@ and var_spec =
       direct_var_location
       * direct_var_size option
       * int list
-      (* address *)
+  (* address *)
       * var_qualifier option
   | VarSpecOut of var_qualifier option
   | VarSpecIn of var_qualifier option
@@ -270,8 +270,8 @@ module VariableDecl = struct
     match d.spec with
     | VarSpec _ | VarSpecDirect _ | VarSpecOut _ | VarSpecIn _
     | VarSpecExternal _ | VarSpecGlobal _ ->
-        let s = VarSpec (Some qa) in
-        { d with spec = s }
+      let s = VarSpec (Some qa) in
+      { d with spec = s }
     | VarSpecInOut | VarSpecAccess _ | VarSpecTemp | VarSpecConfig _ -> d
 end
 
@@ -282,6 +282,14 @@ type expr =
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
+
+let c_from_expr = function
+    | Constant(v) -> Some v
+    | _ -> None
+
+let c_from_expr_exn = function
+    | Constant(v) -> v
+    | _ -> raise @@ InternalError "Incompatible types"
 
 module Function = struct
   type t = { name : string; ti : TI.t; is_std : bool }
@@ -332,17 +340,33 @@ type program_decl = {
 }
 
 module Task = struct
+
   type t = {
     name : string;
     ti : TI.t;
-    interval : Core.Time.t option;
+    interval : data_source option;
+    single : data_source option;
     priority : int option;
   }
+  (** Data sources used in task configruation *)
+  and data_source =
+    | DSConstant of constant
+    | DSGlobalVar of Variable.t
+    | DSDirectVar of Variable.t
+    | DSProgOutput of string * Variable.t
 
   let create name ti =
     let interval = None in
+    let single = None in
     let priority = None in
-    { name; ti; interval; priority }
+    { name; ti; interval; single; priority }
+
+  let set_interval t v = {t with interval = Some v}
+
+  let set_single t v = {t with single = Some v}
+
+  let set_priority t v = {t with priority = Some v}
+
 end
 
 module ProgramConfig = struct
@@ -365,6 +389,8 @@ module ProgramConfig = struct
   let set_task pc t = { pc with task = Some t }
 
   let set_conn_vars pc conn_vars = { pc with conn_vars }
+
+  let get_name t = t.name
 end
 
 type resource_decl = {
