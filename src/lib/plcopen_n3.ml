@@ -168,10 +168,19 @@ let reserved_keywords =
     "UDINT";
   ]
 
-let check (variables : S.VariableDecl.t list) =
+let check (variables : S.VarDecl.t list) =
   let check_name var =
-    let name = S.Variable.get_name var in
-    let ti = S.Variable.get_ti var in
+    let name =
+      match var with
+      | S.SymVar v -> S.SymVar.get_name v
+      | S.DirVar v -> (
+          match S.DirVar.get_name v with Some n -> n | None -> "" )
+    in
+    let ti =
+      match var with
+      | S.SymVar v -> S.SymVar.get_ti v
+      | S.DirVar v -> S.DirVar.get_ti v
+    in
     let m = List.mem reserved_keywords name ~equal:String.equal in
     if m then
       Printf.printf
@@ -180,5 +189,5 @@ let check (variables : S.VariableDecl.t list) =
         name ti.linenr ti.col
   in
   List.iter variables ~f:(fun d ->
-      let var = S.VariableDecl.get_var d in
+      let var = S.VarDecl.get_var d in
       check_name var)

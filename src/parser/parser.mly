@@ -28,6 +28,12 @@
   let cget_int_val = function
     | S.CInteger (v, _) -> v
     | _ -> E.raise E.InternalError "Unknown constant type"
+
+  let mk_global_decl v =
+    let vv = S.SymVar(v) in
+    let s = S.VarDecl.SpecGlobal(None) in
+    let vd = S.VarDecl.create vv s in
+    vd
 %}
 
 (* {{{ Tokens *)
@@ -874,7 +880,7 @@ direct_variable:
   | T_PERCENT loc = location_prefix; sz = size_prefix; pcs = unsigned_int_list;
   {
     let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
-    S.VarSpecDirect(loc, Some sz, pvals, None)
+    S.VarDecl.SpecDirect(None)
   }
 
 (* Helper symbol for direct_variable.
@@ -913,11 +919,11 @@ variable:
   (* | v = direct_variable *)
   (* | {} *)
   | v = symbolic_variable
-  { v }
+  { S.SymVar(v) }
 
 symbolic_variable:
-  | v = variable_name
-  { v }
+  | out = variable_name
+  { let (name, ti) = out in S.SymVar.create name ti }
   (* | multi_elem_var *)
 
 (* var_access: *)
@@ -926,7 +932,7 @@ variable_name:
   | id = T_IDENTIFIER
   {
     let (name, ti) = id in
-    S.Variable.create name ti
+    (name, ti)
   }
 
 (* multi_elem_var:
@@ -950,29 +956,32 @@ input_decls:
   | T_VAR_INPUT T_RETAIN vds = input_decl T_END_VAR
   {
     let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (S.VariableDecl.set_qualifier v S.VarQRetain)) vdsr
+    List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QRetain)) vdsr
   }
   | T_VAR_INPUT T_NON_RETAIN vds = input_decl T_END_VAR
   {
     let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (S.VariableDecl.set_qualifier v S.VarQNonRetain)) vdsr
+    List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QNonRetain)) vdsr
   }
 
 input_decl:
-  | vl = var_decl_init_list
+  | vs = var_decl_init_list
   {
-    let vlr = List.rev vl in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpecIn(None) in
-      S.VariableDecl.create v s
-    )) vlr
+      let s = S.VarDecl.SpecIn(None) in
+      S.VarDecl.create v s
+    )) vsr
   }
 
 (* edge_decl: *)
 
 var_decl_init:
   | vs = variable_list; T_COLON; simple_spec_init;
-  { vs }
+  { List.map ~f:(fun (n, ti) -> (
+    let v = S.SymVar.create n ti in
+    S.SymVar(v)
+  )) vs }
 
 (* Helper symbol for var_decl_init *)
 var_decl_init_list:
@@ -1013,47 +1022,58 @@ fb_name:
 (* fb_instance_name: *)
 
 output_decls:
-  | T_VAR_OUTPUT vl = var_decl_init_list T_END_VAR
+  | T_VAR_OUTPUT vs = var_decl_init_list T_END_VAR
   {
-    let vlr = List.rev vl in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpecOut(None) in
-      S.VariableDecl.create v s
-    )) vlr
+      let s = S.VarDecl.SpecOut(None) in
+      S.VarDecl.create v s
+    )) vsr
   }
-  | T_VAR_OUTPUT T_RETAIN vl = var_decl_init_list T_END_VAR
+  | T_VAR_OUTPUT T_RETAIN vs = var_decl_init_list T_END_VAR
   {
-    let vlr = List.rev vl in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpecOut(Some S.VarQRetain) in
-      S.VariableDecl.create v s
-    )) vlr
+      let s = S.VarDecl.SpecOut(Some S.VarDecl.QRetain) in
+      S.VarDecl.create v s
+    )) vsr
   }
-  | T_VAR_OUTPUT T_NON_RETAIN vl = var_decl_init_list T_END_VAR
+  | T_VAR_OUTPUT T_NON_RETAIN vs = var_decl_init_list T_END_VAR
   {
-    let vlr = List.rev vl in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpecOut(Some S.VarQNonRetain) in
-      S.VariableDecl.create v s
-    )) vlr
+      let s = S.VarDecl.SpecOut(Some S.VarDecl.QNonRetain) in
+      S.VarDecl.create v s
+    )) vsr
   }
 
 (* output_decl: *)
 
 in_out_decls:
-  | T_VAR_IN_OUT  vl = var_decl_list T_END_VAR
-  {
-    let vlr = List.rev vl in
-    List.map ~f:(fun v -> S.VariableDecl.create v S.VarSpecInOut) vlr
-  }
+  | T_VAR_IN_OUT vds = in_out_var_decl T_END_VAR
+  { vds }
 
-(* in_out_var_decl: *)
+(* Return list of S.VarDecl.t *)
+in_out_var_decl:
+  | vs = var_decl_list
+  {
+    let vsr = List.rev vs in
+    List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecInOut) vsr
+  }
+  (* | vs = array_conform_decl
+  {  } *)
+  (* | vs = fb_decl_no_init
+  {  } *)
 
 var_decl:
-  | vs = temp_var_decl
-  { vs }
-  (* | f = fb_name_decl
-  { f } *)
+  | vs = variable_list; T_COLON; simple_spec;
+  { List.map ~f:(fun (n, ti) -> (
+    let v = S.SymVar.create n ti in
+    S.SymVar(v)
+  )) vs }
+  (* | vs = variable_list; T_COLON; str_var_decl; *)
+  (* | vs = variable_list; T_COLON; array_var_decl; *)
+  (* | vs = variable_list; T_COLON; struct_var_decl; *)
 
 (* Helper symbol for var_decl *)
 var_decl_list:
@@ -1067,31 +1087,31 @@ var_decl_list:
 (* struct_var_decl: *)
 
 var_decls:
-  | T_VAR vds = var_decl_init_list T_END_VAR
+  | T_VAR vs = var_decl_init_list T_END_VAR
   {
-    let vdsr = List.rev vds in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpec(None) in
-      S.VariableDecl.create v s
-    )) vdsr
+      let s = S.VarDecl.Spec(None) in
+      S.VarDecl.create v s
+    )) vsr
   }
-  | T_VAR T_RETAIN vds = var_decl_init_list T_END_VAR
+  | T_VAR T_RETAIN vs = var_decl_init_list T_END_VAR
   {
-    let vdsr = List.rev vds in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpec(Some S.VarQRetain) in
-        S.VariableDecl.create v s
-    )) vdsr
+      let s = S.VarDecl.Spec(Some S.VarDecl.QRetain) in
+      S.VarDecl.create v s
+    )) vsr
   }
 
 retain_var_decls:
-  | T_VAR T_RETAIN vds = var_decl_init_list T_END_VAR
+  | T_VAR T_RETAIN vs = var_decl_init_list T_END_VAR
   {
-    let vdsr = List.rev vds in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpec(Some S.VarQRetain) in
-        S.VariableDecl.create v s
-    )) vdsr
+      let s = S.VarDecl.Spec(Some S.VarDecl.QRetain) in
+      S.VarDecl.create v s
+    )) vsr
   }
 
 (* loc_var_decls: *)
@@ -1099,49 +1119,49 @@ retain_var_decls:
 (* loc_var_decl: *)
 
 temp_var_decls:
-  | T_VAR_TEMP vl = temp_decl_list T_END_VAR
-  {
-    let vlr = List.rev vl in
-    List.map ~f:(fun v -> S.VariableDecl.create v S.VarSpecTemp) vlr
-  }
-
-(* Helper symbol for temp_var_decls *)
-temp_decl_list:
-  | v = temp_var_decl T_SEMICOLON
-  { v }
-  | vs = temp_decl_list; v = temp_var_decl T_SEMICOLON
-  { List.append vs v }
+  | T_VAR_TEMP vds = temp_var_decl T_END_VAR
+  { vds }
+  (* | ref_var_decl *)
+  (* | interface_var_decl *)
 
 (* Helper symbol for temp_var_decls_list.
-   Return S.Variable list *)
+   Return S.VarDecl.t list *)
 temp_var_decl:
-  | vs = var1_init_decl
-  { vs }
+  | vs = var_decl_list
+  {
+    let vsr = List.rev vs in
+    List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecTemp) vsr
+  }
 
 external_var_decls:
   | T_VAR_EXTERNAL vl = external_decl_list T_END_VAR
   {
     let vlr = List.rev vl in
     List.map ~f:(fun v -> (
-      let s = S.VarSpecGlobal(None) in
-      S.VariableDecl.create v s
+      let s = S.VarDecl.SpecGlobal(None) in
+      S.VarDecl.create v s
     )) vlr
   }
   | T_VAR_EXTERNAL T_RETAIN vl = external_decl_list T_END_VAR
   {
     let vlr = List.rev vl in
     List.map ~f:(fun v -> (
-      let s = S.VarSpecGlobal(Some S.VarQRetain) in
-      S.VariableDecl.create v s
+      let s = S.VarDecl.SpecGlobal(Some S.VarDecl.QRetain) in
+      S.VarDecl.create v s
     )) vlr
   }
 
-(* Return S.Variable list *)
+(* Return S.variable list *)
 external_decl:
-  | v = variable_name T_COLON  simple_spec
-  { v }
+  | out = variable_name T_COLON  simple_spec
+  {
+    let (n, ti) = out in
+    let v = S.SymVar.create n ti in
+    let vv = S.SymVar(v) in
+    vv
+  }
 
-(* Helper symbol for external_decl. *)
+(* Helper symbol for external_decl *)
 external_decl_list:
   | v = external_decl T_SEMICOLON
   { v :: [] }
@@ -1151,22 +1171,20 @@ external_decl_list:
 global_var_name:
   | id = T_IDENTIFIER
   {
-    let (name, ti) = id in
-    S.Variable.create name ti
+    let (n, ti) = id in
+    S.SymVar.create n ti
   }
 
 (* Helper symbol for global_var_name *)
 global_var_list:
-  | v = global_var_name;
+  | out = global_var_name;
   {
-    let s = S.VarSpecGlobal(None) in
-    let vd = S.VariableDecl.create v s in
+    let vd = mk_global_decl out in
     vd :: []
   }
-  | vds = global_var_list; T_COMMA v = global_var_name
+  | vds = global_var_list; T_COMMA out = global_var_name
   {
-    let s = S.VarSpecGlobal(None) in
-    let vd = S.VariableDecl.create v s in
+    let vd = mk_global_decl out in
     vd :: vds
   }
 
@@ -1176,15 +1194,15 @@ global_var_decls:
   | T_VAR_GLOBAL T_RETAIN vds = global_var_decl_list; T_END_VAR
   {
     let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (S.VariableDecl.set_qualifier v S.VarQNonRetain)) vdsr
+    List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QNonRetain)) vdsr
   }
   | T_VAR_GLOBAL T_CONSTANT vds = global_var_decl_list; T_END_VAR
   {
     let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (S.VariableDecl.set_qualifier v S.VarQConstant)) vdsr
+    List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QConstant)) vdsr
   }
 
-(* Return S.VariableDecl.t list *)
+(* Return S.VarDecl.t list *)
 global_var_decl:
   | ss = global_var_spec; T_COLON loc_var_spec_init;
   { ss }
@@ -1196,14 +1214,15 @@ global_var_decl_list:
   | vs = global_var_decl_list; v = global_var_decl T_SEMICOLON
   { List.append vs v }
 
-(* Return S.VariableDecl.t list *)
+(* Return S.VarDecl.t list *)
 global_var_spec:
   | vs = global_var_list
   { vs }
   | v = global_var_name; l = located_at
   {
-    let s = S.VarSpecGlobal(None) in
-    let vd = S.VariableDecl.create v s in
+    let vv = S.SymVar(v) in
+    let s = S.VarDecl.SpecGlobal(None) in
+    let vd = S.VarDecl.create vv s in
     [vd]
   }
 
@@ -1234,10 +1253,13 @@ loc_partly_var_decl:
     { List.rev vl } (* TODO: add qualifier *)
 
 loc_partly_var:
-    | v = variable_name; l = incompl_location; T_COLON s = var_spec
+    | out = variable_name; l = incompl_location; T_COLON s = var_spec
     {
-        let s = S.VarSpecDirect(l, None, [], None) in
-        S.VariableDecl.create v s
+        let (n, ti) = out in
+        let v = S.SymVar.create n ti in
+        let vv = S.SymVar(v) in
+        let s = S.VarDecl.SpecDirect(None) in
+        S.VarDecl.create vv s
     }
 
 (* Helper symbol for loc_partly_var *)
@@ -1248,13 +1270,14 @@ incompl_located_var_list:
     { v :: vs }
 
 (* Helper symbol for loc_partly_var *)
+(* TODO: Not keywords *)
 incompl_location:
     | T_AT T_PERCENT T_I T_MUL
-    { S.DirVarLocI }
+    { S.DirVar.LocI }
     | T_AT T_PERCENT T_Q T_MUL
-    { S.DirVarLocQ }
+    { S.DirVar.LocQ }
     | T_AT T_PERCENT T_M T_MUL
-    { S.DirVarLocM }
+    { S.DirVar.LocM }
 
 var_spec:
     | ty = simple_spec
@@ -1409,13 +1432,13 @@ other_var_decls:
     { vds }
 
 no_retain_var_decls:
-  | T_VAR T_NON_RETAIN vds = var_decl_init_list T_END_VAR
+  | T_VAR T_NON_RETAIN vs = var_decl_init_list T_END_VAR
   {
-    let vdsr = List.rev vds in
+    let vsr = List.rev vs in
     List.map ~f:(fun v -> (
-      let s = S.VarSpec(Some S.VarQNonRetain) in
-        S.VariableDecl.create v s
-    )) vdsr
+      let s = S.VarDecl.Spec(Some S.VarDecl.QNonRetain) in
+      S.VarDecl.create v s
+    )) vsr
   }
 
 fb_body:
@@ -1504,19 +1527,20 @@ prog_access_decls:
   | T_VAR_ACCESS vl = prog_access_decl_list T_END_VAR
   { List.rev vl }
 
+prog_access_decl:
+    | an = access_name T_COLON v = symbolic_variable T_COLON data_type_access
+    {
+      let vv = S.SymVar(v) in
+      let s = S.VarDecl.SpecAccess(an) in
+      S.VarDecl.create vv s
+    }
+
 (* Helper for prog_access_decls *)
 prog_access_decl_list:
     | v = prog_access_decl T_SEMICOLON
     { v :: [] }
     | vs = prog_access_decl_list; v = prog_access_decl T_SEMICOLON
     { v :: vs }
-
-prog_access_decl:
-    | an = access_name T_COLON v = symbolic_variable T_COLON data_type_access
-    {
-        let s = S.VarSpecAccess(an) in
-        S.VariableDecl.create v s
-    }
 (* }}} *)
 
 (* {{{ Table 54-61 -- SFC *)
@@ -1624,16 +1648,16 @@ access_path:
     | prog_name; T_DOT; symbolic_variable
     {  }
 
-(* Return S.Variable.t *)
+(* Return S.SymVar *)
 global_var_access:
-    | v = global_var_name;
-    { v }
-    | resource_name_list; v = global_var_name;
-    { v }
-    | v = global_var_name; struct_elem_name_list
-    { v }
-    | resource_name_list; v = global_var_name; struct_elem_name_list
-    { v }
+    | out = global_var_name;
+    { S.SymVar(out) }
+    | resource_name_list; out = global_var_name;
+    { S.SymVar(out) }
+    | out = global_var_name; struct_elem_name_list
+    { S.SymVar(out) }
+    | resource_name_list; out = global_var_name; struct_elem_name_list
+    { S.SymVar(out) }
 
 access_name:
     | id = T_IDENTIFIER
@@ -1644,7 +1668,10 @@ access_name:
 
 prog_output_access:
   | p = prog_name T_DOT v = symbolic_variable
-  { let n = S.ProgramConfig.get_name p in (n, v) }
+  {
+    let vv = S.SymVar(v) in
+    let n = S.ProgramConfig.get_name p in (n, vv)
+  }
 
 prog_name:
   | id = T_IDENTIFIER
@@ -1658,9 +1685,9 @@ prog_name_qual:
   | p = prog_name;
   { p }
   | p = prog_name; T_RETAIN
-  { S.ProgramConfig.set_qualifier p S.VarQRetain }
+  { S.ProgramConfig.set_qualifier p S.ProgramConfig.QRetain }
   | p = prog_name; T_NON_RETAIN
-  { S.ProgramConfig.set_qualifier p S.VarQNonRetain }
+  { S.ProgramConfig.set_qualifier p S.ProgramConfig.QNonRetain }
 
 access_direction:
     | T_READ_WRITE
@@ -1759,7 +1786,7 @@ prog_conf_elem:
 prog_cnxn:
     (* Input *)
     | v = symbolic_variable; T_ASSIGN; prog_data_source
-    { v }
+    { S.SymVar(v) }
     (* Output *)
     (* | v = symbolic_variable; T_SENDTO; data_sink
     { v } *)
@@ -1972,33 +1999,29 @@ generic_type_name:
     | T_ANY_DATE
     { S.ANY_DATE }
 
-var1_init_decl:
-    | vs = variable_list; T_COLON; simple_spec_init;
-    { vs }
-
 (* TODO: They are not reserved keywords. *)
 location_prefix:
     | T_I
-    { S.DirVarLocI }
+    { S.DirVar.LocI }
     | T_Q
-    { S.DirVarLocQ }
+    { S.DirVar.LocQ }
     | T_M
-    { S.DirVarLocM }
+    { S.DirVar.LocM }
 
 (* TODO: They are not reserved keywords. *)
 size_prefix:
     | T_NIL
-    { S.DirVarSizeNone }
+    { S.DirVar.SizeNone }
     | T_X
-    { S.DirVarSizeX }
+    { S.DirVar.SizeX }
     | T_B
-    { S.DirVarSizeB }
+    { S.DirVar.SizeB }
     | T_W
-    { S.DirVarSizeW }
+    { S.DirVar.SizeW }
     | T_D
-    { S.DirVarSizeD }
+    { S.DirVar.SizeD }
     | T_L
-    { S.DirVarSizeL }
+    { S.DirVar.SizeL }
 
 compare_expr_operator:
     | T_GT

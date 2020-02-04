@@ -156,75 +156,94 @@ val c_get_ti : constant -> TI.t
 val c_add : constant -> constant -> constant
 (** Add value to existing constant. *)
 
-(** Variable identifier *)
-module Variable : sig
-  type t
+(** TODO: *)
+(* module Identifier : sig
+   type t
 
-  (** Variable could be connected to input/output data flow of POU. *)
-  type direction = Input | Output
+   val create : string -> TI.t -> t
+
+   val get_name : t -> string
+
+   val get_ti : t -> TI.t
+   end *)
+
+(** Symbolically represented variable *)
+module SymVar : sig
+  type t
 
   val create : string -> TI.t -> t
 
   val get_name : t -> string
 
   val get_ti : t -> TI.t
+end
+
+(** Directly represented variable *)
+module DirVar : sig
+  type t
+
+  (** Location prefixes for directly represented variables.
+      See 6.5.5.2 for explainations. *)
+  type location = LocI | LocQ | LocM
+
+  (** Size prefixes for directly represented variables. *)
+  type size =
+    | SizeX (** single bit *)
+    | SizeNone (** single bit *)
+    | SizeB (** byte *)
+    | SizeW (** word (16 bits) *)
+    | SizeD (** double word (32 bits) *)
+    | SizeL  (** quad word (64 bits) *)
+
+  val create : string option -> TI.t -> location -> size option -> int list -> t
+
+  val get_name : t -> string option
+
+  val get_ti : t -> TI.t
+end
+
+type variable = SymVar of SymVar.t | DirVar of DirVar.t
+
+(** Declaration of the IEC variable *)
+module VarDecl : sig
+  type t
+
+  (** Variable could be connected to input/output data flow of POU. *)
+  type direction = Input | Output
+
+  (** Qualifier of IEC variable *)
+  type qualifier = QRetain | QNonRetain | QConstant
+
+  (** Variable specification *)
+  type spec =
+    | Spec of qualifier option
+    | SpecDirect of qualifier option
+    | SpecOut of qualifier option
+    | SpecIn of qualifier option
+    | SpecInOut
+    | SpecExternal of qualifier option
+    | SpecGlobal of qualifier option
+    | SpecAccess of string (** access name *)
+    | SpecTemp
+    | SpecConfig of
+        string (** resource name *) * string (** program name *) * string (** fb name *)
+
+  val create : variable -> spec -> t
+
+  val get_var : t -> variable
+
+  val set_qualifier_exn : t -> qualifier -> t
+  (** Set qualifier for variable. Raise an exception if this variable doesn't support qualifiers. *)
 
   val get_direction : t -> direction option
 
   val set_direction : t -> direction -> t
 end
 
-(** Qualifier of IEC variable *)
-type var_qualifier = VarQRetain | VarQNonRetain | VarQConstant
-
-(** Location prefixes for directly represented variables.
-    See 2.4.1.1 and Table 15 for explaination. *)
-type direct_var_location = DirVarLocI | DirVarLocQ | DirVarLocM
-
-(** Size prefixes for directly represented variables.
-    See 2.4.1.1 and Table 15 for explaination. *)
-and direct_var_size =
-  | DirVarSizeX (** single bit *)
-  | DirVarSizeNone (** single bit *)
-  | DirVarSizeB (** byte *)
-  | DirVarSizeW (** word (16 bits) *)
-  | DirVarSizeD (** double word (32 bits) *)
-  | DirVarSizeL  (** quad word (64 bits) *)
-
-(** Variable specification *)
-and var_spec =
-  | VarSpec of var_qualifier option
-  | VarSpecDirect of
-      direct_var_location
-      * direct_var_size option
-      * int list
-      * var_qualifier option
-  | VarSpecOut of var_qualifier option
-  | VarSpecIn of var_qualifier option
-  | VarSpecInOut
-  | VarSpecExternal of var_qualifier option
-  | VarSpecGlobal of var_qualifier option
-  | VarSpecAccess of string (** access name *)
-  | VarSpecTemp
-  | VarSpecConfig of
-      string (** resource name *) * string (** program name *) * string (** fb name *)
-
-(** Declaration of IEC variable *)
-module VariableDecl : sig
-  type t
-
-  val create : Variable.t -> var_spec -> t
-
-  val get_var : t -> Variable.t
-
-  val set_qualifier : t -> var_qualifier -> t
-  (** Set qualifier for variable. Do nothing if variable can't accept qualifier. *)
-end
-
 (** Arbitrary expressions of ST language *)
 type expr =
   | Nil of TI.t
-  | Variable of Variable.t
+  | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
@@ -253,7 +272,7 @@ end
 type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   statements : expr list;
 }
 
@@ -273,14 +292,14 @@ end
 (** Function block declaration *)
 type fb_decl = {
   id : FunctionBlock.t;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   statements : expr list;
 }
 
 type program_decl = {
   is_retain : bool;
   name : string;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   (** Variables declared in this program *)
   statements : expr list;
 }
@@ -293,9 +312,9 @@ module Task : sig
   (** Data sources used in task configruation *)
   type data_source =
     | DSConstant of constant
-    | DSGlobalVar of Variable.t
-    | DSDirectVar of Variable.t
-    | DSProgOutput of string (** program name *) * Variable.t
+    | DSGlobalVar of variable
+    | DSDirectVar of variable
+    | DSProgOutput of string (** program name *) * variable
 
   val create : string -> TI.t -> t
 
@@ -312,15 +331,18 @@ end
 module ProgramConfig : sig
   type t
 
+  (** Qualifier of IEC program *)
+  type qualifier = QRetain | QNonRetain | QConstant
+
   val create : string -> TI.t -> t
 
-  val set_qualifier : t -> var_qualifier -> t
+  val set_qualifier : t -> qualifier -> t
   (** Set program qualifier. *)
 
   val set_task : t -> Task.t -> t
   (** Set task configuration. *)
 
-  val set_conn_vars : t -> Variable.t list -> t
+  val set_conn_vars : t -> variable list -> t
   (** Set connected variables. *)
 
   val get_name : t -> string
@@ -330,7 +352,7 @@ end
 type resource_decl = {
   name : string option; (** Resource name. Can be is skipped in case of single resource *)
   tasks : Task.t list;
-  variables : VariableDecl.t list; (** Global variables *)
+  variables : VarDecl.t list; (** Global variables *)
   programs : ProgramConfig.t list; (** Configuration of program instances. *)
 }
 
@@ -339,7 +361,7 @@ type resource_decl = {
 type configuration_decl = {
   name : string;
   resources : resource_decl list;
-  variables : VariableDecl.t list; (** Global variables and access lists *)
+  variables : VarDecl.t list; (** Global variables and access lists *)
   access_paths : string list;
 }
 

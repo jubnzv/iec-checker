@@ -1,7 +1,8 @@
 (** This module describes all common elements that which make up programming
-   model of Structured Text language. See Annex B of IEC61131-3 for reference. *)
+    model of Structured Text language. See Annex B of IEC61131-3 for reference. *)
 open Core_kernel
 module TI = Tok_info
+module E = Error
 
 exception InternalError of string
 
@@ -82,7 +83,7 @@ and derived_ty =
 and iec_array_size = Capacity of int | Range of int * int
 
 and iec_array_type_spec = {
- size : iec_array_size;
+  size : iec_array_size;
 }
 
 and iec_structure_type_element = {
@@ -197,83 +198,95 @@ let c_add c1 c2 =
     CTimeValue (v, ti)
   | _ -> raise @@ InternalError "Incompatible types"
 
-module Variable = struct
-  type direction = Input | Output
-
-  type t = { name : string; ti : TI.t; dir : direction option }
+module SymVar = struct
+  type t = { name : string; ti : TI.t }
 
   let create name ti =
-    let dir = None in
-    { name; ti; dir }
+    { name; ti }
 
   let get_name var = var.name
 
   let get_ti var = var.ti
-
-  let get_direction var = var.dir
-
-  let set_direction var d = { var with dir = Some d }
 end
 
-type var_qualifier = VarQRetain | VarQNonRetain | VarQConstant
+module DirVar = struct
+  type location = LocI | LocQ | LocM
 
-type direct_var_location = DirVarLocI | DirVarLocQ | DirVarLocM
+  type size =
+    | SizeX (** single bit *)
+    | SizeNone (** single bit *)
+    | SizeB (** byte *)
+    | SizeW (** word (16 bits) *)
+    | SizeD (** double word (32 bits) *)
+    | SizeL  (** quad word (64 bits) *)
 
-and direct_var_size =
-  | DirVarSizeX
-  | DirVarSizeNone
-  | DirVarSizeB
-  | DirVarSizeW
-  | DirVarSizeD
-  | DirVarSizeL
+  type t = { name: string option; ti: TI.t; loc: location; sz: size option; path: int list; }
 
-and var_spec =
-  | VarSpec of var_qualifier option
-  | VarSpecDirect of
-      direct_var_location
-      * direct_var_size option
-      * int list
-      * var_qualifier option
-  | VarSpecOut of var_qualifier option
-  | VarSpecIn of var_qualifier option
-  | VarSpecInOut
-  | VarSpecExternal of var_qualifier option
-  | VarSpecGlobal of var_qualifier option
-  | VarSpecAccess of string (* access name *)
-  | VarSpecTemp
-  | VarSpecConfig of
-      string * string * string
+  let create name ti loc sz path =
+    { name; ti; loc; sz; path; }
 
-module VariableDecl = struct
-  type t = { var : Variable.t; spec : var_spec }
+  let get_name var = var.name
 
-  let create var spec = { var; spec }
+  let get_ti var = var.ti
+end
 
-  let get_var d = d.var
+type variable = SymVar of SymVar.t | DirVar of DirVar.t
 
-  let set_qualifier d qa =
-    match d.spec with
-    | VarSpec _ | VarSpecDirect _ | VarSpecOut _ | VarSpecIn _
-    | VarSpecExternal _ | VarSpecGlobal _ ->
-      let s = VarSpec (Some qa) in
-      { d with spec = s }
-    | VarSpecInOut | VarSpecAccess _ | VarSpecTemp | VarSpecConfig _ -> d
+module VarDecl = struct
+
+  type direction = Input | Output
+
+  type qualifier = QRetain | QNonRetain | QConstant
+
+  type spec =
+    | Spec of qualifier option
+    | SpecDirect of qualifier option
+    | SpecOut of qualifier option
+    | SpecIn of qualifier option
+    | SpecInOut
+    | SpecExternal of qualifier option
+    | SpecGlobal of qualifier option
+    | SpecAccess of string (** access name *)
+    | SpecTemp
+    | SpecConfig of
+        string (** resource name *) * string (** program name *) * string (** fb name *)
+
+  type t = { var : variable; spec : spec; qual: qualifier option; dir: direction option;  }
+
+  let create var spec =
+      let qual = None in
+      let dir = None in
+      { var; spec; qual; dir }
+
+  let get_var dcl = dcl.var
+
+  let set_qualifier_exn dcl qa =
+    match dcl.spec with
+    | Spec _ | SpecDirect _ | SpecOut _ | SpecIn _
+    | SpecExternal _ | SpecGlobal _ ->
+      let s = Spec (Some qa) in
+      { dcl with spec = s }
+    | _ -> raise @@ InternalError "Can't set qualifier for this type of variables!"
+
+  let get_direction dcl = dcl.dir
+
+  let set_direction dcl d = { dcl with dir = Some d }
 end
 
 type expr =
   | Nil of TI.t
-  | Variable of Variable.t
+  | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
 
 let c_from_expr = function
-    | Constant(v) -> Some v
-    | _ -> None
+  | Constant(v) -> Some v
+  | _ -> None
 
 let c_from_expr_exn = function
-    | Constant(v) -> v
-    | _ -> raise @@ InternalError "Incompatible types"
+  | Constant(v) -> v
+  | _ -> raise @@ InternalError "Incompatible types"
 
 module Function = struct
   type t = { name : string; ti : TI.t; is_std : bool }
@@ -292,7 +305,7 @@ end
 type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   statements : expr list;
 }
 
@@ -312,14 +325,14 @@ end
 
 type fb_decl = {
   id : FunctionBlock.t;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   statements : expr list;
 }
 
 type program_decl = {
   is_retain : bool;
   name : string;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   statements : expr list;
 }
 
@@ -334,9 +347,9 @@ module Task = struct
   }
   and data_source =
     | DSConstant of constant
-    | DSGlobalVar of Variable.t
-    | DSDirectVar of Variable.t
-    | DSProgOutput of string * Variable.t
+    | DSGlobalVar of variable
+    | DSDirectVar of variable
+    | DSProgOutput of string * variable
 
   let create name ti =
     let interval = None in
@@ -353,12 +366,15 @@ module Task = struct
 end
 
 module ProgramConfig = struct
+  (** Qualifier of IEC program *)
+  type qualifier = QRetain | QNonRetain | QConstant
+
   type t = {
     name : string;
     ti : TI.t;
-    qual : var_qualifier option;
+    qual : qualifier option;
     task : Task.t option;
-    conn_vars : Variable.t list; (** Variables connected to program data flow. *)
+    conn_vars : variable list; (** Variables connected to program data flow. *)
   }
 
   let create name ti =
@@ -379,14 +395,14 @@ end
 type resource_decl = {
   name : string option;
   tasks : Task.t list;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   programs : ProgramConfig.t list;
 }
 
 type configuration_decl = {
   name : string;
   resources : resource_decl list;
-  variables : VariableDecl.t list;
+  variables : VarDecl.t list;
   access_paths : string list;
 }
 
