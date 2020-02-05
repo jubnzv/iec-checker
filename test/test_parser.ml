@@ -116,6 +116,23 @@ let test_fb_declaration () =
   in
   do_all [ fbs1 ]
 
+(** All ST demo programs in test/st directory should be checked without syntax
+    errors. *)
+let test_syntax_errors_in_demo_programs () =
+  let ls dir =
+    Sys.readdir dir |> Array.to_list |> List.map ~f:(Filename.concat dir)
+  in
+  let files = ls "../../../test/st/" in
+  let rec check_all files =
+    match files with
+    | [] -> ()
+    | h :: t ->
+        let _ = Driver.parse_file h in
+        ();
+        check_all t
+  in
+  check_all files
+
 let () =
   let open Alcotest in
   run "Parser"
@@ -123,4 +140,6 @@ let () =
       ( "test-program-declaration",
         [ test_case " " `Quick test_program_declaration ] );
       ("test-fb-declaration", [ test_case " " `Quick test_fb_declaration ]);
+      ( "test-syntax-errors-in-demo-programs",
+        [ test_case " " `Quick test_syntax_errors_in_demo_programs ] );
     ]
