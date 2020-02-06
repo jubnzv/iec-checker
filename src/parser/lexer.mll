@@ -164,6 +164,8 @@ rule initial tokinfo =
   | "ULINT"          { T_ULINT }
   | "WSTRING"        { T_WSTRING }
   | "STRING"         { T_STRING }
+  | "CHAR"           { T_CHAR }
+  | "WCHAR"          { T_WCHAR }
   | "BOOL"           { T_BOOL }
   | "TIME"           { T_TIME }
   | "LTIME"          { T_LTIME }

@@ -134,6 +134,8 @@
 %token T_ULINT          "ULINT"
 %token T_WSTRING        "WSTRING"
 %token T_STRING         "STRING"
+%token T_CHAR           "CHAR"
+%token T_WCHAR          "WCHAR"
 %token T_BOOL           "BOOL"
 %token T_TIME           "TIME"
 %token T_LTIME          "LTIME"
@@ -558,13 +560,11 @@ data_type_access:
   { S.TyDerived(ty) }
 
 elem_type_name:
-  | T_STRING
-  { S.STRING }
-  | T_WSTRING
-  { S.WSTRING }
   | ty = numeric_type_name
   { ty }
   | ty = bit_str_type_name
+  { ty }
+  | ty = string_type_name
   { ty }
   | ty = date_type_name
   { ty }
@@ -617,10 +617,26 @@ real_type_name:
   { S.LREAL }
 
 string_type_name:
-  | id = T_IDENTIFIER
+  | T_STRING l = string_type_length
+  { S.STRING(l) }
+  | T_WSTRING l = string_type_length
+  { S.WSTRING(l) }
+  | T_STRING
+  { S.STRING(0) }
+  | T_WSTRING
+  { S.WSTRING(0) }
+  | T_CHAR
+  { S.CHAR }
+  | T_WCHAR
+  { S.WCHAR }
+
+(* Helper symbol for string_type_name *)
+string_type_length:
+  | T_LBRACK c = unsigned_int T_RBRACK
   {
-    let name, _ = id in
-    name
+    match c with
+    | CInteger(v, _) -> v
+    | _ -> raise (SyntaxError "Incorrect string length value")
   }
 
 time_type_name:
@@ -686,9 +702,10 @@ derived_type_access:
   | n = string_type_name
   {  } *)
 
-(* string_type_access: *)
+string_type_access:
+  | ty = string_type_name
+  { ty }
 
-(* Return S.single_element_ty_spec *)
 single_element_type_access:
   | name = simple_type_access
   { S.SETySETy(name) }

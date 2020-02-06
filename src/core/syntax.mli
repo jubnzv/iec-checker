@@ -31,8 +31,10 @@ type iec_data_type =
 
 and elementary_ty =
   | NIL (* TODO: replace with an empty symbol *)
-  | STRING
-  | WSTRING
+  | STRING of int (** length *)
+  | WSTRING of int (** length *)
+  | CHAR
+  | WCHAR
   | TIME
   | LTIME
   | SINT
