@@ -578,7 +578,6 @@ elem_type_name:
   | ty = dt_type_name
   { ty }
 
-
 numeric_type_name:
   | t = int_type_name
   { t }
@@ -657,6 +656,14 @@ dt_type_name:
 bit_str_type_name:
   | ty = bool_type_name
   { ty }
+  | ty = multibits_type_name
+  { ty }
+
+bool_type_name:
+  | T_BOOL
+  { S.BOOL }
+
+multibits_type_name:
   | T_BYTE
   { S.BYTE }
   | T_WORD
@@ -665,12 +672,6 @@ bit_str_type_name:
   { S.DWORD }
   | T_LWORD
   { S.LWORD }
-
-bool_type_name:
-  | T_BOOL
-  { S.BOOL }
-
-(* multibits_type_name: *)
 (* }}} *)
 
 (* {{{ Table 11 -- Derived data types *)
