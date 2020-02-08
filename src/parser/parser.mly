@@ -1872,7 +1872,7 @@ config_inst_init_list:
 expression:
     | s = xor_expr
     { s }
-    | e1 = xor_expr T_OR e2 = xor_expr
+    | e1 = expression T_OR e2 = xor_expr
     { S.BinExpr(e1, S.OR, e2) }
 
 (* constant_expr: *)
@@ -1880,45 +1880,45 @@ expression:
 xor_expr:
     | s = and_expr
     { s }
-    | e1 = and_expr T_XOR e2 = and_expr
+    | e1 = xor_expr T_XOR e2 = and_expr
     { S.BinExpr(e1, S.XOR, e2) }
 
 and_expr:
     | s = compare_expr
     { s }
-    | e1 = compare_expr T_AND e2 = compare_expr
+    | e1 = and_expr T_AND e2 = compare_expr
     { S.BinExpr(e1, S.AND, e2) }
 
 compare_expr:
     | s = equ_expr
     { s }
-    | e1 = equ_expr T_EQ e2 = equ_expr
+    | e1 = compare_expr T_EQ e2 = equ_expr
     { S.BinExpr(e1, S.EQ, e2) }
-    | e1 = equ_expr T_NEQ e2= equ_expr
+    | e1 = compare_expr T_NEQ e2= equ_expr
     { S.BinExpr(e1, S.NEQ, e2) }
 
 equ_expr:
     | s = add_expr
     { s }
-    | e1 = add_expr op = compare_expr_operator e2 = add_expr
+    | e1 = equ_expr op = compare_expr_operator e2 = add_expr
     { S.BinExpr(e1, op, e2) }
 
 add_expr:
     | t = term
     { t }
-    | t1 = term op = add_operator t2 = term
+    | t1 = add_expr op = add_operator t2 = term
     { S.BinExpr(t1, op, t2)}
 
 term:
     | e = power_expr
     { e }
-    | e1 = power_expr op = multiply_operator e2 = power_expr
+    | e1 = term op = multiply_operator e2 = power_expr
     { S.BinExpr(e1, op, e2) }
 
 power_expr:
     | e = unary_expr
     { e }
-    | e1 = unary_expr T_POW e2 = unary_expr
+    | e1 = power_expr T_POW e2 = unary_expr
     { S.BinExpr(e1, S.POW, e2) }
 
 unary_expr:
@@ -1928,17 +1928,18 @@ unary_expr:
     { e }
 
 primary_expr:
-    | c = constant
-    { c } (* | v = enumerated_value
-    { v } *)
-    | v = variable
-    { S.Variable(v) }
-    | T_LBRACE e = expression T_RBRACE
-    { e }
-    (* | f = func_name LBRACE param_assign RBRACE
-    { f } *)
-    (* | f = func_name LBRACE param_assign COMMA param_assign RBRACE
-    { f } *)
+  | c = constant
+  { c }
+  (* | enum_value
+  { } *)
+  | v = variable
+  { S.Variable(v) }
+  (* | func_vall
+  { } *)
+  (* | ref_value
+  {  } *)
+  | T_LPAREN e = expression T_RPAREN
+  { e }
 
 (* variable_access: *)
 
