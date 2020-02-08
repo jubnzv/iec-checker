@@ -256,9 +256,9 @@ module VarDecl = struct
   type t = { var : variable; spec : spec; qual: qualifier option; dir: direction option;  }
 
   let create var spec =
-      let qual = None in
-      let dir = None in
-      { var; spec; qual; dir }
+    let qual = None in
+    let dir = None in
+    { var; spec; qual; dir }
 
   let get_var dcl = dcl.var
 
@@ -275,8 +275,16 @@ module VarDecl = struct
   let set_direction dcl d = { dcl with dir = Some d }
 end
 
-type expr =
-  | Nil of TI.t
+type statement =
+  | StmAssign of variable *
+                 expr
+  | StmElsif of expr * (** condition *)
+                statement list (** body *)
+  | StmIf of expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+and expr =
   | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
@@ -308,7 +316,7 @@ type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
   variables : VarDecl.t list;
-  statements : expr list;
+  statements : statement list;
 }
 
 module FunctionBlock = struct
@@ -328,14 +336,14 @@ end
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VarDecl.t list;
-  statements : expr list;
+  statements : statement list;
 }
 
 type program_decl = {
   is_retain : bool;
   name : string;
   variables : VarDecl.t list;
-  statements : expr list;
+  statements : statement list;
 }
 
 module Task = struct

@@ -242,9 +242,17 @@ module VarDecl : sig
   val set_direction : t -> direction -> t
 end
 
-(** Arbitrary expressions of ST language *)
-type expr =
-  | Nil of TI.t
+(** Statements *)
+type statement =
+  | StmAssign of variable *
+                 expr
+  | StmElsif of expr * (** condition *)
+                statement list (** body *)
+  | StmIf of expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+and expr =
   | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
@@ -275,7 +283,7 @@ type function_decl = {
   id : Function.t;
   return_ty : iec_data_type;
   variables : VarDecl.t list;
-  statements : expr list;
+  statements : statement list;
 }
 
 (** Function Block identifier *)
@@ -295,7 +303,7 @@ end
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VarDecl.t list;
-  statements : expr list;
+  statements : statement list;
 }
 
 type program_decl = {
@@ -303,7 +311,7 @@ type program_decl = {
   name : string;
   variables : VarDecl.t list;
   (** Variables declared in this program *)
-  statements : expr list;
+  statements : statement list;
 }
 
 (** Task configuration.

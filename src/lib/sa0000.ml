@@ -4,7 +4,7 @@ open Core_kernel
 module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
 
-let check (statements : S.expr list) =
+let check statements =
   let rec print_assign s =
     match s with
     | S.BinExpr (e1, op, e2) -> (

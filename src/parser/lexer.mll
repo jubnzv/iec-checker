@@ -65,7 +65,6 @@ rule initial tokinfo =
   (* {{{ Common *)
   | whitespace+          { initial tokinfo lexbuf }
   | '\n'                 { incr_linenum lexbuf; initial tokinfo lexbuf }
-  | "NIL"                { T_NIL(tokinfo lexbuf) }
   | ":="                 { T_ASSIGN }
   | "=>"                 { T_SENDTO }
   | "."                  { T_DOT }
@@ -200,6 +199,15 @@ rule initial tokinfo =
   | "AND" | "&"      { T_AND }
   | "EQU"            { T_EQU }
   (* }}} *)
+
+(* {{{ ST control statements *)
+  | "OR"             { T_OR }
+  | "IF"             { T_IF }
+  | "THEN"           { T_THEN }
+  | "ELSIF"          { T_ELSIF }
+  | "ELSE"           { T_ELSE }
+  | "END_IF"         { T_END_IF }
+(* }}} *)
 
   (* {{{ Integer literals *)
   | integer as i

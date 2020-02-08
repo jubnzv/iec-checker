@@ -37,7 +37,6 @@
 %}
 
 (* {{{ Tokens *)
-%token<IECCheckerCore.Tok_info.t> T_NIL
 
 (* {{{ Common *)
 %token T_ASSIGN    ":="
@@ -164,11 +163,19 @@
 %token T_ANY_DATE       "ANY_DATE"
 (* }}} *)
 
-(* {{{ Operators *)
+(* {{{ ST operators *)
 %token T_OR             "OR"
 %token T_XOR            "XOR"
 %token T_AND            "AND"
 %token T_EQU            "EQU"
+(* }}} *)
+
+(* {{{ ST control statements *)
+%token T_IF
+%token T_THEN
+%token T_ELSIF
+%token T_ELSE
+%token T_END_IF
 (* }}} *)
 
 (* {{{ Helpers for date and time literals
@@ -1940,20 +1947,24 @@ primary_expr:
 (* func_call: *)
 
 stmt_list:
-    | s = stmt T_SEMICOLON
-    { s :: [] }
-    | sl = stmt_list s = stmt T_SEMICOLON
-    { s :: sl }
+  | s = stmt T_SEMICOLON
+  { s :: [] }
+  | sl = stmt_list; s = stmt T_SEMICOLON
+  { s :: sl }
 
 stmt:
-    | s = T_NIL
-    { S.Nil(s) }
-    | s = assign_stmt
-    { s }
+  | s = assign_stmt
+  { s }
+  (* | s = subprog_ctrl_stmt
+  { s } *)
+  | s = selection_stmt
+  { s }
+  (* | s = iteration_stmt
+  { s } *)
 
 assign_stmt:
-    | v = variable T_ASSIGN e = expression
-    { S.BinExpr(S.Variable(v), S.ASSIGN, e) }
+  | v = variable T_ASSIGN e = expression
+  { S.StmAssign(v, e) }
 
 (* assignment_attempt: *)
 
@@ -1963,9 +1974,34 @@ assign_stmt:
 
 (* param_assign: *)
 
-(* selection_stmt: *)
+selection_stmt:
+  | s = if_stmt
+  { s }
+  (* | s = case_stmt
+  { s } *)
 
-(* if_stmt: *)
+if_stmt:
+  | T_IF cond = expression T_THEN if_exprs = stmt_list T_END_IF
+  { S.StmIf(cond, if_exprs, [], []) }
+  | T_IF cond = expression T_THEN if_exprs = stmt_list; T_ELSE else_stmts = stmt_list T_END_IF
+  { S.StmIf(cond, if_exprs, [], else_stmts) }
+  | T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list T_END_IF
+  { S.StmIf(cond, if_exprs, elsif_stmts, []) }
+  | T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
+  { S.StmIf(cond, if_exprs, elsif_stmts, else_stmts) }
+
+(* Helper symbol for if_stmt *)
+if_stmt_elsif_list:
+  | T_ELSIF cond = expression T_THEN stmts = stmt_list
+  {
+    let elsif = S.StmElsif(cond, stmts) in
+    elsif :: []
+  }
+  | elsifs = if_stmt_elsif_list T_ELSIF cond = expression T_THEN stmts = stmt_list
+  {
+    let elsif = S.StmElsif(cond, stmts) in
+    elsif :: elsifs
+  }
 
 (* case_stmt: *)
 
@@ -2028,8 +2064,6 @@ location_prefix:
 
 (* TODO: They are not reserved keywords. *)
 size_prefix:
-    | T_NIL
-    { S.DirVar.SizeNone }
     | T_X
     { S.DirVar.SizeX }
     | T_B
