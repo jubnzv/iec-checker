@@ -234,6 +234,9 @@ end
 
 type variable = SymVar of SymVar.t | DirVar of DirVar.t
 
+let vget_ti = function
+  | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti) | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
+
 module VarDecl = struct
 
   type direction = Input | Output
@@ -290,18 +293,22 @@ module Function = struct
 end
 
 type statement =
-  | StmAssign of variable *
+  | StmAssign of TI.t *
+                 variable *
                  expr
-  | StmElsif of expr * (** condition *)
+  | StmElsif of TI.t *
+                expr * (** condition *)
                 statement list (** body *)
-  | StmIf of expr * (** condition *)
+  | StmIf of TI.t *
+             expr * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
-  | StmFuncParamAssign of string option * (** variable name *)
-                          expr *
+  | StmFuncParamAssign of string option * (** function param name *)
+                          expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
-  | StmFuncCall of Function.t *
+  | StmFuncCall of TI.t *
+                   Function.t *
                    statement list (** params assignment *)
 and expr =
   | Variable of variable

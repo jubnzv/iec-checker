@@ -171,11 +171,7 @@
 (* }}} *)
 
 (* {{{ ST control statements *)
-%token T_IF
-%token T_THEN
-%token T_ELSIF
-%token T_ELSE
-%token T_END_IF
+%token<IECCheckerCore.Tok_info.t> T_IF T_THEN T_ELSIF T_ELSE T_END_IF
 (* }}} *)
 
 (* {{{ Helpers for date and time literals
@@ -1951,9 +1947,15 @@ primary_expr:
 
 func_call:
   | f = func_access T_LPAREN T_RPAREN
-  { S.StmFuncCall(f, []) }
+  {
+    let ti = S.Function.get_ti f in
+    S.StmFuncCall(ti, f, [])
+  }
   | f = func_access T_LPAREN stmts = param_assign_list T_RPAREN
-  { S.StmFuncCall(f, stmts) }
+  {
+    let ti = S.Function.get_ti f in
+    S.StmFuncCall(ti, f, stmts)
+  }
 
 (* Helper symbol for func_call *)
 param_assign_list:
@@ -1980,7 +1982,10 @@ stmt:
 
 assign_stmt:
   | v = variable T_ASSIGN e = expression
-  { S.StmAssign(v, e) }
+  {
+    let ti = S.vget_ti v in
+    S.StmAssign(ti, v, e)
+  }
 
 (* assignment_attempt: *)
 
@@ -2030,25 +2035,25 @@ selection_stmt:
   { s } *)
 
 if_stmt:
-  | T_IF cond = expression T_THEN if_exprs = stmt_list T_END_IF
-  { S.StmIf(cond, if_exprs, [], []) }
-  | T_IF cond = expression T_THEN if_exprs = stmt_list; T_ELSE else_stmts = stmt_list T_END_IF
-  { S.StmIf(cond, if_exprs, [], else_stmts) }
-  | T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list T_END_IF
-  { S.StmIf(cond, if_exprs, elsif_stmts, []) }
-  | T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
-  { S.StmIf(cond, if_exprs, elsif_stmts, else_stmts) }
+  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list T_END_IF
+  { S.StmIf(ti, cond, if_exprs, [], []) }
+  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list; T_ELSE else_stmts = stmt_list T_END_IF
+  { S.StmIf(ti, cond, if_exprs, [], else_stmts) }
+  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list T_END_IF
+  { S.StmIf(ti, cond, if_exprs, elsif_stmts, []) }
+  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
+  { S.StmIf(ti, cond, if_exprs, elsif_stmts, else_stmts) }
 
 (* Helper symbol for if_stmt *)
 if_stmt_elsif_list:
-  | T_ELSIF cond = expression T_THEN stmts = stmt_list
+  | ti = T_ELSIF cond = expression T_THEN stmts = stmt_list
   {
-    let elsif = S.StmElsif(cond, stmts) in
+    let elsif = S.StmElsif(ti, cond, stmts) in
     elsif :: []
   }
-  | elsifs = if_stmt_elsif_list T_ELSIF cond = expression T_THEN stmts = stmt_list
+  | elsifs = if_stmt_elsif_list; ti = T_ELSIF cond = expression T_THEN stmts = stmt_list
   {
-    let elsif = S.StmElsif(cond, stmts) in
+    let elsif = S.StmElsif(ti, cond, stmts) in
     elsif :: elsifs
   }
 

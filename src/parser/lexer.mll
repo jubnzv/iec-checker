@@ -201,12 +201,11 @@ rule initial tokinfo =
   (* }}} *)
 
 (* {{{ ST control statements *)
-  | "OR"             { T_OR }
-  | "IF"             { T_IF }
-  | "THEN"           { T_THEN }
-  | "ELSIF"          { T_ELSIF }
-  | "ELSE"           { T_ELSE }
-  | "END_IF"         { T_END_IF }
+  | "IF"             { let ti = tokinfo lexbuf in T_IF(ti) }
+  | "THEN"           { let ti = tokinfo lexbuf in T_THEN(ti) }
+  | "ELSIF"          { let ti = tokinfo lexbuf in T_ELSIF(ti) }
+  | "ELSE"           { let ti = tokinfo lexbuf in T_ELSE(ti) }
+  | "END_IF"         { let ti = tokinfo lexbuf in T_END_IF(ti) }
 (* }}} *)
 
   (* {{{ Integer literals *)
