@@ -242,28 +242,6 @@ module VarDecl : sig
   val set_direction : t -> direction -> t
 end
 
-(** Statements *)
-type statement =
-  | StmAssign of variable *
-                 expr
-  | StmElsif of expr * (** condition *)
-                statement list (** body *)
-  | StmIf of expr * (** condition *)
-             statement list * (** body *)
-             statement list * (** elsif statements *)
-             statement list (** else *)
-and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-
-val c_from_expr : expr -> constant option
-(** Convert given expr to const. *)
-
-val c_from_expr_exn : expr -> constant
-(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
-
 (** Function identifier *)
 module Function : sig
   type t
@@ -277,6 +255,33 @@ module Function : sig
   val is_std : t -> bool
   (** Returns true if function declared in standard library. *)
 end
+
+(** Statements *)
+type statement =
+  | StmAssign of variable *
+                 expr
+  | StmElsif of expr * (** condition *)
+                statement list (** body *)
+  | StmIf of expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+  | StmFuncParamAssign of string option * (** function param name *)
+                          expr * (** assignment expression *)
+                          bool (** has inversion in output assignment *)
+  | StmFuncCall of Function.t *
+                   statement list (** params assignment *)
+and expr =
+  | Variable of variable
+  | Constant of constant
+  | BinExpr of expr * operator * expr
+  | UnExpr of operator * expr
+
+val c_from_expr : expr -> constant option
+(** Convert given expr to const. *)
+
+val c_from_expr_exn : expr -> constant
+(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
 
 (** Function declaration *)
 type function_decl = {

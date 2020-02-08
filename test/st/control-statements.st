@@ -19,9 +19,8 @@ PROGRAM square_root
       X1 := -b;
     ELSE
       nroots := 2;
-      (* TODO: Standard library functions not yet implemented *)
-      (*X1 := (-b + SQRT(D))/(2.0*A);
-      X2 := (-b - SQRT(D))/(2.0*A);*)
+      X1 := (-b + SQRT(d))/(2.0*a);
+      X2 := (-b - SQRT(d))/(2.0*a);
   END_IF;
 
 END_PROGRAM

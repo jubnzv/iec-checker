@@ -1318,7 +1318,11 @@ func_name:
     S.Function.create name ti
   }
 
-(* func_access: *)
+func_access:
+  (* | namespace_name func_name
+  {  } *)
+  | f = func_name
+  { f }
 
 (* std_func_name:
   | id = T_IDENTIFIER
@@ -1945,7 +1949,18 @@ primary_expr:
 
 (* multibit_part_access: *)
 
-(* func_call: *)
+func_call:
+  | f = func_access T_LPAREN T_RPAREN
+  { S.StmFuncCall(f, []) }
+  | f = func_access T_LPAREN stmts = param_assign_list T_RPAREN
+  { S.StmFuncCall(f, stmts) }
+
+(* Helper symbol for func_call *)
+param_assign_list:
+  | p = param_assign
+  { p :: [] }
+  | ps = param_assign_list T_COMMA p = param_assign
+  { p :: ps }
 
 stmt_list:
   | s = stmt T_SEMICOLON
@@ -1956,8 +1971,8 @@ stmt_list:
 stmt:
   | s = assign_stmt
   { s }
-  (* | s = subprog_ctrl_stmt
-  { s } *)
+  | s = subprog_ctrl_stmt
+  { s }
   | s = selection_stmt
   { s }
   (* | s = iteration_stmt
@@ -1971,9 +1986,42 @@ assign_stmt:
 
 (* invocation: *)
 
-(* subprog_ctrl_stmt: *)
+subprog_ctrl_stmt:
+  | fc = func_call
+  { fc }
+  (* | invocation
+  {  } *)
+  (* | T_SUPER T_LPAREN T_RPAREN
+  {  } *)
+  (* | T_RETURN
+  {  } *)
 
-(* param_assign: *)
+param_assign:
+  | vn = variable_name T_ASSIGN e = expression
+  {
+    let (n, _) = vn in
+    S.StmFuncParamAssign(Some n, e, false)
+  }
+  | e = expression
+  {
+    S.StmFuncParamAssign(None, e, false)
+  }
+  (* | ref_assign
+  {  } *)
+  (* Use assignment expression for "=>" tokens that assigns given parameter
+     to a function output variable. *)
+  | T_NOT vn = variable_name T_SENDTO v = variable
+  {
+    let (n, _) = vn in
+    let vexpr = S.Variable(v) in
+    S.StmFuncParamAssign(Some n, vexpr, true)
+  }
+  | vn = variable_name T_SENDTO v = variable
+  {
+    let (n, _) = vn in
+    let vexpr = S.Variable(v) in
+    S.StmFuncParamAssign(Some n, vexpr, false)
+  }
 
 selection_stmt:
   | s = if_stmt

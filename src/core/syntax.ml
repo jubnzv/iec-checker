@@ -275,29 +275,6 @@ module VarDecl = struct
   let set_direction dcl d = { dcl with dir = Some d }
 end
 
-type statement =
-  | StmAssign of variable *
-                 expr
-  | StmElsif of expr * (** condition *)
-                statement list (** body *)
-  | StmIf of expr * (** condition *)
-             statement list * (** body *)
-             statement list * (** elsif statements *)
-             statement list (** else *)
-and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-
-let c_from_expr = function
-  | Constant(v) -> Some v
-  | _ -> None
-
-let c_from_expr_exn = function
-  | Constant(v) -> v
-  | _ -> raise @@ InternalError "Incompatible types"
-
 module Function = struct
   type t = { name : string; ti : TI.t; is_std : bool }
 
@@ -311,6 +288,34 @@ module Function = struct
 
   let is_std fn = fn.is_std
 end
+
+type statement =
+  | StmAssign of variable *
+                 expr
+  | StmElsif of expr * (** condition *)
+                statement list (** body *)
+  | StmIf of expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+  | StmFuncParamAssign of string option * (** variable name *)
+                          expr *
+                          bool (** has inversion in output assignment *)
+  | StmFuncCall of Function.t *
+                   statement list (** params assignment *)
+and expr =
+  | Variable of variable
+  | Constant of constant
+  | BinExpr of expr * operator * expr
+  | UnExpr of operator * expr
+
+let c_from_expr = function
+  | Constant(v) -> Some v
+  | _ -> None
+
+let c_from_expr_exn = function
+  | Constant(v) -> v
+  | _ -> raise @@ InternalError "Incompatible types"
 
 type function_decl = {
   id : Function.t;
