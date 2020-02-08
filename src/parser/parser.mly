@@ -2035,14 +2035,14 @@ selection_stmt:
   { s } *)
 
 if_stmt:
-  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list T_END_IF
-  { S.StmIf(ti, cond, if_exprs, [], []) }
-  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list; T_ELSE else_stmts = stmt_list T_END_IF
-  { S.StmIf(ti, cond, if_exprs, [], else_stmts) }
-  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list T_END_IF
-  { S.StmIf(ti, cond, if_exprs, elsif_stmts, []) }
-  | ti = T_IF cond = expression T_THEN if_exprs = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
-  { S.StmIf(ti, cond, if_exprs, elsif_stmts, else_stmts) }
+  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list T_END_IF
+  { S.StmIf(ti, cond, if_stmts, [], []) }
+  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; T_ELSE else_stmts = stmt_list T_END_IF
+  { S.StmIf(ti, cond, if_stmts, [], else_stmts) }
+  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; elsif_stmts = if_stmt_elsif_list T_END_IF
+  { S.StmIf(ti, cond, if_stmts, elsif_stmts, []) }
+  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
+  { S.StmIf(ti, cond, if_stmts, elsif_stmts, else_stmts) }
 
 (* Helper symbol for if_stmt *)
 if_stmt_elsif_list:

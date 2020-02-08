@@ -1,4 +1,4 @@
-(* PLCOPEN-N3 – Define the names to avoid *)
+(** PLCOPEN-N3 – Define the names to avoid *)
 
 open Core_kernel
 module S = IECCheckerCore.Syntax
