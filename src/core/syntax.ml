@@ -6,6 +6,7 @@ module E = Error
 
 exception InternalError of string
 
+(* {{{ Operators *)
 type operator =
   | NEG
   | NOT
@@ -25,7 +26,9 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
+(* }}} *)
 
+(* {{{ Data types *)
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -149,7 +152,9 @@ module TimeValue = struct
   let is_zero tv = phys_equal tv.d 0.
   (* TODO: List.map ~f(fun fv -> phys_equal fv 0.) ???Fields *)
 end
+(* }}} *)
 
+(* {{{ Constants *)
 type constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
@@ -199,17 +204,28 @@ let c_add c1 c2 =
     let v = TimeValue.( + ) v1 v2 in
     CTimeValue (v, ti)
   | _ -> raise @@ InternalError "Incompatible types"
+(* }}} *)
 
-module SymVar = struct
+(* {{{ Identifiers *)
+module type ID = sig
+   type t
+   val create : string -> TI.t -> t
+   val get_name : t -> string
+   val get_ti : t -> TI.t
+end
+
+module Identifier : ID = struct
   type t = { name : string; ti : TI.t }
 
   let create name ti =
     { name; ti }
 
-  let get_name var = var.name
+  let get_name id = id.name
 
-  let get_ti var = var.ti
+  let get_ti id = id.ti
 end
+
+module SymVar = Identifier
 
 module DirVar = struct
   type location = LocI | LocQ | LocM
@@ -232,50 +248,18 @@ module DirVar = struct
   let get_ti var = var.ti
 end
 
-type variable = SymVar of SymVar.t | DirVar of DirVar.t
+module FunctionBlock = struct
+  type t = { name : string; ti : TI.t; is_std : bool }
 
-let vget_ti = function
-  | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti) | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
+  let create name ti =
+    let is_std = false in
+    { name; ti; is_std }
 
-module VarDecl = struct
+  let get_name fb = fb.name
 
-  type direction = Input | Output
+  let get_ti fb = fb.ti
 
-  type qualifier = QRetain | QNonRetain | QConstant
-
-  type spec =
-    | Spec of qualifier option
-    | SpecDirect of qualifier option
-    | SpecOut of qualifier option
-    | SpecIn of qualifier option
-    | SpecInOut
-    | SpecExternal of qualifier option
-    | SpecGlobal of qualifier option
-    | SpecAccess of string (** access name *)
-    | SpecTemp
-    | SpecConfig of
-        string (** resource name *) * string (** program name *) * string (** fb name *)
-
-  type t = { var : variable; spec : spec; qual: qualifier option; dir: direction option;  }
-
-  let create var spec =
-    let qual = None in
-    let dir = None in
-    { var; spec; qual; dir }
-
-  let get_var dcl = dcl.var
-
-  let set_qualifier_exn dcl qa =
-    match dcl.spec with
-    | Spec _ | SpecDirect _ | SpecOut _ | SpecIn _
-    | SpecExternal _ | SpecGlobal _ ->
-      let s = Spec (Some qa) in
-      { dcl with spec = s }
-    | _ -> raise @@ InternalError "Can't set qualifier for this type of variables!"
-
-  let get_direction dcl = dcl.dir
-
-  let set_direction dcl d = { dcl with dir = Some d }
+  let is_std fb = fb.is_std
 end
 
 module Function = struct
@@ -292,72 +276,14 @@ module Function = struct
   let is_std fn = fn.is_std
 end
 
-type statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-  | StmElsif of TI.t *
-                expr * (** condition *)
-                statement list (** body *)
-  | StmIf of TI.t *
-             expr * (** condition *)
-             statement list * (** body *)
-             statement list * (** elsif statements *)
-             statement list (** else *)
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-  | StmFuncCall of TI.t *
-                   Function.t *
-                   statement list (** params assignment *)
-and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
+(* }}} *)
 
-let c_from_expr = function
-  | Constant(v) -> Some v
-  | _ -> None
+type variable = SymVar of SymVar.t | DirVar of DirVar.t
 
-let c_from_expr_exn = function
-  | Constant(v) -> v
-  | _ -> raise @@ InternalError "Incompatible types"
+let vget_ti = function
+  | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti) | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
 
-type function_decl = {
-  id : Function.t;
-  return_ty : iec_data_type;
-  variables : VarDecl.t list;
-  statements : statement list;
-}
-
-module FunctionBlock = struct
-  type t = { name : string; ti : TI.t; is_std : bool }
-
-  let create name ti =
-    let is_std = false in
-    { name; ti; is_std }
-
-  let get_name fb = fb.name
-
-  let get_ti fb = fb.ti
-
-  let is_std fb = fb.is_std
-end
-
-type fb_decl = {
-  id : FunctionBlock.t;
-  variables : VarDecl.t list;
-  statements : statement list;
-}
-
-type program_decl = {
-  is_retain : bool;
-  name : string;
-  variables : VarDecl.t list;
-  statements : statement list;
-}
-
+(* {{{ Configuration objects *)
 module Task = struct
 
   type t = {
@@ -413,6 +339,103 @@ module ProgramConfig = struct
 
   let get_name t = t.name
 end
+(* }}} *)
+
+(* {{{ Statements and expressions *)
+type statement =
+  | StmAssign of TI.t *
+                 variable *
+                 expr
+  | StmElsif of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmIf of TI.t *
+             expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+  | StmFuncParamAssign of string option * (** function param name *)
+                          expr * (** assignment expression *)
+                          bool (** has inversion in output assignment *)
+  | StmFuncCall of TI.t *
+                   Function.t *
+                   statement list (** params assignment *)
+and expr =
+  | Variable of variable
+  | Constant of constant
+  | BinExpr of expr * operator * expr
+  | UnExpr of operator * expr
+
+let c_from_expr = function
+  | Constant(v) -> Some v
+  | _ -> None
+
+let c_from_expr_exn = function
+  | Constant(v) -> v
+  | _ -> raise @@ InternalError "Incompatible types"
+(* }}} *)
+
+(* {{{ Declarations *)
+module VarDecl = struct
+
+  type direction = Input | Output
+
+  type qualifier = QRetain | QNonRetain | QConstant
+
+  type spec =
+    | Spec of qualifier option
+    | SpecDirect of qualifier option
+    | SpecOut of qualifier option
+    | SpecIn of qualifier option
+    | SpecInOut
+    | SpecExternal of qualifier option
+    | SpecGlobal of qualifier option
+    | SpecAccess of string (** access name *)
+    | SpecTemp
+    | SpecConfig of
+        string (** resource name *) * string (** program name *) * string (** fb name *)
+
+  type t = { var : variable; spec : spec; qual: qualifier option; dir: direction option;  }
+
+  let create var spec =
+    let qual = None in
+    let dir = None in
+    { var; spec; qual; dir }
+
+  let get_var dcl = dcl.var
+
+  let set_qualifier_exn dcl qa =
+    match dcl.spec with
+    | Spec _ | SpecDirect _ | SpecOut _ | SpecIn _
+    | SpecExternal _ | SpecGlobal _ ->
+      let s = Spec (Some qa) in
+      { dcl with spec = s }
+    | _ -> raise @@ InternalError "Can't set qualifier for this type of variables!"
+
+  let get_direction dcl = dcl.dir
+
+  let set_direction dcl d = { dcl with dir = Some d }
+end
+
+type function_decl = {
+  id : Function.t;
+  return_ty : iec_data_type;
+  variables : VarDecl.t list;
+  statements : statement list;
+}
+
+type fb_decl = {
+  id : FunctionBlock.t;
+  variables : VarDecl.t list;
+  statements : statement list;
+}
+
+type program_decl = {
+  is_retain : bool;
+  name : string;
+  variables : VarDecl.t list;
+  statements : statement list;
+}
 
 type resource_decl = {
   name : string option;
@@ -427,9 +450,12 @@ type configuration_decl = {
   variables : VarDecl.t list;
   access_paths : string list;
 }
+(* }}} *)
 
 type iec_library_element =
   | IECFunction of function_decl
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
+
+(* vim: set foldmethod=marker foldlevel=0 foldenable : *)

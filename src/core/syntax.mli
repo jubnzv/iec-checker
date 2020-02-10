@@ -2,6 +2,7 @@ module TI = Tok_info
 
 exception InternalError of string
 
+(* {{{ Operators *)
 (** Operators of the ST language *)
 type operator =
   | NEG
@@ -22,8 +23,9 @@ type operator =
   | EQ (** = *)
   | NEQ (** <> *)
   | ASSIGN
+  (* }}} *)
 
-(** Types *)
+(* {{{ Data types *)
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -137,8 +139,9 @@ module TimeValue : sig
 
   val is_zero : t -> bool
 end
+(* }}} *)
 
-(** Constants *)
+(* {{{ Constants *)
 type constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
@@ -157,32 +160,22 @@ val c_get_ti : constant -> TI.t
 
 val c_add : constant -> constant -> constant
 (** Add value to existing constant. *)
+(* }}} *)
 
-(** TODO: *)
-(* module Identifier : sig
-   type t
-
-   val create : string -> TI.t -> t
-
-   val get_name : t -> string
-
-   val get_ti : t -> TI.t
-   end *)
-
-(** Symbolically represented variable *)
-module SymVar : sig
+(* {{{ Identifiers *)
+module type ID = sig
   type t
-
   val create : string -> TI.t -> t
-
   val get_name : t -> string
-
   val get_ti : t -> TI.t
 end
 
-(** Directly represented variable *)
+(** Identifier of symbolically represented variable *)
+module SymVar : ID
+
+(** Identifier of directly represented variable *)
 module DirVar : sig
-  type t
+  include ID
 
   (** Location prefixes for directly represented variables.
       See 6.5.5.2 for explainations. *)
@@ -198,134 +191,29 @@ module DirVar : sig
     | SizeL  (** quad word (64 bits) *)
 
   val create : string option -> TI.t -> location -> size option -> int list -> t
-
   val get_name : t -> string option
-
-  val get_ti : t -> TI.t
 end
+
+(** Function Block identifier *)
+module FunctionBlock : sig
+  include ID
+  val is_std : t -> bool
+end
+
+(** Function identifier *)
+module Function : sig
+  include ID
+  val is_std : t -> bool
+  (** Returns true if function declared in standard library. *)
+end
+(* }}} *)
 
 type variable = SymVar of SymVar.t | DirVar of DirVar.t
 
 val vget_ti : variable -> TI.t
 (** Return token info of a given variable *)
 
-(** Declaration of the IEC variable *)
-module VarDecl : sig
-  type t
-
-  (** Variable could be connected to input/output data flow of POU. *)
-  type direction = Input | Output
-
-  (** Qualifier of IEC variable *)
-  type qualifier = QRetain | QNonRetain | QConstant
-
-  (** Variable specification *)
-  type spec =
-    | Spec of qualifier option
-    | SpecDirect of qualifier option
-    | SpecOut of qualifier option
-    | SpecIn of qualifier option
-    | SpecInOut
-    | SpecExternal of qualifier option
-    | SpecGlobal of qualifier option
-    | SpecAccess of string (** access name *)
-    | SpecTemp
-    | SpecConfig of
-        string (** resource name *) * string (** program name *) * string (** fb name *)
-
-  val create : variable -> spec -> t
-
-  val get_var : t -> variable
-
-  val set_qualifier_exn : t -> qualifier -> t
-  (** Set qualifier for variable. Raise an exception if this variable doesn't support qualifiers. *)
-
-  val get_direction : t -> direction option
-
-  val set_direction : t -> direction -> t
-end
-
-(** Function identifier *)
-module Function : sig
-  type t
-
-  val create : string -> TI.t -> t
-
-  val get_name : t -> string
-
-  val get_ti : t -> TI.t
-
-  val is_std : t -> bool
-  (** Returns true if function declared in standard library. *)
-end
-
-(** Statements *)
-type statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-  | StmElsif of TI.t *
-                expr * (** condition *)
-                statement list (** body *)
-  | StmIf of TI.t *
-             expr * (** condition *)
-             statement list * (** body *)
-             statement list * (** elsif statements *)
-             statement list (** else *)
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-  | StmFuncCall of TI.t *
-                   Function.t *
-                   statement list (** params assignment *)
-and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-
-val c_from_expr : expr -> constant option
-(** Convert given expr to const. *)
-
-val c_from_expr_exn : expr -> constant
-(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
-
-(** Function declaration *)
-type function_decl = {
-  id : Function.t;
-  return_ty : iec_data_type;
-  variables : VarDecl.t list;
-  statements : statement list;
-}
-
-(** Function Block identifier *)
-module FunctionBlock : sig
-  type t
-
-  val create : string -> TI.t -> t
-
-  val get_name : t -> string
-
-  val get_ti : t -> TI.t
-
-  val is_std : t -> bool
-end
-
-(** Function block declaration *)
-type fb_decl = {
-  id : FunctionBlock.t;
-  variables : VarDecl.t list;
-  statements : statement list;
-}
-
-type program_decl = {
-  is_retain : bool;
-  name : string;
-  variables : VarDecl.t list;
-  (** Variables declared in this program *)
-  statements : statement list;
-}
-
+(* {{{ Configuration objects *)
 (** Task configuration.
     See: 6.8.2 Tasks *)
 module Task : sig
@@ -370,6 +258,100 @@ module ProgramConfig : sig
   val get_name : t -> string
   (** Get name of a program. *)
 end
+(* }}} *)
+
+(* {{{ Statements and expressions *)
+(** Statements *)
+type statement =
+  | StmAssign of TI.t *
+                 variable *
+                 expr
+  | StmElsif of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmIf of TI.t *
+             expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+  | StmFuncParamAssign of string option * (** function param name *)
+                          expr * (** assignment expression *)
+                          bool (** has inversion in output assignment *)
+  | StmFuncCall of TI.t *
+                   Function.t *
+                   statement list (** params assignment *)
+and expr =
+  | Variable of variable
+  | Constant of constant
+  | BinExpr of expr * operator * expr
+  | UnExpr of operator * expr
+
+val c_from_expr : expr -> constant option
+(** Convert given expr to const. *)
+
+val c_from_expr_exn : expr -> constant
+(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
+(* }}} *)
+
+(* {{{ Declarations *)
+(** Declaration of the IEC variable *)
+module VarDecl : sig
+  type t
+
+  (** Variable could be connected to input/output data flow of POU. *)
+  type direction = Input | Output
+
+  (** Qualifier of IEC variable *)
+  type qualifier = QRetain | QNonRetain | QConstant
+
+  (** Variable specification *)
+  type spec =
+    | Spec of qualifier option
+    | SpecDirect of qualifier option
+    | SpecOut of qualifier option
+    | SpecIn of qualifier option
+    | SpecInOut
+    | SpecExternal of qualifier option
+    | SpecGlobal of qualifier option
+    | SpecAccess of string (** access name *)
+    | SpecTemp
+    | SpecConfig of
+        string (** resource name *) * string (** program name *) * string (** fb name *)
+
+  val create : variable -> spec -> t
+
+  val get_var : t -> variable
+
+  val set_qualifier_exn : t -> qualifier -> t
+  (** Set qualifier for variable. Raise an exception if this variable doesn't support qualifiers. *)
+
+  val get_direction : t -> direction option
+
+  val set_direction : t -> direction -> t
+end
+
+(** Function declaration *)
+type function_decl = {
+  id : Function.t;
+  return_ty : iec_data_type;
+  variables : VarDecl.t list;
+  statements : statement list;
+}
+
+(** Function block declaration *)
+type fb_decl = {
+  id : FunctionBlock.t;
+  variables : VarDecl.t list;
+  statements : statement list;
+}
+
+type program_decl = {
+  is_retain : bool;
+  name : string;
+  variables : VarDecl.t list;
+  (** Variables declared in this program *)
+  statements : statement list;
+}
 
 type resource_decl = {
   name : string option; (** Resource name. Can be is skipped in case of single resource *)
@@ -386,9 +368,12 @@ type configuration_decl = {
   variables : VarDecl.t list; (** Global variables and access lists *)
   access_paths : string list;
 }
+(* }}} *)
 
 type iec_library_element =
   | IECFunction of function_decl
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
+
+(* vim: set foldmethod=marker foldlevel=0 foldenable : *)
