@@ -1,0 +1,11 @@
+PROGRAM program0
+  VAR
+    FOR_B : INT; (* PLCOPEN-N3 *)
+    NO_FALSE_POSITIVE : INT;
+    IF_A : INT; (* PLCOPEN-N3 *)
+    TOF : INT; (* PLCOPEN-N3 *)
+    OK_ALLOWED : INT;
+  END_VAR
+
+  FOR_B := IF_A / 1;
+END_PROGRAM

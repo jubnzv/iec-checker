@@ -348,8 +348,7 @@ type fb_decl = {
 type program_decl = {
   is_retain : bool;
   name : string;
-  variables : VarDecl.t list;
-  (** Variables declared in this program *)
+  variables : VarDecl.t list; (** Variables declared in this program *)
   statements : statement list;
 }
 

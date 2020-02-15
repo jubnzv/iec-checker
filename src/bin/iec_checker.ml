@@ -6,6 +6,7 @@ open IECCheckerLib
 module S = Syntax
 module C = CheckerLib
 module TI = Tok_info
+module W = Warn
 
 let read_all filename =
   let chan = open_in filename in
@@ -58,4 +59,5 @@ let _ =
       failwith ("File " ^ filename ^ " doesn't exists")
     else
       let elements = parse_file filename in
-      C.run_all_checks elements
+      let warnings = C.run_all_checks elements in
+      List.iter warnings ~f:(fun w -> W.print w)

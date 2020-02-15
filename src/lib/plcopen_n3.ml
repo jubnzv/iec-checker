@@ -1,10 +1,10 @@
-(** PLCOPEN-N3 – Define the names to avoid *)
-
 open Core_kernel
 module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
+module AU = IECCheckerCore.Ast_util
+module E = IECCheckerCore.Error
 
-(* Keywords / reserved word list of IEC 61131-3 Ed.3 starting with a letter *)
+(** Keywords / reserved word list of IEC 61131-3 Ed.3 starting with a letter *)
 let reserved_keywords =
   [
     "ABS";
@@ -168,26 +168,43 @@ let reserved_keywords =
     "UDINT";
   ]
 
-let check (variables : S.VarDecl.t list) =
-  let check_name var =
-    let name =
-      match var with
-      | S.SymVar v -> S.SymVar.get_name v
-      | S.DirVar v -> (
-          match S.DirVar.get_name v with Some n -> n | None -> "" )
-    in
-    let ti =
-      match var with
-      | S.SymVar v -> S.SymVar.get_ti v
-      | S.DirVar v -> S.DirVar.get_ti v
-    in
-    let m = List.mem reserved_keywords name ~equal:String.equal in
-    if m then
-      Printf.printf
-        "PLCOPEN-N3 violation: %s (%d:%d): IEC data types and standard library \
-         objects must be avoided\n"
-        name ti.linenr ti.col
+let startswith s1 s2 =
+  let len1 = String.length s1 and len2 = String.length s2 in
+  if len1 < len2 then false
+  else
+    let sub = String.sub s1 ~pos:0 ~len:len2 in
+    String.equal sub s2
+
+let check_name var =
+  let name =
+    match var with
+    | S.SymVar v -> S.SymVar.get_name v
+    | S.DirVar v -> (
+        match S.DirVar.get_name v with Some n -> n | None -> "" )
   in
-  List.iter variables ~f:(fun d ->
+  let ti =
+    match var with
+    | S.SymVar v -> S.SymVar.get_ti v
+    | S.DirVar v -> S.DirVar.get_ti v
+  in
+  let m = List.find reserved_keywords ~f:(fun k -> startswith name k) in
+  match m with
+  | Some _ ->
+      let msg =
+        Printf.sprintf
+          "%s (%d:%d): IEC data types and standard library objects must be \
+           avoided\n"
+          name ti.linenr ti.col
+      in
+      let w = Warn.mk "PLCOPEN-N3" msg in
+      Some w
+  | None -> None
+
+let do_check elems =
+  let vs = AU.get_var_decl elems in
+  List.map vs ~f:(fun d ->
       let var = S.VarDecl.get_var d in
       check_name var)
+  |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
+  |> List.map ~f:(fun w ->
+         match w with Some w -> w | None -> E.raise E.InternalError "")
