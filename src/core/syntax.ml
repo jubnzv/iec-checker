@@ -379,6 +379,12 @@ type statement =
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
+  | StmFor of TI.t *
+              SymVar.t * (** control variable *)
+              expr * (** range start *)
+              expr * (** range end *)
+              expr option * (** range step *)
+              statement list (** body statements *)
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)

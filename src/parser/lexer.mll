@@ -198,6 +198,12 @@ rule initial tokinfo =
   | "ELSIF"          { let ti = tokinfo lexbuf in T_ELSIF(ti) }
   | "ELSE"           { let ti = tokinfo lexbuf in T_ELSE(ti) }
   | "END_IF"         { let ti = tokinfo lexbuf in T_END_IF(ti) }
+
+  | "FOR"            { let ti = tokinfo lexbuf in T_FOR(ti) }
+  | "TO"             { let ti = tokinfo lexbuf in T_TO(ti) }
+  | "BY"             { let ti = tokinfo lexbuf in T_BY(ti) }
+  | "DO"             { let ti = tokinfo lexbuf in T_DO(ti) }
+  | "END_FOR"        { let ti = tokinfo lexbuf in T_END_FOR(ti) }
 (* }}} *)
 
   (* {{{ Integer literals *)

@@ -164,6 +164,7 @@
 
 (* {{{ ST control statements *)
 %token<IECCheckerCore.Tok_info.t> T_IF T_THEN T_ELSIF T_ELSE T_END_IF
+%token<IECCheckerCore.Tok_info.t> T_FOR T_TO T_BY T_DO T_END_FOR
 (* }}} *)
 
 (* {{{ Helpers for date and time literals
@@ -1967,8 +1968,8 @@ stmt:
   { s }
   | s = selection_stmt
   { s }
-  (* | s = iteration_stmt
-  { s } *)
+  | s = iteration_stmt
+  { s }
 
 assign_stmt:
   | v = variable T_ASSIGN e = expression
@@ -2055,13 +2056,37 @@ if_stmt_elsif_list:
 
 (* case_list_elem: *)
 
-(* iteration_stmt: *)
+iteration_stmt:
+  | s = for_stmt
+  { s }
+  (* | s = while_stmt
+  { s } *)
+  (* | s = repeat_stmt
+  { s } *)
+  (* | T_EXIT
+  { } *)
+  (* | T_CONTINUE
+  { } *)
 
-(* for_stmt: *)
+for_stmt:
+  | ti = T_FOR cv = control_variable T_ASSIGN fl = for_list T_DO sl = stmt_list T_END_FOR
+  {
+    let (e1,e2,e3) = fl in
+    S.StmFor(ti, cv, e1, e2, e3, sl)
+  }
 
-(* control_variable: *)
+control_variable:
+  | id = T_IDENTIFIER
+  {
+    let (n, ti) = id in
+    S.SymVar.create n ti
+  }
 
-(* for_list: *)
+for_list:
+  | e1 = expression T_TO e2 = expression T_BY e3 = expression
+  { (e1, e2, Some(e3)) }
+  | e1 = expression T_TO e2 = expression
+  { (e1, e2, None) }
 
 (* while_stmt: *)
 
