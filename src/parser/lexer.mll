@@ -198,7 +198,9 @@ rule initial tokinfo =
   | "ELSIF"          { let ti = tokinfo lexbuf in T_ELSIF(ti) }
   | "ELSE"           { let ti = tokinfo lexbuf in T_ELSE(ti) }
   | "END_IF"         { let ti = tokinfo lexbuf in T_END_IF(ti) }
-
+  | "CASE"           { let ti = tokinfo lexbuf in T_CASE(ti) }
+  | "OF"             { let ti = tokinfo lexbuf in T_OF(ti) }
+  | "END_CASE"       { let ti = tokinfo lexbuf in T_END_CASE(ti) }
   | "FOR"            { let ti = tokinfo lexbuf in T_FOR(ti) }
   | "TO"             { let ti = tokinfo lexbuf in T_TO(ti) }
   | "BY"             { let ti = tokinfo lexbuf in T_BY(ti) }

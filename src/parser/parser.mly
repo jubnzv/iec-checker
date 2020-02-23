@@ -164,6 +164,7 @@
 
 (* {{{ ST control statements *)
 %token<IECCheckerCore.Tok_info.t> T_IF T_THEN T_ELSIF T_ELSE T_END_IF
+%token<IECCheckerCore.Tok_info.t> T_CASE T_OF T_END_CASE
 %token<IECCheckerCore.Tok_info.t> T_FOR T_TO T_BY T_DO T_END_FOR
 (* }}} *)
 
@@ -1866,7 +1867,25 @@ expression:
   | e1 = expression T_OR e2 = xor_expr
   { S.BinExpr(e1, S.OR, e2) }
 
-(* constant_expr: *)
+(* According IEC61131-3 constant expression should be evaluated at compile-time.
+
+   There are no examples or more formal rules for supported compile-time expressions
+   in a Standard text, so I don't know what does this means. For now I replace this
+   rule from a previous version of standard which replaces constant expression with
+   a following BNF rule:
+
+   signed_integer | enumerated_value
+
+*)
+constant_expr:
+  | v = signed_int
+  {
+    match v with
+    | CInteger(v, _) -> v
+    | _ -> raise (SyntaxError "Incorrect constant expression value")
+  }
+  (* | v = enum_value
+  { v } *)
 
 xor_expr:
   | s = and_expr
@@ -2022,8 +2041,8 @@ param_assign:
 selection_stmt:
   | s = if_stmt
   { s }
-  (* | s = case_stmt
-  { s } *)
+  | s = case_stmt
+  { s }
 
 if_stmt:
   | ti = T_IF cond = expression T_THEN if_stmts = stmt_list T_END_IF
@@ -2048,13 +2067,34 @@ if_stmt_elsif_list:
     elsif :: elsifs
   }
 
-(* case_stmt: *)
+case_stmt:
+  | ti = T_CASE e = expression T_OF css = case_selection_list T_ELSE sl = stmt_list T_END_CASE
+  { S.StmCase(ti, e, css, sl) }
+  | ti = T_CASE e = expression T_OF css = case_selection_list T_END_CASE
+  { S.StmCase(ti, e, css, []) }
 
-(* case_selection: *)
+(* Helper symbol for case_stmt *)
+case_selection_list:
+  | cs = case_selection
+  { cs :: [] }
+  | css = case_selection_list cs = case_selection
+  { cs :: css }
 
-(* case_list: *)
+case_selection:
+  | cl = case_list T_COLON sl = stmt_list
+  { {S.case = cl; S.body = sl} }
 
-(* case_list_elem: *)
+case_list:
+  | e = case_list_elem
+  { e :: [] }
+  | es = case_list T_COMMA e = case_list_elem
+  { e :: es }
+
+case_list_elem:
+  (* | e = subrange
+  {  } *)
+  | e = constant_expr
+  { e }
 
 iteration_stmt:
   | s = for_stmt

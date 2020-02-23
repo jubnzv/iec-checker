@@ -279,6 +279,10 @@ type statement =
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
+  | StmCase of TI.t *
+               expr * (** condition *)
+               case_selection list *
+               statement list (* else *)
   | StmFor of TI.t *
               SymVar.t * (** control variable *)
               expr * (** range start *)
@@ -296,6 +300,8 @@ and expr =
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
+(* FIXME: These values should have a separate type which supports subranges and enums. *)
+and case_selection = {case: int list; body: statement list}
 
 val c_from_expr : expr -> constant option
 (** Convert given expr to const. *)

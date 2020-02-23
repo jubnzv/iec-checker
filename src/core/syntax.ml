@@ -379,6 +379,10 @@ type statement =
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
+  | StmCase of TI.t *
+               expr * (** condition *)
+               case_selection list *
+               statement list (* else *)
   | StmFor of TI.t *
               SymVar.t * (** control variable *)
               expr * (** range start *)
@@ -396,6 +400,7 @@ and expr =
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
+and case_selection = {case: int list; body: statement list}
 
 let c_from_expr = function
   | Constant(v) -> Some v

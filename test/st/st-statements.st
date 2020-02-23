@@ -6,6 +6,7 @@ PROGRAM p0
   END_VAR
   VAR_OUTPUT
     vo1 : INT;
+    vo2 : INT;
   END_VAR
   VAR
     i : INT;
@@ -17,6 +18,14 @@ PROGRAM p0
     THEN vo1 := 0;
     ELSE vo1 := vi1 - 42;
   END_IF;
+
+  CASE vi1 OF
+    1 : vo1 := 19;
+    2 : vo1 := 29;
+    3,4 : vo1 := 39;
+    (* TODO: 3..10: vo1 := 42; *)
+    ELSE vo1 := 1; vo2 := -1;
+  END_CASE;
 
   FOR i := 1 TO 100 DO
     acc := acc * x;
