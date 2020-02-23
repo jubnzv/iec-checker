@@ -26,7 +26,7 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
-(* }}} *)
+  (* }}} *)
 
 (* {{{ Data types *)
 type iec_data_type =
@@ -208,10 +208,10 @@ let c_add c1 c2 =
 
 (* {{{ Identifiers *)
 module type ID = sig
-   type t
-   val create : string -> TI.t -> t
-   val get_name : t -> string
-   val get_ti : t -> TI.t
+  type t
+  val create : string -> TI.t -> t
+  val get_name : t -> string
+  val get_ti : t -> TI.t
 end
 
 module Identifier : ID = struct
@@ -230,17 +230,39 @@ module SymVar = Identifier
 module DirVar = struct
   type location = LocI | LocQ | LocM
 
+  let loc_to_string = function
+    | LocI -> "I"
+    | LocQ -> "Q"
+    | LocM -> "M"
+
   type size =
-    | SizeX (** single bit *)
+    | SizeX    (** single bit *)
     | SizeNone (** single bit *)
-    | SizeB (** byte *)
-    | SizeW (** word (16 bits) *)
-    | SizeD (** double word (32 bits) *)
-    | SizeL  (** quad word (64 bits) *)
+    | SizeB    (** byte *)
+    | SizeW    (** word (16 bits) *)
+    | SizeD    (** double word (32 bits) *)
+    | SizeL    (** quad word (64 bits) *)
 
-  type t = { name: string option; ti: TI.t; loc: location; sz: size option; path: int list; }
+  let size_to_string = function
+    | None -> ""
+    | Some(s) -> (match s with
+        | SizeX    -> "X"
+        | SizeNone -> ""
+        | SizeB    -> "B"
+        | SizeW    -> "W"
+        | SizeD    -> "D"
+        | SizeL    -> "L")
 
-  let create name ti loc sz path =
+  let path_to_string path = List.fold_left path ~f:(fun s p -> s ^ (Printf.sprintf ".%d" p)) ~init:""
+
+  type t = { name: string; ti: TI.t; loc: location; sz: size option; path: int list; }
+
+  let create opt_name ti loc sz path =
+    let name =
+      match opt_name with
+      | None -> let n = Printf.sprintf "%s%s%s" (loc_to_string loc) (size_to_string sz) (path_to_string path) in n
+      | Some(n) -> n
+    in
     { name; ti; loc; sz; path; }
 
   let get_name var = var.name
@@ -279,6 +301,9 @@ end
 (* }}} *)
 
 type variable = SymVar of SymVar.t | DirVar of DirVar.t
+
+let vget_name = function
+  | SymVar(v) -> (let n = SymVar.get_name(v) in n) | DirVar(v) -> (let n = DirVar.get_name(v) in n)
 
 let vget_ti = function
   | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti) | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
@@ -404,6 +429,11 @@ module VarDecl = struct
 
   let get_var dcl = dcl.var
 
+  let get_var_name dcl =
+    match dcl.var with
+    | SymVar v -> SymVar.get_name v
+    | DirVar v -> DirVar.get_name v
+
   let set_qualifier_exn dcl qa =
     match dcl.spec with
     | Spec _ | SpecDirect _ | SpecOut _ | SpecIn _
@@ -457,5 +487,11 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
+
+let get_pou_vars_decl = function
+  | IECFunction f -> f.variables
+  | IECFunctionBlock fb -> fb.variables
+  | IECProgram p -> p.variables
+  | IECConfiguration _ -> []
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

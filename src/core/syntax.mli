@@ -163,6 +163,8 @@ val c_add : constant -> constant -> constant
 (* }}} *)
 
 (* {{{ Identifiers *)
+
+(** Description of use -- nondefining occurence of an identifier *)
 module type ID = sig
   type t
   val create : string -> TI.t -> t
@@ -183,15 +185,15 @@ module DirVar : sig
 
   (** Size prefixes for directly represented variables. *)
   type size =
-    | SizeX (** single bit *)
+    | SizeX    (** single bit *)
     | SizeNone (** single bit *)
-    | SizeB (** byte *)
-    | SizeW (** word (16 bits) *)
-    | SizeD (** double word (32 bits) *)
-    | SizeL  (** quad word (64 bits) *)
+    | SizeB    (** byte *)
+    | SizeW    (** word (16 bits) *)
+    | SizeD    (** double word (32 bits) *)
+    | SizeL    (** quad word (64 bits) *)
 
   val create : string option -> TI.t -> location -> size option -> int list -> t
-  val get_name : t -> string option
+  val get_name : t -> string
 end
 
 (** Function Block identifier *)
@@ -209,6 +211,9 @@ end
 (* }}} *)
 
 type variable = SymVar of SymVar.t | DirVar of DirVar.t
+
+val vget_name : variable -> string
+(** Return name of a given variable *)
 
 val vget_ti : variable -> TI.t
 (** Return token info of a given variable *)
@@ -322,6 +327,8 @@ module VarDecl : sig
 
   val get_var : t -> variable
 
+  val get_var_name : t -> string
+
   val set_qualifier_exn : t -> qualifier -> t
   (** Set qualifier for variable. Raise an exception if this variable doesn't support qualifiers. *)
 
@@ -367,6 +374,7 @@ type configuration_decl = {
   variables : VarDecl.t list; (** Global variables and access lists *)
   access_paths : string list;
 }
+
 (* }}} *)
 
 type iec_library_element =
@@ -374,5 +382,8 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
+
+val get_pou_vars_decl : iec_library_element -> VarDecl.t list
+(** Return variables declared for given POU *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

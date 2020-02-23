@@ -2,7 +2,6 @@ open Core_kernel
 open IECCheckerCore
 open IECCheckerParser
 open IECCheckerLib
-
 module S = Syntax
 module C = CheckerLib
 module TI = Tok_info
@@ -59,5 +58,6 @@ let _ =
       failwith ("File " ^ filename ^ " doesn't exists")
     else
       let elements = parse_file filename in
-      let warnings = C.run_all_checks elements in
+      let scopes = Ast_util.create_scopes elements in
+      let warnings = C.run_all_checks elements scopes in
       List.iter warnings ~f:(fun w -> W.print w)

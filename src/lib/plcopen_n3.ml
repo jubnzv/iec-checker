@@ -176,17 +176,8 @@ let startswith s1 s2 =
     String.equal sub s2
 
 let check_name var =
-  let name =
-    match var with
-    | S.SymVar v -> S.SymVar.get_name v
-    | S.DirVar v -> (
-        match S.DirVar.get_name v with Some n -> n | None -> "" )
-  in
-  let ti =
-    match var with
-    | S.SymVar v -> S.SymVar.get_ti v
-    | S.DirVar v -> S.DirVar.get_ti v
-  in
+  let name = S.vget_name var in
+  let ti = S.vget_ti var in
   let m = List.find reserved_keywords ~f:(fun k -> startswith name k) in
   match m with
   | Some _ ->

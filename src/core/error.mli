@@ -1,4 +1,4 @@
-type error = InternalError
+type error = InternalError | UnboundIdentifier
 
 exception Error of string
 

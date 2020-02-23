@@ -14,3 +14,9 @@ let create lexbuf =
   let col = lexbuf.Lexing.lex_curr_p.pos_bol in
   { id; linenr; col }
 
+let create_dummy =
+  let id = next_id () in
+  let linenr = -1 in
+  let col = -1 in
+  { id; linenr; col }
+

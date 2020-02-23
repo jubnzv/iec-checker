@@ -13,19 +13,8 @@ let check statements =
         | _, _, S.BinExpr _ -> print_assign e2
         | S.Variable lhs, S.DIV, S.Constant rhs ->
             if S.c_is_zero rhs then
-              let name =
-                match lhs with
-                | S.SymVar v -> S.SymVar.get_name v
-                | S.DirVar v -> (
-                    match S.DirVar.get_name v with
-                    | Some n -> n
-                    | None -> "" )
-              in
-              let ti =
-                match lhs with
-                | S.SymVar v -> S.SymVar.get_ti v
-                | S.DirVar v -> S.DirVar.get_ti v
-              in
+              let name = S.vget_name lhs in
+              let ti = S.vget_ti lhs in
               Printf.printf
                 "SA000: Zero division: variable %s (%d:%d) divided to zero!\n"
                 name ti.linenr ti.col
