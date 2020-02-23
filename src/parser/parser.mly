@@ -69,14 +69,6 @@
 %token T_SEMICOLON ";"
 %token T_COMMA     ","
 %token T_AT        "AT"
-%token T_I         "I"
-%token T_Q         "Q"
-%token T_M         "M"
-%token T_X         "X"
-%token T_B         "B"
-%token T_W         "W"
-%token T_D         "D"
-%token T_L         "L"
 %token T_WITH
 %token T_RETAIN
 %token T_NON_RETAIN
@@ -898,7 +890,7 @@ struct_elem_name_list:
 
 (* {{{ Table 16 -- Direct variables *)
 direct_variable:
-  | T_PERCENT loc = location_prefix; sz = size_prefix; pcs = unsigned_int_list;
+  | T_PERCENT loc = dir_var_location_prefix; sz = dir_var_size_prefix; pcs = unsigned_int_list;
   {
     let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
     S.VarDecl.SpecDirect(None)
@@ -1274,7 +1266,7 @@ loc_partly_var_decl:
     { List.rev vl } (* TODO: add qualifier *)
 
 loc_partly_var:
-    | out = variable_name; l = incompl_location; T_COLON s = var_spec
+    | out = variable_name; T_AT T_PERCENT l = dir_var_location_prefix T_MUL T_COLON s = var_spec
     {
         let (n, ti) = out in
         let v = S.SymVar.create n ti in
@@ -1289,16 +1281,6 @@ incompl_located_var_list:
     { v :: [] }
     | vs = incompl_located_var_list; v = loc_partly_var T_SEMICOLON
     { v :: vs }
-
-(* Helper symbol for loc_partly_var *)
-(* TODO: Not keywords *)
-incompl_location:
-    | T_AT T_PERCENT T_I T_MUL
-    { S.DirVar.LocI }
-    | T_AT T_PERCENT T_Q T_MUL
-    { S.DirVar.LocQ }
-    | T_AT T_PERCENT T_M T_MUL
-    { S.DirVar.LocM }
 
 var_spec:
     | ty = simple_spec
@@ -2107,27 +2089,37 @@ generic_type_name:
     | T_ANY_DATE
     { S.ANY_DATE }
 
-(* TODO: They are not reserved keywords. *)
-location_prefix:
-    | T_I
-    { S.DirVar.LocI }
-    | T_Q
-    { S.DirVar.LocQ }
-    | T_M
-    { S.DirVar.LocM }
+dir_var_location_prefix:
+  | id = T_IDENTIFIER
+  {
+    let (v, _) = id in
+      if String.equal v "I" then
+        S.DirVar.LocI
+      else if String.equal v "Q" then
+        S.DirVar.LocQ
+      else if String.equal v "M" then
+        S.DirVar.LocM
+      else
+        raise (SyntaxError ("Unknown direct variable location prefix: " ^ v))
+  }
 
-(* TODO: They are not reserved keywords. *)
-size_prefix:
-    | T_X
-    { S.DirVar.SizeX }
-    | T_B
-    { S.DirVar.SizeB }
-    | T_W
-    { S.DirVar.SizeW }
-    | T_D
-    { S.DirVar.SizeD }
-    | T_L
-    { S.DirVar.SizeL }
+dir_var_size_prefix:
+  | id = T_IDENTIFIER
+  {
+    let (v, _) = id in
+      if v == "X" then
+        S.DirVar.SizeX
+      else if String.equal v "B" then
+        S.DirVar.SizeB
+      else if String.equal v "W" then
+        S.DirVar.SizeW
+      else if String.equal v "D" then
+        S.DirVar.SizeD
+      else if String.equal v "L" then
+        S.DirVar.SizeL
+      else
+        raise (SyntaxError ("Unknown direct variable size prefix: " ^ v))
+  }
 
 compare_expr_operator:
     | T_GT

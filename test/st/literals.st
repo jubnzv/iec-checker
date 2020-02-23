@@ -13,7 +13,7 @@ PROGRAM program0
        So they could be used as a regular identifiers. *)
     T : INT;
     LT : INT;
-    (* TODO: D : INT; *)
+    D : INT;
     LD : INT;
   END_VAR
 

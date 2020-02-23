@@ -92,14 +92,6 @@ rule initial tokinfo =
   | ":"                  { T_COLON }
   | ","                  { T_COMMA }
   | "AT"                 { T_AT }
-  | "I"                  { T_I }
-  | "Q"                  { T_Q }
-  | "M"                  { T_M }
-  | "X"                  { T_X }
-  | "B"                  { T_B }
-  | "W"                  { T_W }
-  | "D"                  { T_D }
-  | "L"                  { T_L }
   | ";"                  { T_SEMICOLON }
   | "#"                  { T_SHARP }
   | "%"                  { T_PERCENT }
