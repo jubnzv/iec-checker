@@ -1861,62 +1861,62 @@ config_inst_init_list:
 
 (* {{{ Table 71-72 -- ST *)
 expression:
-    | s = xor_expr
-    { s }
-    | e1 = expression T_OR e2 = xor_expr
-    { S.BinExpr(e1, S.OR, e2) }
+  | s = xor_expr
+  { s }
+  | e1 = expression T_OR e2 = xor_expr
+  { S.BinExpr(e1, S.OR, e2) }
 
 (* constant_expr: *)
 
 xor_expr:
-    | s = and_expr
-    { s }
-    | e1 = xor_expr T_XOR e2 = and_expr
-    { S.BinExpr(e1, S.XOR, e2) }
+  | s = and_expr
+  { s }
+  | e1 = xor_expr T_XOR e2 = and_expr
+  { S.BinExpr(e1, S.XOR, e2) }
 
 and_expr:
-    | s = compare_expr
-    { s }
-    | e1 = and_expr T_AND e2 = compare_expr
-    { S.BinExpr(e1, S.AND, e2) }
+  | s = compare_expr
+  { s }
+  | e1 = and_expr T_AND e2 = compare_expr
+  { S.BinExpr(e1, S.AND, e2) }
 
 compare_expr:
-    | s = equ_expr
-    { s }
-    | e1 = compare_expr T_EQ e2 = equ_expr
-    { S.BinExpr(e1, S.EQ, e2) }
-    | e1 = compare_expr T_NEQ e2= equ_expr
-    { S.BinExpr(e1, S.NEQ, e2) }
+  | s = equ_expr
+  { s }
+  | e1 = compare_expr T_EQ e2 = equ_expr
+  { S.BinExpr(e1, S.EQ, e2) }
+  | e1 = compare_expr T_NEQ e2= equ_expr
+  { S.BinExpr(e1, S.NEQ, e2) }
 
 equ_expr:
-    | s = add_expr
-    { s }
-    | e1 = equ_expr op = compare_expr_operator e2 = add_expr
-    { S.BinExpr(e1, op, e2) }
+  | s = add_expr
+  { s }
+  | e1 = equ_expr op = compare_expr_operator e2 = add_expr
+  { S.BinExpr(e1, op, e2) }
 
 add_expr:
-    | t = term
-    { t }
-    | t1 = add_expr op = add_operator t2 = term
-    { S.BinExpr(t1, op, t2)}
+  | t = term
+  { t }
+  | t1 = add_expr op = add_operator t2 = term
+  { S.BinExpr(t1, op, t2)}
 
 term:
-    | e = power_expr
-    { e }
-    | e1 = term op = multiply_operator e2 = power_expr
-    { S.BinExpr(e1, op, e2) }
+  | e = power_expr
+  { e }
+  | e1 = term op = multiply_operator e2 = power_expr
+  { S.BinExpr(e1, op, e2) }
 
 power_expr:
-    | e = unary_expr
-    { e }
-    | e1 = power_expr T_POW e2 = unary_expr
-    { S.BinExpr(e1, S.POW, e2) }
+  | e = unary_expr
+  { e }
+  | e1 = power_expr T_POW e2 = unary_expr
+  { S.BinExpr(e1, S.POW, e2) }
 
 unary_expr:
-    | op = unary_operator e = primary_expr
-    { S.UnExpr(op, e) }
-    | e = primary_expr
-    { e }
+  | op = unary_operator e = primary_expr
+  { S.UnExpr(op, e) }
+  | e = primary_expr
+  { e }
 
 primary_expr:
   | c = constant
