@@ -2140,7 +2140,7 @@ dir_var_size_prefix:
   | id = T_IDENTIFIER
   {
     let (v, _) = id in
-      if v == "X" then
+      if String.equal v "X" then
         S.DirVar.SizeX
       else if String.equal v "B" then
         S.DirVar.SizeB
