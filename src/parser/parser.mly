@@ -1349,6 +1349,14 @@ function_vars:
   { vs }
   | vs = func_var_decls
   { vs }
+  | vs = temp_var_decls
+  { vs }
+  | vss = function_vars; vs = io_var_decls
+  { List.append vss vs }
+  | vss = function_vars; vs = func_var_decls
+  { List.append vss vs }
+  | vss = function_vars; vs = temp_var_decls
+  { List.append vss vs }
 
 io_var_decls:
   | vs = input_decls
