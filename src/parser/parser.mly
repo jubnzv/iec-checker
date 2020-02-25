@@ -1942,18 +1942,38 @@ primary_expr:
   { c }
   (* | enum_value
   { } *)
-  | v = variable
+  | v = variable_access
   { S.Variable(v) }
-  (* | func_vall
-  { } *)
+  | fc = func_call
+  { S.FuncCall(fc) }
   (* | ref_value
   {  } *)
   | T_LPAREN e = expression T_RPAREN
   { e }
 
-(* variable_access: *)
+variable_access:
+  | v = variable_expr multibit_part_access
+  { v }
+  | v = variable_expr
+  { v }
 
-(* multibit_part_access: *)
+(* Helper symbol for variable_access.
+ * This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
+variable_expr:
+  | id = T_IDENTIFIER
+  {
+    let (name, ti) = id in
+    let sv = S.SymVar.create name ti in
+    S.SymVar(sv)
+  }
+
+multibit_part_access:
+  | T_DOT v = unsigned_int
+  {  }
+  | T_DOT T_PERCENT sz = dir_var_size_prefix v = unsigned_int
+  {  }
+  | T_DOT T_PERCENT v = unsigned_int
+  {  }
 
 func_call:
   | f = func_access T_LPAREN T_RPAREN

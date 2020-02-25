@@ -26,7 +26,8 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
-  (* }}} *)
+[@@deriving show]
+(* }}} *)
 
 (* {{{ Data types *)
 type iec_data_type =
@@ -161,6 +162,7 @@ type constant =
   | CReal of float * TI.t
   | CString of string * TI.t
   | CTimeValue of TimeValue.t * TI.t
+[@@deriving show]
 
 let c_is_zero c =
   match c with
@@ -286,6 +288,7 @@ end
 
 module Function = struct
   type t = { name : string; ti : TI.t; is_std : bool }
+  [@@deriving show]
 
   let create name ti =
     let is_std = false in
@@ -300,7 +303,8 @@ end
 
 (* }}} *)
 
-type variable = SymVar of SymVar.t | DirVar of DirVar.t
+type variable = SymVar of (SymVar.t [@opaque]) | DirVar of (DirVar.t [@opaque])
+[@@deriving show]
 
 let vget_name = function
   | SymVar(v) -> (let n = SymVar.get_name(v) in n) | DirVar(v) -> (let n = DirVar.get_name(v) in n)
@@ -383,24 +387,28 @@ type statement =
                expr * (** condition *)
                case_selection list *
                statement list (* else *)
-  | StmFor of TI.t *
-              SymVar.t * (** control variable *)
-              expr * (** range start *)
-              expr * (** range end *)
-              expr option * (** range step *)
-              statement list (** body statements *)
+  | StmFor of (TI.t *
+               SymVar.t * (** control variable *)
+               expr * (** range start *)
+               expr * (** range end *)
+               expr option * (** range step *)
+               statement list (** body statements *) [@opaque])
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
+[@@deriving show { with_path = false }]
 and expr =
   | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
+  | FuncCall of statement
+[@@deriving show]
 and case_selection = {case: int list; body: statement list}
+[@@deriving show]
 
 let c_from_expr = function
   | Constant(v) -> Some v

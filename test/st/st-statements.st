@@ -1,5 +1,17 @@
 (* Test for various statements of ST language.
    See: table 71-72; chapter 7.3.3 -- operators *)
+
+FUNCTION fn0 : INT
+  VAR_INPUT
+    INVAL : INT;
+  END_VAR
+  VAR_OUTPUT
+    OUTVAL : INT;
+  END_VAR
+
+  OUTVAL := 0;
+END_FUNCTION
+
 PROGRAM p0
   VAR_INPUT
     vi1 : INT;
@@ -34,5 +46,10 @@ PROGRAM p0
   FOR i := 100 TO 0 BY -2 DO
     acc := acc * x;
   END_FOR;
+
+  (* Invocation statements *)
+  acc := fn0();
+  acc := fn0(19);
+  acc := fn0(INVAL := 19);
 
 END_PROGRAM

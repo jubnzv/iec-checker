@@ -16,4 +16,6 @@ let print_element (e : S.iec_library_element) =
 
 let[@warning "-27"] run_all_checks elements scopes =
   List.iter elements ~f:(fun e -> print_element e);
-  Plcopen_n3.do_check elements |> List.append (Plcopen_l17.do_check elements)
+  Plcopen_n3.do_check elements
+  |> List.append (Plcopen_l17.do_check elements)
+  |> List.append (Plcopen_cp13.do_check elements)

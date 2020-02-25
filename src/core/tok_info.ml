@@ -1,6 +1,6 @@
 open Core_kernel
 
-type t = { id : int; linenr : int; col: int }
+type t = { id : int; linenr : int; col : int } [@@deriving show]
 
 let next_id =
   let n = ref (-1) in
@@ -19,4 +19,3 @@ let create_dummy =
   let linenr = -1 in
   let col = -1 in
   { id; linenr; col }
-

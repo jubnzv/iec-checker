@@ -23,7 +23,8 @@ type operator =
   | EQ (** = *)
   | NEQ (** <> *)
   | ASSIGN
-  (* }}} *)
+[@@deriving show]
+(* }}} *)
 
 (* {{{ Data types *)
 type iec_data_type =
@@ -148,6 +149,7 @@ type constant =
   | CReal of float * TI.t
   | CString of string * TI.t
   | CTimeValue of TimeValue.t * TI.t
+[@@deriving show]
 
 val c_is_zero : constant -> bool
 (** Return true if constant value is zero, false otherwise *)
@@ -283,25 +285,29 @@ type statement =
                expr * (** condition *)
                case_selection list *
                statement list (* else *)
-  | StmFor of TI.t *
-              SymVar.t * (** control variable *)
-              expr * (** range start *)
-              expr * (** range end *)
-              expr option * (** range step *)
-              statement list (** body statements *)
+  | StmFor of (TI.t *
+               SymVar.t * (** control variable *)
+               expr * (** range start *)
+               expr * (** range end *)
+               expr option * (** range step *)
+               statement list (** body statements *) [@opaque])
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
+[@@deriving show]
 and expr =
   | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
+  | FuncCall of statement
+[@@deriving show]
 (* FIXME: These values should have a separate type which supports subranges and enums. *)
 and case_selection = {case: int list; body: statement list}
+[@@deriving show]
 
 val c_from_expr : expr -> constant option
 (** Convert given expr to const. *)
