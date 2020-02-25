@@ -12,6 +12,22 @@
       Lexing.pos_lnum = pos.Lexing.pos_lnum + 1;
       Lexing.pos_bol = pos.Lexing.pos_cnum;
     }
+
+  (* Keywords tables are required to get rid of transition table overflow errors.
+     See: http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual026.html#toc111 *)
+  let generic_types_table  = Caml.Hashtbl.create 97
+  let () =
+    Caml.List.iter (fun (x,y) -> Caml.Hashtbl.add generic_types_table x y)
+      [ "ANY",            T_ANY;
+        "ANY_DERIVED",    T_ANY_DERIVED;
+        "ANY_ELEMENTARY", T_ANY_ELEMENTARY;
+        "ANY_MAGNITUDE",  T_ANY_MAGNITUDE;
+        "ANY_NUM",        T_ANY_NUM;
+        "ANY_REAL",       T_ANY_REAL;
+        "ANY_INT",        T_ANY_INT;
+        "ANY_BIT",        T_ANY_BIT;
+        "ANY_STRING",     T_ANY_STRING;
+        "ANY_DATE",       T_ANY_DATE; ]
 }
 
 let comment_beg  = "(*"
@@ -173,16 +189,9 @@ rule initial tokinfo =
   (* }}} *)
 
   (* {{{ Generic data types *)
-  | "ANY"            { T_ANY }
-  | "ANY_DERIVED"    { T_ANY_DERIVED }
-  | "ANY_ELEMENTARY" { T_ANY_ELEMENTARY }
-  | "ANY_MAGNITUDE"  { T_ANY_MAGNITUDE }
-  | "ANY_NUM"        { T_ANY_NUM }
-  | "ANY_REAL"       { T_ANY_REAL }
-  | "ANY_INT"        { T_ANY_INT }
-  | "ANY_BIT"        { T_ANY_BIT }
-  | "ANY_STRING"     { T_ANY_STRING }
-  | "ANY_DATE"       { T_ANY_DATE }
+  | "ANY" ['_' 'A'-'Z'] as v
+  { try Caml.Hashtbl.find generic_types_table v
+      with Not_found -> (let ti = tokinfo lexbuf in T_IDENTIFIER(v, ti)) }
   (* }}} *)
 
   (* {{{ ST operators *)
