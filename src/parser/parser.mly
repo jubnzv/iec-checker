@@ -166,6 +166,7 @@
 %token<IECCheckerCore.Tok_info.t> T_IF T_THEN T_ELSIF T_ELSE T_END_IF
 %token<IECCheckerCore.Tok_info.t> T_CASE T_OF T_END_CASE
 %token<IECCheckerCore.Tok_info.t> T_FOR T_TO T_BY T_DO T_END_FOR
+%token<IECCheckerCore.Tok_info.t> T_WHILE T_END_WHILE T_REPEAT T_END_REPEAT T_UNTIL
 (* }}} *)
 
 (* {{{ Helpers for date and time literals
@@ -2119,10 +2120,10 @@ case_list_elem:
 iteration_stmt:
   | s = for_stmt
   { s }
-  (* | s = while_stmt
-  { s } *)
-  (* | s = repeat_stmt
-  { s } *)
+  | s = while_stmt
+  { s }
+  | s = repeat_stmt
+  { s }
   (* | T_EXIT
   { } *)
   (* | T_CONTINUE
@@ -2148,9 +2149,13 @@ for_list:
   | e1 = expression T_TO e2 = expression
   { (e1, e2, None) }
 
-(* while_stmt: *)
+while_stmt:
+  | ti = T_WHILE e = expression T_DO sl = stmt_list T_END_WHILE
+  { S.StmWhile(ti, e, sl) }
 
-(* repeat_stmt: *)
+repeat_stmt:
+  | ti = T_REPEAT sl = stmt_list T_UNTIL e = expression T_END_REPEAT
+  { S.StmRepeat(ti, sl, e) }
 (* }}} *)
 
 (* {{{ Table 73-76 -- Graphical languages *)

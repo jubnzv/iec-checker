@@ -24,6 +24,7 @@ PROGRAM p0
     i : INT;
     x : INT;
     acc : INT;
+    j : INT;
   END_VAR
 
   IF (vi1 = 0)
@@ -46,6 +47,17 @@ PROGRAM p0
   FOR i := 100 TO 0 BY -2 DO
     acc := acc * x;
   END_FOR;
+
+  J := 1;
+  WHILE J <= 100 DO
+    J := J + 2;
+  END_WHILE;
+
+  J := -1;
+  REPEAT
+    J := J + 2;
+    UNTIL J = 101
+  END_REPEAT;
 
   (* Invocation statements *)
   acc := fn0();

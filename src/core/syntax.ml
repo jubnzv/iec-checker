@@ -393,6 +393,12 @@ type statement =
                expr * (** range end *)
                expr option * (** range step *)
                statement list (** body statements *) [@opaque])
+  | StmWhile of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmRepeat of TI.t *
+                 statement list * (** body *)
+                 expr (** condition *)
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)

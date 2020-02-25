@@ -48,6 +48,12 @@ let rec stmts_to_list stmt =
       in
       [ stmt ] @ expr_to_stmts e1 @ expr_to_stmts e2 @ e3_stmts
       @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.StmWhile (_, e, ns) ->
+      [ stmt ] @ expr_to_stmts e
+      @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.StmRepeat (_, ns, e) ->
+      [ stmt ] @ expr_to_stmts e
+      @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
   | S.StmFuncParamAssign (_, e, _) -> [ stmt ] @ expr_to_stmts e
   | S.StmFuncCall (_, _, ns) ->
       stmt

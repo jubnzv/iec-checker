@@ -215,6 +215,11 @@ rule initial tokinfo =
   | "BY"             { let ti = tokinfo lexbuf in T_BY(ti) }
   | "DO"             { let ti = tokinfo lexbuf in T_DO(ti) }
   | "END_FOR"        { let ti = tokinfo lexbuf in T_END_FOR(ti) }
+  | "WHILE"          { let ti = tokinfo lexbuf in T_WHILE(ti) }
+  | "END_WHILE"      { let ti = tokinfo lexbuf in T_END_WHILE(ti) }
+  | "REPEAT"         { let ti = tokinfo lexbuf in T_REPEAT(ti) }
+  | "END_REPEAT"     { let ti = tokinfo lexbuf in T_END_REPEAT(ti) }
+  | "UNTIL"          { let ti = tokinfo lexbuf in T_UNTIL(ti) }
 (* }}} *)
 
   (* {{{ Integer literals *)
