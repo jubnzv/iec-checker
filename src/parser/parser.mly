@@ -1140,8 +1140,7 @@ temp_var_decls:
   (* | ref_var_decl *)
   (* | interface_var_decl *)
 
-(* Helper symbol for temp_var_decls_list.
-   Return S.VarDecl.t list *)
+(* Helper symbol for temp_var_decls_list. *)
 temp_var_decl:
   | vs = var_decl_list
   {
@@ -1150,7 +1149,7 @@ temp_var_decl:
   }
 
 external_var_decls:
-  | T_VAR_EXTERNAL vl = external_decl_list T_END_VAR
+  | T_VAR_EXTERNAL vl = list(external_decl) T_END_VAR
   {
     let vlr = List.rev vl in
     List.map ~f:(fun v -> (
@@ -1158,7 +1157,7 @@ external_var_decls:
       S.VarDecl.create v s
     )) vlr
   }
-  | T_VAR_EXTERNAL T_RETAIN vl = external_decl_list T_END_VAR
+  | T_VAR_EXTERNAL T_RETAIN vl = list(external_decl) T_END_VAR
   {
     let vlr = List.rev vl in
     List.map ~f:(fun v -> (
@@ -1167,22 +1166,14 @@ external_var_decls:
     )) vlr
   }
 
-(* Return S.variable list *)
 external_decl:
-  | out = variable_name T_COLON  simple_spec
+  | out = variable_name T_COLON  simple_spec T_SEMICOLON
   {
     let (n, ti) = out in
     let v = S.SymVar.create n ti in
     let vv = S.SymVar(v) in
     vv
   }
-
-(* Helper symbol for external_decl *)
-external_decl_list:
-  | v = external_decl T_SEMICOLON
-  { v :: [] }
-  | vs = external_decl_list; v = external_decl T_SEMICOLON
-  { v :: vs }
 
 global_var_name:
   | id = T_IDENTIFIER
@@ -1261,15 +1252,15 @@ located_at:
 (* d_byte_str_spec: *)
 
 loc_partly_var_decl:
-    | T_VAR vl = incompl_located_var_list T_END_VAR
+    | T_VAR vl = list(loc_partly_var) T_END_VAR
     { List.rev vl }
-    | T_VAR T_RETAIN vl = incompl_located_var_list T_END_VAR
+    | T_VAR T_RETAIN vl = list(loc_partly_var) T_END_VAR
     { List.rev vl } (* TODO: add qualifier *)
-    | T_VAR T_NON_RETAIN vl = incompl_located_var_list T_END_VAR
+    | T_VAR T_NON_RETAIN vl = list(loc_partly_var) T_END_VAR
     { List.rev vl } (* TODO: add qualifier *)
 
 loc_partly_var:
-    | out = variable_name; T_AT T_PERCENT l = dir_var_location_prefix T_MUL T_COLON s = var_spec
+    | out = variable_name; T_AT T_PERCENT l = dir_var_location_prefix T_MUL T_COLON s = var_spec T_SEMICOLON
     {
         let (n, ti) = out in
         let v = S.SymVar.create n ti in
@@ -1277,13 +1268,6 @@ loc_partly_var:
         let s = S.VarDecl.SpecDirect(None) in
         S.VarDecl.create vv s
     }
-
-(* Helper symbol for loc_partly_var *)
-incompl_located_var_list:
-    | v = loc_partly_var T_SEMICOLON
-    { v :: [] }
-    | vs = incompl_located_var_list; v = loc_partly_var T_SEMICOLON
-    { v :: vs }
 
 var_spec:
     | ty = simple_spec
@@ -1542,23 +1526,16 @@ prog_type_access:
   { n }
 
 prog_access_decls:
-  | T_VAR_ACCESS vl = prog_access_decl_list T_END_VAR
+  | T_VAR_ACCESS vl = list(prog_access_decl) T_END_VAR
   { List.rev vl }
 
 prog_access_decl:
-    | an = access_name T_COLON v = symbolic_variable T_COLON data_type_access
+    | an = access_name T_COLON v = symbolic_variable T_COLON data_type_access T_SEMICOLON
     {
       let vv = S.SymVar(v) in
       let s = S.VarDecl.SpecAccess(an) in
       S.VarDecl.create vv s
     }
-
-(* Helper for prog_access_decls *)
-prog_access_decl_list:
-    | v = prog_access_decl T_SEMICOLON
-    { v :: [] }
-    | vs = prog_access_decl_list; v = prog_access_decl T_SEMICOLON
-    { v :: vs }
 (* }}} *)
 
 (* {{{ Table 54-61 -- SFC *)
@@ -1597,7 +1574,7 @@ config_decl:
 resource_decls:
     | rcs = single_resource_decl
     { [rcs] }
-    | rcs = resource_decl_list
+    | rcs = list(resource_decl)
     { rcs }
 
 (* Return S.resource_decl *)
@@ -1607,16 +1584,9 @@ resource_decl:
     | T_RESOURCE n = resource_name; T_ON resource_type_name; vs = global_var_decls; rc = single_resource_decl; T_END_RESOURCE
     { { S.name = Some n; S.tasks = rc.tasks; S.variables = vs; S.programs = rc.programs } }
 
-(* Helper symbol for resource_decl *)
-resource_decl_list:
-    | rc = resource_decl
-    { rc :: [] }
-    | rcs = resource_decl_list; rc = resource_decl
-    { rc :: rcs }
-
 (* Return S.resource_decl *)
 single_resource_decl:
-    | ts = task_config_list; pis = prog_config_list
+    | ts = list(task_config); pis = prog_config_list
     { { S.name = None; S.tasks = ts; S.variables = []; S.programs = pis } }
     | pis = prog_config_list
     { { S.name = None; S.tasks = []; S.variables = []; S.programs = pis } }
@@ -1636,20 +1606,13 @@ resource_name_list:
     { n :: ns }
 
 access_decls:
-    | T_VAR_ACCESS ads = access_decl_list; T_END_VAR
+    | T_VAR_ACCESS ads = list(access_decl); T_END_VAR
     { ads }
 
-(* Helper symbol for access_decl *)
-access_decl_list:
-    | v = access_decl; T_SEMICOLON
-    { v :: [] }
-    | vs = access_decl_list; v = access_decl; T_SEMICOLON
-    { v :: vs }
-
 access_decl:
-    | access_name; T_COLON access_path; T_COLON data_type_access
+    | access_name; T_COLON access_path; T_COLON data_type_access T_SEMICOLON
     {  }
-    | access_name; T_COLON access_path; T_COLON data_type_access; access_direction
+    | access_name; T_COLON access_path; T_COLON data_type_access; access_direction T_SEMICOLON
     {  }
 
 access_path:
@@ -1708,23 +1671,14 @@ prog_name_qual:
   { S.ProgramConfig.set_qualifier p S.ProgramConfig.QNonRetain }
 
 access_direction:
-    | T_READ_WRITE
-    {  }
-    | T_READ_ONLY
-    {  }
+  | T_READ_WRITE
+  {  }
+  | T_READ_ONLY
+  {  }
 
 task_config:
-    | T_TASK t = task_name; i = task_init;
-    {
-      t
-    }
-
-(* Helper symbol for task_config *)
-task_config_list:
-    | t = task_config; T_SEMICOLON
-    { t :: [] }
-    | ts = task_config_list; t = task_config; T_SEMICOLON
-    { t :: ts }
+  | T_TASK t = task_name; i = task_init; T_SEMICOLON
+  { t }
 
 task_name:
     | id = T_IDENTIFIER
