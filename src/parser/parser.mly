@@ -205,34 +205,20 @@
 
 (* }}} *)
 
-(* Parser entry point. *)
+(* Parser entry point *)
 %start <IECCheckerCore.Syntax.iec_library_element list> main
 
 %%
-(* Parser entry point *)
-main:
-    | T_EOF
-    { [] }
-    | dl = library_element_declaration_list; T_EOF
-    { List.rev dl }
+let main :=
+  | ~ = list(library_element_declaration); T_EOF; <>
+  | T_EOF; { [] }
 
 (* {{{ Programming model *)
-library_element_declaration:
-    | p = prog_decl
-    { S.IECProgram(p) }
-    | f = func_decl
-    { S.IECFunction(f) }
-    | fb = fb_decl
-    { S.IECFunctionBlock(fb) }
-    | c = config_decl
-    { S.IECConfiguration(c) }
-
-(* Helper symbol for library_element_declaration *)
-library_element_declaration_list:
-    | e = library_element_declaration
-    { e :: [] }
-    | el = library_element_declaration_list; e = library_element_declaration
-    { e :: el }
+let library_element_declaration :=
+  | ~ = prog_decl; <S.IECProgram>
+  | ~ = func_decl; <S.IECFunction>
+  | ~ = fb_decl; <S.IECFunctionBlock>
+  | ~ = config_decl; <S.IECConfiguration>
 (* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
@@ -246,41 +232,26 @@ library_element_declaration_list:
 (* {{{ Table 5 -- Numeric literals *)
 (* In Annex A any external representation of data are designated as "constant".
  * So literally constant is just a literal value. *)
-constant:
-  | c = numeric_literal
-  { S.Constant(c) }
-  | c = char_literal
-  { S.Constant(c) }
-  | c = time_literal
-  { S.Constant(c) }
-  (* | c = bit_str_literal
-  { c } *)
-  | c = bool_literal
-  { S.Constant(c) }
+let constant :=
+  | ~ = numeric_literal; <S.Constant>
+  | ~ = char_literal; <S.Constant>
+  | ~ = time_literal; <S.Constant>
+  (* | ~ = bit_str_literal <S.Constant> *)
+  | ~ = bool_literal; <S.Constant>
 
-numeric_literal:
-  | res = int_literal
-  { res }
-  | res = real_literal
-  { res }
+let numeric_literal :=
+  | ~ = int_literal; <>
+  | ~ = real_literal; <>
 
-int_literal:
-  | int_type_name T_SHARP v = signed_int
-  { v }
-  | int_type_name T_SHARP v = binary_int
-  { v }
-  | int_type_name T_SHARP v = octal_int
-  { v }
-  | int_type_name T_SHARP v = hex_int
-  { v }
-  | v = signed_int
-  { v }
-  | v = binary_int
-  { v }
-  | v = octal_int
-  { v }
-  | v = hex_int
-  { v }
+let int_literal :=
+  | int_type_name; T_SHARP; ~ = signed_int; <>
+  | int_type_name; T_SHARP; ~ = binary_int; <>
+  | int_type_name; T_SHARP; ~ = octal_int; <>
+  | int_type_name; T_SHARP; ~ = hex_int; <>
+  | ~ = signed_int; <>
+  | ~ = binary_int; <>
+  | ~ = octal_int; <>
+  | ~ = hex_int; <>
 
 unsigned_int:
   | vi = T_INTEGER
@@ -362,15 +333,12 @@ bool_literal:
 (* }}} *)
 
 (* {{{ Table 6 -- String literals / Table 7 -- Two-character combinations in strings *)
-char_literal:
-  | v = char_str
-  { v }
+let char_literal :=
+  | ~ = char_str; <>
 
-char_str:
-  | v = s_byte_char_str
-  { v }
-  | v = d_byte_char_str
-  { v }
+let char_str :=
+  | ~ = s_byte_char_str; <>
+  | ~ = d_byte_char_str; <>
 
 s_byte_char_str:
   | str = T_SSTRING_LITERAL
@@ -392,16 +360,12 @@ d_byte_char_str:
 (* common_char_value: *)
 (* }}} *)
 
-(* {{{ Table 8 -- Diration literals / Table 9 -- Datetime literals *)
-time_literal:
-  | v = duration
-  { v }
-  | v = time_of_day
-  { v }
-  | v = date
-  { v }
-  | v = date_and_time
-  { v }
+(* {{{ Table 8 -- Duration literals / Table 9 -- Datetime literals *)
+let time_literal :=
+  | ~ = duration; <>
+  | ~ = time_of_day; <>
+  | ~ = date; <>
+  | ~ = date_and_time; <>
 
 duration:
   | time_type_helper v = interval
@@ -436,21 +400,14 @@ fix_point:
     (vs, ti)
   }
 
-interval:
-  | v = days
-  { v }
-  | v = hours
-  { v }
-  | v = minutes
-  { v }
-  | v = seconds
-  { v }
-  | v = miliseconds
-  { v }
-  | v = microseconds
-  { v }
-  | v = nanoseconds
-  { v }
+let interval :=
+  | ~ = days; <>
+  | ~ = hours; <>
+  | ~ = minutes; <>
+  | ~ = seconds; <>
+  | ~ = miliseconds; <>
+  | ~ = microseconds; <>
+  | ~ = nanoseconds; <>
 
 days:
   | vt = T_TIME_INTERVAL_D
@@ -512,13 +469,11 @@ daytime:
     ctime_of_timevals hi mi ss
   }
 
-day_hour:
-  | v = unsigned_int
-  { v }
+let day_hour :=
+  | ~ = unsigned_int; <>
 
-day_minute:
-  | v = unsigned_int
-  { v }
+let day_minute :=
+  | ~ = unsigned_int; <>
 
 day_second:
   | fp = fix_point
@@ -546,17 +501,14 @@ date_literal:
     cdate_of_timevals cy cmo cd
   }
 
-year:
-  | v = unsigned_int
-  { v }
+let year :=
+  | ~ = unsigned_int; <>
 
-month:
-  | v = unsigned_int
-  { v }
+let month :=
+  | ~ = unsigned_int; <>
 
-day:
-  | v = unsigned_int
-  { v }
+let day :=
+  | ~ = unsigned_int; <>
 
 date_and_time:
   | dt_type_name; T_SHARP; d = date_literal; T_MINUS dt = daytime
@@ -568,43 +520,29 @@ date_and_time:
 (* {{{ Table 10 -- Elementary data types *)
 (* Note: *_name rules will return an actual Syntax AST type representation.
   This simplifies a processing of derived types specifications. *)
+let data_type_access :=
+  | ~ = elem_type_name; <S.TyElementary>
+  | ~ = derived_type_access; <S.TyDerived>
 
-data_type_access:
-  | ty = elem_type_name
-  { S.TyElementary(ty) }
-  | ty = derived_type_access
-  { S.TyDerived(ty) }
-
-elem_type_name:
-  | ty = numeric_type_name
-  { ty }
-  | ty = bit_str_type_name
-  { ty }
-  | ty = string_type_name
-  { ty }
-  | ty = date_type_name
-  { ty }
-  | ty = time_type_name
-  { ty }
+let elem_type_name :=
+  | ~ = numeric_type_name; <>
+  | ~ = bit_str_type_name; <>
+  | ~ = string_type_name; <>
+  | ~ = date_type_name; <>
+  | ~ = time_type_name; <>
   (* NOTE: TOD and DT types are not defined as part of elem_type_name in 3rd edition of IEC61131-3
      standard. This seems like a typo because 2nd edition includes these types in date_type which
      has been splitted to few rules in new standard after introducing long types. *)
-  | ty = tod_type_name
-  { ty }
-  | ty = dt_type_name
-  { ty }
+  | ~ = tod_type_name; <>
+  | ~ = dt_type_name; <>
 
-numeric_type_name:
-  | t = int_type_name
-  { t }
-  | t = real_type_name
-  { t }
+let numeric_type_name :=
+  | ~ = int_type_name; <>
+  | ~ = real_type_name; <>
 
-int_type_name:
-  | t = sign_int_type_name
-  { t }
-  | t = unsign_int_type_name
-  { t }
+let int_type_name :=
+  | ~ = sign_int_type_name; <>
+  | ~ = unsign_int_type_name; <>
 
 sign_int_type_name:
   | T_SINT
@@ -685,11 +623,9 @@ dt_type_name:
   | T_LDT
   { S.LDT }
 
-bit_str_type_name:
-  | ty = bool_type_name
-  { ty }
-  | ty = multibits_type_name
-  { ty }
+let bit_str_type_name :=
+  | ~ = bool_type_name; <>
+  | ~ = multibits_type_name; <>
 
 bool_type_name:
   | T_BOOL
@@ -718,9 +654,8 @@ derived_type_access:
   | n = string_type_name
   {  } *)
 
-string_type_access:
-  | ty = string_type_name
-  { ty }
+let string_type_access :=
+  | ~ = string_type_name; <>
 
 single_element_type_access:
   | name = simple_type_access
@@ -730,10 +665,8 @@ single_element_type_access:
   (* | n = enum_type_access
     { n } *)
 
-(* Return a name of derived ty *)
-simple_type_access:
-  | tn = simple_type_name
-  { tn }
+let simple_type_access :=
+  | ~ = simple_type_name; <>
 
 (* subrange_type_access: *)
   (* | id = T_IDENTIFIER *)
@@ -911,19 +844,11 @@ struct_elem_name_list:
 
 (* {{{ Table 16 -- Direct variables *)
 direct_variable:
-  | T_PERCENT loc = dir_var_location_prefix; sz = dir_var_size_prefix; pcs = unsigned_int_list;
+  | T_PERCENT loc = dir_var_location_prefix; sz = dir_var_size_prefix; pcs = list(unsigned_int);
   {
     let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
     S.VarDecl.SpecDirect(None)
   }
-
-(* Helper symbol for direct_variable.
- * Return int list. *)
-unsigned_int_list:
-  | ci = unsigned_int;
-  { ci :: [] }
-  | cil = unsigned_int_list; ci = unsigned_int;
-  { ci :: cil }
 (* }}} *)
 
 (* {{{ Table 12 -- Operations with references *)
@@ -1251,13 +1176,11 @@ global_var_spec:
     [vd]
   }
 
-loc_var_spec_init:
-  | s = simple_spec_init
-  { s }
+let loc_var_spec_init :=
+  | ~ = simple_spec_init; <>
 
-located_at:
-  | T_AT v = direct_variable
-  { v }
+let located_at :=
+  | T_AT; ~ = direct_variable; <>
 
 (* str_var_decl: *)
 
@@ -1363,23 +1286,17 @@ function_vars:
   | vss = function_vars; vs = temp_var_decls
   { List.append vss vs }
 
-io_var_decls:
-  | vs = input_decls
-  { vs }
-  | vs = output_decls
-  { vs }
-  | vs = in_out_decls
-  { vs }
+let io_var_decls :=
+  | ~ = input_decls; <>
+  | ~ = output_decls; <>
+  | ~ = in_out_decls; <>
 
-func_var_decls:
-  | vds = external_var_decls
-  { vds }
-  | vds = var_decls
-  { vds }
+let func_var_decls :=
+  | ~ = external_var_decls; <>
+  | ~ = var_decls; <>
 
-func_body:
-  | sl = stmt_list
-  { sl }
+let func_body :=
+  | ~ = stmt_list; <>
 (* }}} *)
 
 (* {{{ Table 40 -- Function block definition / Table 41 -- Function block instantiation *)
@@ -1430,26 +1347,20 @@ fb_var_decls_list:
 (* Reuse input_decls and output_decls defined in Table 13.
    These grammar rules are actually the same as fb_input_decls
    and fb_output_decls. *)
-fb_io_var_decls:
-  | vds = input_decls
-  { vds }
-  | vds = output_decls
-  { vds }
-  | vds = in_out_decls
-  { vds }
+let fb_io_var_decls :=
+  | ~ = input_decls; <>
+  | ~ = output_decls; <>
+  | ~ = in_out_decls; <>
 
 (* fb_input_decls: *)
 (* fb_input_decl: *)
 (* fb_output_decls: *)
 (* fb_output_decl: *)
 
-other_var_decls:
-    | vds = retain_var_decls
-    { vds }
-    | vds = no_retain_var_decls
-    { vds }
-    | vds = loc_partly_var_decl
-    { vds }
+let other_var_decls :=
+  | ~ = retain_var_decls; <>
+  | ~ = no_retain_var_decls; <>
+  | ~ = loc_partly_var_decl; <>
 
 no_retain_var_decls:
   | T_VAR T_NON_RETAIN vs = var_decl_init_list T_END_VAR
@@ -1461,9 +1372,8 @@ no_retain_var_decls:
     )) vsr
   }
 
-fb_body:
-    | sl = stmt_list
-    { sl }
+let fb_body :=
+  | ~ = stmt_list; <>
 
 (* method_decl: *)
 
@@ -1539,21 +1449,19 @@ prog_type_name:
     name
   }
 
-prog_type_access:
-  | n = prog_type_name
-  { n }
+let prog_type_access :=
+  | ~ = prog_type_name; <>
 
-prog_access_decls:
-  | T_VAR_ACCESS vl = list(prog_access_decl) T_END_VAR
-  { List.rev vl }
+let prog_access_decls :=
+  | T_VAR_ACCESS; ~ = list(prog_access_decl); T_END_VAR; <>
 
 prog_access_decl:
-    | an = access_name T_COLON v = symbolic_variable T_COLON data_type_access T_SEMICOLON
-    {
-      let vv = S.SymVar(v) in
-      let s = S.VarDecl.SpecAccess(an) in
-      S.VarDecl.create vv s
-    }
+  | an = access_name T_COLON v = symbolic_variable T_COLON data_type_access T_SEMICOLON
+  {
+    let vv = S.SymVar(v) in
+    let s = S.VarDecl.SpecAccess(an) in
+    S.VarDecl.create vv s
+  }
 (* }}} *)
 
 (* {{{ Table 54-61 -- SFC *)
@@ -1616,16 +1524,8 @@ resource_name:
         name
     }
 
-(* Helper symbol for resource_name *)
-resource_name_list:
-    | n = resource_name;
-    { n :: [] }
-    | ns = resource_name_list; T_DOT n = resource_name;
-    { n :: ns }
-
-access_decls:
-    | T_VAR_ACCESS ads = list(access_decl); T_END_VAR
-    { ads }
+  let access_decls :=
+    | T_VAR_ACCESS; ~ = list(access_decl); T_END_VAR; <>
 
 access_decl:
     | access_name; T_COLON access_path; T_COLON data_type_access T_SEMICOLON
@@ -1647,15 +1547,14 @@ access_path:
     | prog_name; T_DOT; symbolic_variable
     {  }
 
-(* Return S.SymVar *)
 global_var_access:
     | out = global_var_name;
     { S.SymVar(out) }
-    | resource_name_list; out = global_var_name;
+    | separated_list(T_DOT, resource_name); out = global_var_name;
     { S.SymVar(out) }
     | out = global_var_name; struct_elem_name_list
     { S.SymVar(out) }
-    | resource_name_list; out = global_var_name; struct_elem_name_list
+    | separated_list(T_DOT, resource_name); out = global_var_name; struct_elem_name_list
     { S.SymVar(out) }
 
 access_name:
@@ -1732,7 +1631,7 @@ data_source:
 prog_config:
     | T_PROGRAM pc = prog_name_qual; T_COLON prog_type_access;
     { pc }
-    | T_PROGRAM pc = prog_name_qual; T_COLON prog_type_access; T_LBRACE; cvs = prog_conf_elems; T_RBRACE
+    | T_PROGRAM pc = prog_name_qual; T_COLON prog_type_access; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE
     {
         let pc = S.ProgramConfig.set_conn_vars pc cvs in
         pc
@@ -1742,7 +1641,7 @@ prog_config:
         let pc = S.ProgramConfig.set_task pc t in
         pc
     }
-    | T_PROGRAM pc = prog_name_qual; T_WITH; t = task_name; T_COLON ty = prog_type_name; T_LBRACE; cvs = prog_conf_elems; T_RBRACE
+    | T_PROGRAM pc = prog_name_qual; T_WITH; t = task_name; T_COLON ty = prog_type_name; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE
     {
         let pc = S.ProgramConfig.set_conn_vars pc cvs in
         let pc = S.ProgramConfig.set_task pc t in
@@ -1756,11 +1655,7 @@ prog_config_list:
     | pcs = prog_config_list; pc = prog_config T_SEMICOLON
     { pc :: pcs }
 
-prog_conf_elems:
-    | el = prog_conf_elem
-    { el :: [] }
-    | els = prog_conf_elems; T_COMMA el = prog_conf_elem
-    { el :: els }
+(* prog_conf_elems: *)
 
 prog_conf_elem:
     (* | fb = fb_task
@@ -1791,29 +1686,18 @@ prog_data_source:
     (* | v = direct_variable
     { v } *)
 
-data_sink:
-    | v = global_var_access
-    { v }
-    | v = direct_variable
-    { v }
+  let data_sink :=
+    | ~ = global_var_access; <>
+    | ~ = direct_variable; <>
 
 config_init:
-    | T_VAR_CONFIG is = config_inst_init_list T_END_VAR
+    | T_VAR_CONFIG is = list(config_inst_init) T_END_VAR
     { is }
 
+(* TODO: This is not complete *)
 config_inst_init:
-    | resource_name; T_DOT; prog_name; T_DOT;
+    | resource_name; T_DOT; prog_name; T_SEMICOLON
     {  }
-    (* | resource_name; T_DOT; prog_name; T_DOT; fn = fb_name T_DOT;
-    {  } *)
-
-(* Helper symbol for config_inst_init *)
-config_inst_init_list:
-    | i = config_inst_init; T_SEMICOLON
-    { i :: [] }
-    | is = config_inst_init_list; i = config_inst_init; T_SEMICOLON
-    { i :: is }
-
 (* }}} *)
 
 (* {{{ Table 64 -- Namespaces *)
@@ -1954,18 +1838,11 @@ func_call:
     let ti = S.Function.get_ti f in
     S.StmFuncCall(ti, f, [])
   }
-  | f = func_access T_LPAREN stmts = param_assign_list T_RPAREN
+  | f = func_access T_LPAREN stmts = separated_list(T_COMMA, param_assign) T_RPAREN
   {
     let ti = S.Function.get_ti f in
     S.StmFuncCall(ti, f, stmts)
   }
-
-(* Helper symbol for func_call *)
-param_assign_list:
-  | p = param_assign
-  { p :: [] }
-  | ps = param_assign_list T_COMMA p = param_assign
-  { p :: ps }
 
 stmt_list:
   | s = stmt T_SEMICOLON
@@ -1973,15 +1850,11 @@ stmt_list:
   | sl = stmt_list; s = stmt T_SEMICOLON
   { s :: sl }
 
-stmt:
-  | s = assign_stmt
-  { s }
-  | s = subprog_ctrl_stmt
-  { s }
-  | s = selection_stmt
-  { s }
-  | s = iteration_stmt
-  { s }
+let stmt :=
+  | ~ = assign_stmt; <>
+  | ~ = subprog_ctrl_stmt; <>
+  | ~ = selection_stmt; <>
+  | ~ = iteration_stmt; <>
 
 assign_stmt:
   | v = variable T_ASSIGN e = expression
@@ -2031,11 +1904,9 @@ param_assign:
     S.StmFuncParamAssign(Some n, vexpr, false)
   }
 
-selection_stmt:
-  | s = if_stmt
-  { s }
-  | s = case_stmt
-  { s }
+let selection_stmt :=
+  | ~ = if_stmt; <>
+  | ~ = case_stmt; <>
 
 if_stmt:
   | ti = T_IF cond = expression T_THEN if_stmts = stmt_list T_END_IF
@@ -2061,17 +1932,10 @@ if_stmt_elsif_list:
   }
 
 case_stmt:
-  | ti = T_CASE e = expression T_OF css = case_selection_list T_ELSE sl = stmt_list T_END_CASE
+  | ti = T_CASE e = expression T_OF css = list(case_selection) T_ELSE sl = stmt_list T_END_CASE
   { S.StmCase(ti, e, css, sl) }
-  | ti = T_CASE e = expression T_OF css = case_selection_list T_END_CASE
+  | ti = T_CASE e = expression T_OF css = list(case_selection) T_END_CASE
   { S.StmCase(ti, e, css, []) }
-
-(* Helper symbol for case_stmt *)
-case_selection_list:
-  | cs = case_selection
-  { cs :: [] }
-  | css = case_selection_list cs = case_selection
-  { cs :: css }
 
 case_selection:
   | cl = case_list T_COLON sl = stmt_list
