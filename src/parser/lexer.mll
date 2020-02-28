@@ -30,8 +30,7 @@
         "ANY_DATE",       T_ANY_DATE; ]
 }
 
-let comment_beg  = "(*"
-let comment_end  = "*)"
+let common_char_value = ['!' '#' '%' '&' '('-'@' 'A'-'Z' '['-'`' 'a'-'z' '{'-'~']
 
 let whitespace = ['\r' '\t' ' ']
 
@@ -201,7 +200,7 @@ rule initial tokinfo =
   | "EQU"            { T_EQU }
   (* }}} *)
 
-(* {{{ ST control statements *)
+  (* {{{ ST control statements *)
   | "IF"             { let ti = tokinfo lexbuf in T_IF(ti) }
   | "THEN"           { let ti = tokinfo lexbuf in T_THEN(ti) }
   | "ELSIF"          { let ti = tokinfo lexbuf in T_ELSIF(ti) }
@@ -347,13 +346,53 @@ rule initial tokinfo =
 
   (* {{{ etc. *)
   | eof              { T_EOF }
-  | "(*" {comment tokinfo 1 lexbuf} (* start of a comment *)
+  | "(*" { comment tokinfo 1 lexbuf }
+  | "STRING#" '\'' { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
+  | '\'' { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
+  | "STRING#" '"' { let ti = tokinfo lexbuf in dstring_literal (Buffer.create 19) ti lexbuf }
+  | '"' { let ti = tokinfo lexbuf in dstring_literal (Buffer.create 19) ti lexbuf }
   | _ { raise (LexingError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
-and comment tokinfo depth  = parse
-  | "(*" {comment tokinfo (depth + 1) lexbuf}
-  | "*)" {if depth = 1 then initial tokinfo lexbuf else comment tokinfo (depth-1) lexbuf} (*Nested comments are allowed*)
+  (* }}} *)
+
+  (* {{{ String literals *)
+and sstring_literal buf ti = parse
+  | '"' { Buffer.add_char buf '"'; sstring_literal buf ti lexbuf }
+  | common_char_value+ | '$' '\'' | '$' hex_digit hex_digit
+  {
+    Buffer.add_string buf (Lexing.lexeme lexbuf);
+    sstring_literal buf ti lexbuf
+  }
+  | '\''
+  {
+    (* Printf.printf "SSTRING: %s" (Buffer.contents buf); *)
+    T_SSTRING_LITERAL((Buffer.contents buf), ti)
+  }
+  | _ { raise (LexingError ("Illegal string character: " ^ (Lexing.lexeme lexbuf))) }
+  | eof { raise (LexingError ("String is not terminated")) }
+
+and dstring_literal buf ti = parse
+  | '\'' { Buffer.add_char buf '\''; dstring_literal buf ti lexbuf }
+  | common_char_value+ | '$' '"' | '$' hex_digit hex_digit hex_digit hex_digit
+  {
+    Buffer.add_string buf (Lexing.lexeme lexbuf);
+    dstring_literal buf ti lexbuf
+  }
+  | '"'
+  {
+    (* Printf.printf "DSTRING: %s" (Buffer.contents buf); *)
+    T_DSTRING_LITERAL((Buffer.contents buf), ti)
+  }
+  | _ { raise (LexingError ("Illegal string character: " ^ (Lexing.lexeme lexbuf))) }
+  | eof { raise (LexingError ("String is not terminated")) }
+  (* }}}*)
+
+  (* {{{ Comments *)
+and comment tokinfo depth = parse
+  | '(' '*' {comment tokinfo (depth + 1) lexbuf}
+  | '*' ')' {if depth = 1 then initial tokinfo lexbuf else comment tokinfo (depth-1) lexbuf}
   | '\n' {let () = new_line lexbuf in comment tokinfo depth lexbuf}
   | _ {comment tokinfo depth lexbuf}
+  | eof { raise (LexingError ("Comment is not terminated")) }
   (* }}} *)
 
 {

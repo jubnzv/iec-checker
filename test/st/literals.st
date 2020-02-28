@@ -15,6 +15,8 @@ PROGRAM program0
     LT : INT;
     D : INT;
     LD : INT;
+
+    s : STRING;
   END_VAR
 
   (* integer *)
@@ -106,6 +108,14 @@ PROGRAM program0
   dtv := DT#2020-01-30-18:01:38;
   dtv := DATE_AND_TIME#2020-01-30-18:01:38;
   dtv := LDATE_AND_TIME#2020-01-30-18:01:38;
+
+  (* String literals *)
+  s := "FOO";
+  s := "(*FO*)O";
+  s := 'BAR';
+  s := STRING#"FOO";
+  s := STRING#"BAR(*";
+  s := STRING#'FOO';
 
 END_PROGRAM
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)

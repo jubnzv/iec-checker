@@ -191,6 +191,9 @@
 %token <float * IECCheckerCore.Tok_info.t> T_REAL_VALUE
 %token <string * IECCheckerCore.Tok_info.t> T_FIX_POINT_VALUE
 
+%token <string * IECCheckerCore.Tok_info.t> T_SSTRING_LITERAL
+%token <string * IECCheckerCore.Tok_info.t> T_DSTRING_LITERAL
+
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_D
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_H
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_M
@@ -246,8 +249,8 @@ library_element_declaration_list:
 constant:
   | c = numeric_literal
   { S.Constant(c) }
-  (* | c = char_literal
-  | { c } *)
+  | c = char_literal
+  { S.Constant(c) }
   | c = time_literal
   { S.Constant(c) }
   (* | c = bit_str_literal
@@ -359,18 +362,33 @@ bool_literal:
 (* }}} *)
 
 (* {{{ Table 6 -- String literals / Table 7 -- Two-character combinations in strings *)
-(* char_literal: *)
+char_literal:
+  | v = char_str
+  { v }
 
-(* char_str: *)
+char_str:
+  | v = s_byte_char_str
+  { v }
+  | v = d_byte_char_str
+  { v }
 
-(* s_byte_char_str: *)
+s_byte_char_str:
+  | str = T_SSTRING_LITERAL
+  {
+    let(v, ti) = str in
+    S.CString(v, ti)
+  }
 
-(* d_byte_char_str: *)
+d_byte_char_str:
+  | str = T_DSTRING_LITERAL
+  {
+    let(v, ti) = str in
+    S.CString(v, ti)
+  }
 
+(* Implemented in lexer *)
 (* s_byte_char_value: *)
-
 (* d_byte_char_value: *)
-
 (* common_char_value: *)
 (* }}} *)
 
