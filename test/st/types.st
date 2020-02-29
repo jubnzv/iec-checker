@@ -11,5 +11,8 @@ PROGRAM program0
   END_VAR
 
   a := 0;
+  s := "foo";
+  s1 := "bar";
+
 END_PROGRAM
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)

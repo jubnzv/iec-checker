@@ -37,8 +37,8 @@ type iec_data_type =
 
 and elementary_ty =
   | NIL (* TODO: replace with an empty symbol *)
-  | STRING of int
-  | WSTRING of int
+  | STRING
+  | WSTRING
   | CHAR
   | WCHAR
   | TIME
@@ -84,7 +84,7 @@ and ty_decl = DTyDecl of string * derived_ty
 
 and derived_ty =
   | DTySingleElementTy of single_element_ty_spec
-  | DTyStringTy of string * int
+  | DTyStringTy of elementary_ty (** type spec *) * int (** length *)
 
 and iec_array_size = Capacity of int | Range of int * int
 

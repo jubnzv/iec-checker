@@ -527,7 +527,7 @@ let data_type_access :=
 let elem_type_name :=
   | ~ = numeric_type_name; <>
   | ~ = bit_str_type_name; <>
-  | ~ = string_type_name; <>
+  | ty_def = string_type_name; { let (ty, _) = ty_def in ty }
   | ~ = date_type_name; <>
   | ~ = time_type_name; <>
   (* NOTE: TOD and DT types are not defined as part of elem_type_name in 3rd edition of IEC61131-3
@@ -570,19 +570,13 @@ real_type_name:
   | T_LREAL
   { S.LREAL }
 
-string_type_name:
-  | T_STRING l = string_type_length
-  { S.STRING(l) }
-  | T_WSTRING l = string_type_length
-  { S.WSTRING(l) }
-  | T_STRING
-  { S.STRING(0) }
-  | T_WSTRING
-  { S.WSTRING(0) }
-  | T_CHAR
-  { S.CHAR }
-  | T_WCHAR
-  { S.WCHAR }
+let string_type_name :=
+  | T_STRING; l = string_type_length; { (S.STRING, l) }
+  | T_WSTRING; l = string_type_length; { (S.WSTRING, l) }
+  | T_STRING; { (S.STRING, Cfg.max_string_len) }
+  | T_WSTRING; { (S.WSTRING, Cfg.max_string_len) }
+  | T_CHAR; { (S.CHAR, 1) }
+  | T_WCHAR; { (S.WCHAR, 1) }
 
 (* Helper symbol for string_type_name *)
 string_type_length:
@@ -643,16 +637,14 @@ multibits_type_name:
 (* }}} *)
 
 (* {{{ Table 11 -- Derived data types *)
-(* Return S.derived_ty *)
-derived_type_access:
-  | spec = single_element_type_access
-  { S.DTySingleElementTy(spec) }
-  (* | n = array_type_access
-  {  }
-  | n = struct_type_access
-  {  }
-  | n = string_type_name
-  {  } *)
+let derived_type_access :=
+  | ~ = single_element_type_access; <S.DTySingleElementTy>
+  (* | ~ = array_type_access; <> *)
+  (* | ~ = struct_type_access; <> *)
+  | ty_def = string_type_access; { let (ty, len) = ty_def in S.DTyStringTy(ty, len) }
+  (* | ~ = class_type_access; <> *)
+  (* | ~ = ref_type_access; <> *)
+  (* | ~ = interface_type_access; <> *)
 
 let string_type_access :=
   | ~ = string_type_name; <>
@@ -759,12 +751,9 @@ simple_spec_init:
   (* | s = simple_spec ASSIGN c = constant *)
   (* { } *)
 
-(* Return S.single_element_ty_spec  *)
-simple_spec:
-  | ty = elem_type_name
-  { S.SETyElementaryTy(ty)  }
-  | name = simple_type_access
-  { S.SETySETy(name) }
+let simple_spec :=
+  | ~ = elem_type_name; <S.SETyElementaryTy>
+  | ~ = simple_type_access; <S.SETySETy>
 
 (* subrange_type_decl:
   | n = subrange_type_access COLON s = subrange_spec_init
@@ -1230,12 +1219,8 @@ func_access:
   | f = func_name
   { f }
 
-(* std_func_name:
-  | id = T_IDENTIFIER
-  {
-    let (name, ti) = id in
-    S.Function.create name ti
-  } *)
+(* Implemented in semantic analysis *)
+(* std_func_name: *)
 
 (* derived_func_name:
   | id = T_IDENTIFIER
@@ -1265,11 +1250,9 @@ func_decl:
   }
 
 (* Helper symbol for func_decl *)
-function_ty:
-  | ty = elem_type_name
-  { S.TyElementary(ty) }
-  | ty = derived_type_access
-  { S.TyDerived(ty) }
+let function_ty :=
+  | ~ = elem_type_name; <S.TyElementary>
+  | ~ = derived_type_access; <S.TyDerived>
 
 (* Helper symbol for func_decl *)
 function_vars:
