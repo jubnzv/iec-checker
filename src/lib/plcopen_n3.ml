@@ -3,6 +3,7 @@ module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
 module AU = IECCheckerCore.Ast_util
 module E = IECCheckerCore.Error
+module Warn = IECCheckerCore.Warn
 
 (** Keywords / reserved word list of IEC 61131-3 Ed.3 starting with a letter *)
 let reserved_keywords =

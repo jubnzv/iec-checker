@@ -116,8 +116,7 @@ let test_fb_declaration () =
   in
   do_all [ fbs1 ]
 
-(** All ST demo programs in test/st directory should be checked without syntax
-    errors. *)
+(** All ST demo programs in test/st should be parsed without syntax errors. *)
 let test_syntax_errors_in_demo_programs () =
   let ls dir =
     Sys.readdir dir |> Array.to_list |> List.map ~f:(Filename.concat dir)

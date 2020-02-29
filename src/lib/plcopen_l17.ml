@@ -1,6 +1,7 @@
 open Core_kernel
 module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
+module Warn = IECCheckerCore.Warn
 module AU = IECCheckerCore.Ast_util
 module E = IECCheckerCore.Error
 

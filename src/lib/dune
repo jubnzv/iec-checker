@@ -1,5 +1,5 @@
 (library
  (name IECCheckerLib)
  (public_name iec_checker.lib)
- (synopsis "IEC61131-3 statis analisys routines")
+ (synopsis "Implementation of static analysis rules")
  (libraries core iec_checker.core))
