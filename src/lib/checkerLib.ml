@@ -1,6 +1,6 @@
 open Core_kernel
 module S = IECCheckerCore.Syntax
-module Scope = IECCheckerCore.Scope
+module Env = IECCheckerCore.Env
 module TI = IECCheckerCore.Tok_info
 
 let print_element (e : S.iec_library_element) =
@@ -14,7 +14,7 @@ let print_element (e : S.iec_library_element) =
   | S.IECConfiguration c ->
       Printf.printf "Running check for configuration %s\n" c.name
 
-let[@warning "-27"] run_all_checks elements scopes =
+let[@warning "-27"] run_all_checks elements envs =
   List.iter elements ~f:(fun e -> print_element e);
   Plcopen_n3.do_check elements
   |> List.append (Plcopen_l17.do_check elements)

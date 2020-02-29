@@ -8,7 +8,7 @@ module VarDeclMap = struct
 
   let empty = Map.empty (module String)
 
-  let lookup m (name: string) = Map.find m name
+  let lookup m (name : string) = Map.find m name
 
   (* let lookup_exn m name = match Map.find m name with
     | Some var_decl -> var_decl
@@ -22,8 +22,8 @@ module VarDeclMap = struct
 end
 
 type t = {
-  parent : t option;  (** Parent scope *)
-  var_decls : VarDeclMap.t;  (** Varaibles declared in this scope *)
+  parent : t option;  (** Parent env *)
+  var_decls : VarDeclMap.t;  (** Varaibles declared in this env *)
 }
 
 let empty = { parent = None; var_decls = VarDeclMap.empty }
@@ -38,11 +38,11 @@ let mk p =
   let var_decls = VarDeclMap.empty in
   { parent; var_decls }
 
-let add_vdecl scope vd =
+let add_vdecl env vd =
   let name = S.VarDecl.get_var_name vd in
-  let vds = VarDeclMap.add scope.var_decls name vd in
-  { scope with var_decls = vds }
+  let vds = VarDeclMap.add env.var_decls name vd in
+  { env with var_decls = vds }
 
-let get_vdecls scope = VarDeclMap.to_list scope.var_decls
+let get_vdecls env = VarDeclMap.to_list env.var_decls
 
-let lookup_vdecl scope name = VarDeclMap.lookup scope.var_decls name
+let lookup_vdecl env name = VarDeclMap.lookup env.var_decls name

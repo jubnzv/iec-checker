@@ -10,5 +10,5 @@ val get_pou_stmts : S.iec_library_element -> S.statement list
 val get_stmts : S.iec_library_element list -> S.statement list
 (** collect statements from each POU *)
 
-val create_scopes : S.iec_library_element list -> Scope.t list
-(** Create scope tables for given configuration elements *)
+val create_envs : S.iec_library_element list -> Env.t list
+(** Create the environments for a given configuration elements *)

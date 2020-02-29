@@ -58,6 +58,6 @@ let _ =
       failwith ("File " ^ filename ^ " doesn't exists")
     else
       let elements = parse_file filename in
-      let scopes = Ast_util.create_scopes elements in
+      let scopes = Ast_util.create_envs elements in
       let warnings = C.run_all_checks elements scopes in
       List.iter warnings ~f:(fun w -> W.print w)
