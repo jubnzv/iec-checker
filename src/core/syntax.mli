@@ -2,6 +2,37 @@ module TI = Tok_info
 
 exception InternalError of string
 
+(** Representation of time interval
+
+    According the IEC61131-3 3rd edition grammar, all interval values defined as
+    fix_point. That means that these values could be represented as float values.
+*)
+module TimeValue : sig
+  type t
+
+  val mk :
+    ?y:int ->
+    ?mo:int ->
+    ?d:float ->
+    ?h:float ->
+    ?m:float ->
+    ?s:float ->
+    ?ms:float ->
+    ?us:float ->
+    ?ns:float ->
+    unit ->
+    t
+
+  val ( + ) : t -> t -> t
+
+  val inv : t -> t
+  (** Invert time value to represent a negative duration. *)
+
+  val to_string : t -> string
+
+  val is_zero : t -> bool
+end
+
 (* {{{ Operators *)
 (** Operators of the ST language *)
 type operator =
@@ -26,7 +57,63 @@ type operator =
 [@@deriving show]
 (* }}} *)
 
-(* {{{ Data types *)
+(* {{{ Variables and identifiers *)
+
+(** Description of use -- nondefining occurence of an identifier *)
+module type ID = sig
+  type t
+  val create : string -> TI.t -> t
+  val get_name : t -> string
+  val get_ti : t -> TI.t
+end
+
+(** Identifier of symbolically represented variable *)
+module SymVar : ID
+
+(** Identifier of directly represented variable *)
+module DirVar : sig
+  include ID
+
+  (** Location prefixes for directly represented variables.
+      See 6.5.5.2 for explainations. *)
+  type location = LocI | LocQ | LocM
+
+  (** Size prefixes for directly represented variables. *)
+  type size =
+    | SizeX    (** single bit *)
+    | SizeNone (** single bit *)
+    | SizeB    (** byte *)
+    | SizeW    (** word (16 bits) *)
+    | SizeD    (** double word (32 bits) *)
+    | SizeL    (** quad word (64 bits) *)
+
+  val create : string option -> TI.t -> location -> size option -> int list -> t
+  val get_name : t -> string
+end
+
+(** Function Block identifier *)
+module FunctionBlock : sig
+  include ID
+  val is_std : t -> bool
+end
+
+(** Function identifier *)
+module Function : sig
+  include ID
+  val is_std : t -> bool
+  (** Returns true if function declared in standard library. *)
+end
+
+type variable = SymVar of SymVar.t | DirVar of DirVar.t
+
+val vget_name : variable -> string
+(** Return name of a given variable *)
+
+val vget_ti : variable -> TI.t
+(** Return token info of a given variable *)
+(* }}} *)
+
+(* {{{ Data types, constants and statements *)
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -77,73 +164,33 @@ and generic_ty =
   | ANY_STRING
   | ANY_DATE
 
-(** Declaration of derived type *)
-and ty_decl = DTyDecl of string (* name *) * derived_ty
-
-(** Specification of derived type *)
+(** "Use" occurence of a derived type *)
 and derived_ty =
-  | DTySingleElementTy of single_element_ty_spec
-  (* | ArrayType of string * iec_array_type_spec *)
-  (* | StructureType of string * iec_structure_type_spec *)
-  (* | StringType of string * iec_string_type_spec *)
-  | DTyStringTy of elementary_ty (** type spec *) * int (** length *)
+  | DTyUseSingleElement of single_element_ty_spec
+  (* | DTyUseArrayType *)
+  (* | DTyUseStructType *)
+  | DTyUseStringType of elementary_ty (** string type spec *) *
+                        int (** length *)
 
-(** Arrays *)
-and iec_array_size = Capacity of int | Range of int * int
+(** Declaration of a derived type.
+    This include "use" symbol value of a declared type and optional
+    initialization values. *)
+and derived_ty_decl =
+  | DTyDeclSingleElement of single_element_ty_spec (** declaration ty *) *
+                            single_element_ty_spec (** initialization ty *) *
+                            expr option (** initialization expression *)
+  (* | DTyDeclArrayType *)
+  (* | DTyDeclStructType *)
+  | DTyDeclStringType of derived_ty (** declaration ty *) *
+                         derived_ty (** initialization ty *) *
+                         string (** initialization value *) option
 
-and iec_array_type_spec = {
-  (* TODO: array_type: iec_data_type; *) size : iec_array_size;
-}
-
-(** Structures *)
-and iec_structure_type_element = {
-  name : string; (* TODO: element_type : iec_data_type; *)
-}
-
-and iec_structure_type_spec = { elements : iec_structure_type_element list }
-
-(** String literals *)
-and iec_string_type_spec = { capacity : int }
-
-(** Single element types is user defined tys which works like typedefs in C. *)
+(** Single element type specification (it works like typedef in C). *)
 and single_element_ty_spec =
-  | SETyElementaryTy of elementary_ty
-  | SETySETy of string (** derived ty name *)
+  | DTySpecElementary of elementary_ty
+  | DTySpecSimple of string (** derived ty name *)
 
-(** Representation of time interval
-
-    According the IEC61131-3 3rd edition grammar, all interval values defined as
-    fix_point. That means that these values could be represented as float values.
-*)
-module TimeValue : sig
-  type t
-
-  val mk :
-    ?y:int ->
-    ?mo:int ->
-    ?d:float ->
-    ?h:float ->
-    ?m:float ->
-    ?s:float ->
-    ?ms:float ->
-    ?us:float ->
-    ?ns:float ->
-    unit ->
-    t
-
-  val ( + ) : t -> t -> t
-
-  val inv : t -> t
-  (** Invert time value to represent a negative duration. *)
-
-  val to_string : t -> string
-
-  val is_zero : t -> bool
-end
-(* }}} *)
-
-(* {{{ Constants *)
-type constant =
+and constant =
   | CInteger of int * TI.t
   | CBool of bool * TI.t
   | CReal of float * TI.t
@@ -151,6 +198,56 @@ type constant =
   | CTimeValue of TimeValue.t * TI.t
 [@@deriving show]
 
+and statement =
+  | StmAssign of TI.t *
+                 variable *
+                 expr
+  | StmElsif of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmIf of TI.t *
+             expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+  | StmCase of TI.t *
+               expr * (** condition *)
+               case_selection list *
+               statement list (* else *)
+  | StmFor of (TI.t *
+               SymVar.t * (** control variable *)
+               expr * (** range start *)
+               expr * (** range end *)
+               expr option * (** range step *)
+               statement list (** body statements *) [@opaque])
+  | StmWhile of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmRepeat of TI.t *
+                 statement list * (** body *)
+                 expr (** condition *)
+  | StmFuncParamAssign of string option * (** function param name *)
+                          expr * (** assignment expression *)
+                          bool (** has inversion in output assignment *)
+  | StmFuncCall of TI.t *
+                   Function.t *
+                   statement list (** params assignment *)
+[@@deriving show]
+
+and expr =
+  | Variable of variable
+  | Constant of constant
+  | BinExpr of expr * operator * expr
+  | UnExpr of operator * expr
+  | FuncCall of statement
+[@@deriving show]
+
+and case_selection = {case: expr list; body: statement list}
+[@@deriving show]
+
+(* }}} *)
+
+(* {{{ Functions to work with constants *)
 val c_is_zero : constant -> bool
 (** Return true if constant value is zero, false otherwise *)
 
@@ -162,63 +259,13 @@ val c_get_ti : constant -> TI.t
 
 val c_add : constant -> constant -> constant
 (** Add value to existing constant. *)
+
+val c_from_expr : expr -> constant option
+(** Convert given expr to const. *)
+
+val c_from_expr_exn : expr -> constant
+(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
 (* }}} *)
-
-(* {{{ Identifiers *)
-
-(** Description of use -- nondefining occurence of an identifier *)
-module type ID = sig
-  type t
-  val create : string -> TI.t -> t
-  val get_name : t -> string
-  val get_ti : t -> TI.t
-end
-
-(** Identifier of symbolically represented variable *)
-module SymVar : ID
-
-(** Identifier of directly represented variable *)
-module DirVar : sig
-  include ID
-
-  (** Location prefixes for directly represented variables.
-      See 6.5.5.2 for explainations. *)
-  type location = LocI | LocQ | LocM
-
-  (** Size prefixes for directly represented variables. *)
-  type size =
-    | SizeX    (** single bit *)
-    | SizeNone (** single bit *)
-    | SizeB    (** byte *)
-    | SizeW    (** word (16 bits) *)
-    | SizeD    (** double word (32 bits) *)
-    | SizeL    (** quad word (64 bits) *)
-
-  val create : string option -> TI.t -> location -> size option -> int list -> t
-  val get_name : t -> string
-end
-
-(** Function Block identifier *)
-module FunctionBlock : sig
-  include ID
-  val is_std : t -> bool
-end
-
-(** Function identifier *)
-module Function : sig
-  include ID
-  val is_std : t -> bool
-  (** Returns true if function declared in standard library. *)
-end
-(* }}} *)
-
-type variable = SymVar of SymVar.t | DirVar of DirVar.t
-
-val vget_name : variable -> string
-(** Return name of a given variable *)
-
-val vget_ti : variable -> TI.t
-(** Return token info of a given variable *)
 
 (* {{{ Configuration objects *)
 (** Task configuration.
@@ -265,61 +312,6 @@ module ProgramConfig : sig
   val get_name : t -> string
   (** Get name of a program. *)
 end
-(* }}} *)
-
-(* {{{ Statements and expressions *)
-(** Statements *)
-type statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-  | StmElsif of TI.t *
-                expr * (** condition *)
-                statement list (** body *)
-  | StmIf of TI.t *
-             expr * (** condition *)
-             statement list * (** body *)
-             statement list * (** elsif statements *)
-             statement list (** else *)
-  | StmCase of TI.t *
-               expr * (** condition *)
-               case_selection list *
-               statement list (* else *)
-  | StmFor of (TI.t *
-               SymVar.t * (** control variable *)
-               expr * (** range start *)
-               expr * (** range end *)
-               expr option * (** range step *)
-               statement list (** body statements *) [@opaque])
-  | StmWhile of TI.t *
-                expr * (** condition *)
-                statement list (** body *)
-  | StmRepeat of TI.t *
-                 statement list * (** body *)
-                 expr (** condition *)
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-  | StmFuncCall of TI.t *
-                   Function.t *
-                   statement list (** params assignment *)
-[@@deriving show]
-and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-  | FuncCall of statement
-[@@deriving show]
-(* FIXME: These values should have a separate type which supports subranges and enums. *)
-and case_selection = {case: int list; body: statement list}
-[@@deriving show]
-
-val c_from_expr : expr -> constant option
-(** Convert given expr to const. *)
-
-val c_from_expr_exn : expr -> constant
-(** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
 (* }}} *)
 
 (* {{{ Declarations *)
@@ -406,6 +398,7 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
+  | IECType of derived_ty_decl
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
 (** Return variables declared for given POU *)

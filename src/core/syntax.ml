@@ -6,104 +6,6 @@ module E = Error
 
 exception InternalError of string
 
-(* {{{ Operators *)
-type operator =
-  | NEG
-  | NOT
-  | POW
-  | MUL
-  | DIV
-  | MOD
-  | AND
-  | ADD
-  | SUB
-  | OR
-  | XOR
-  | GT
-  | LT
-  | GE
-  | LE
-  | EQ
-  | NEQ
-  | ASSIGN
-[@@deriving show]
-(* }}} *)
-
-(* {{{ Data types *)
-type iec_data_type =
-  | TyElementary of elementary_ty
-  | TyGeneric of generic_ty
-  | TyDerived of derived_ty
-
-and elementary_ty =
-  | NIL (* TODO: replace with an empty symbol *)
-  | STRING
-  | WSTRING
-  | CHAR
-  | WCHAR
-  | TIME
-  | LTIME
-  | SINT
-  | INT
-  | DINT
-  | LINT
-  | USINT
-  | UINT
-  | UDINT
-  | ULINT
-  | REAL
-  | LREAL
-  | DATE
-  | LDATE
-  | TIME_OF_DAY
-  | TOD
-  | LTOD
-  | DATE_AND_TIME
-  | LDATE_AND_TIME
-  | DT
-  | LDT
-  | BOOL
-  | BYTE
-  | WORD
-  | DWORD
-  | LWORD
-
-and generic_ty =
-  | ANY
-  | ANY_DERIVED
-  | ANY_ELEMENTARY
-  | ANY_MAGNITUDE
-  | ANY_NUM
-  | ANY_REAL
-  | ANY_INT
-  | ANY_BIT
-  | ANY_STRING
-  | ANY_DATE
-
-and ty_decl = DTyDecl of string * derived_ty
-
-and derived_ty =
-  | DTySingleElementTy of single_element_ty_spec
-  | DTyStringTy of elementary_ty (** type spec *) * int (** length *)
-
-and iec_array_size = Capacity of int | Range of int * int
-
-and iec_array_type_spec = {
-  size : iec_array_size;
-}
-
-and iec_structure_type_element = {
-  name : string;
-}
-
-and iec_structure_type_spec = { elements : iec_structure_type_element list }
-
-and iec_string_type_spec = { capacity : int }
-
-and single_element_ty_spec =
-  | SETyElementaryTy of elementary_ty
-  | SETySETy of string
-
 module TimeValue = struct
   type t = {
     y : int;
@@ -153,62 +55,31 @@ module TimeValue = struct
   let is_zero tv = phys_equal tv.d 0.
   (* TODO: List.map ~f(fun fv -> phys_equal fv 0.) ???Fields *)
 end
-(* }}} *)
 
-(* {{{ Constants *)
-type constant =
-  | CInteger of int * TI.t
-  | CBool of bool * TI.t
-  | CReal of float * TI.t
-  | CString of string * TI.t
-  | CTimeValue of TimeValue.t * TI.t
+(* {{{ Operators *)
+type operator =
+  | NEG
+  | NOT
+  | POW
+  | MUL
+  | DIV
+  | MOD
+  | AND
+  | ADD
+  | SUB
+  | OR
+  | XOR
+  | GT
+  | LT
+  | GE
+  | LE
+  | EQ
+  | NEQ
+  | ASSIGN
 [@@deriving show]
-
-let c_is_zero c =
-  match c with
-  | CInteger (v, _) -> phys_equal v 0
-  | CBool (v, _) -> phys_equal v false
-  | CReal (v, _) -> phys_equal v 0.0
-  | CString _ -> false
-  | CTimeValue (tv, _) -> TimeValue.is_zero tv
-
-let c_get_str_value c =
-  match c with
-  | CInteger (v, _) -> string_of_int v
-  | CBool (v, _) -> string_of_bool v
-  | CReal (v, _) -> string_of_float v
-  | CString (v, _) -> v
-  | CTimeValue (v, _) -> TimeValue.to_string v
-
-let c_get_ti c =
-  match c with
-  | CInteger (_, ti) -> ti
-  | CBool (_, ti) -> ti
-  | CReal (_, ti) -> ti
-  | CString (_, ti) -> ti
-  | CTimeValue (_, ti) -> ti
-
-let c_add c1 c2 =
-  match (c1, c2) with
-  | CInteger (v1, ti), CInteger (v2, _) ->
-    let v = v1 + v2 in
-    CInteger (v, ti)
-  | CBool (v1, ti), CBool (v2, _) ->
-    let v = v1 || v2 in
-    CBool (v, ti)
-  | CReal (v1, ti), CReal (v2, _) ->
-    let v = v1 +. v2 in
-    CReal (v, ti)
-  | CString (v1, ti), CString (v2, _) ->
-    let v = v1 ^ v2 in
-    CString (v, ti)
-  | CTimeValue (v1, ti), CTimeValue (v2, _) ->
-    let v = TimeValue.( + ) v1 v2 in
-    CTimeValue (v, ti)
-  | _ -> raise @@ InternalError "Incompatible types"
 (* }}} *)
 
-(* {{{ Identifiers *)
+(* {{{ Variables and identifiers *)
 module type ID = sig
   type t
   val create : string -> TI.t -> t
@@ -301,8 +172,6 @@ module Function = struct
   let is_std fn = fn.is_std
 end
 
-(* }}} *)
-
 type variable = SymVar of (SymVar.t [@opaque]) | DirVar of (DirVar.t [@opaque])
 [@@deriving show]
 
@@ -311,6 +180,187 @@ let vget_name = function
 
 let vget_ti = function
   | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti) | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
+
+(* }}} *)
+
+(* {{{ Data types, constants and statements *)
+type iec_data_type =
+  | TyElementary of elementary_ty
+  | TyGeneric of generic_ty
+  | TyDerived of derived_ty
+
+and elementary_ty =
+  | NIL (* TODO: replace with an empty symbol *)
+  | STRING
+  | WSTRING
+  | CHAR
+  | WCHAR
+  | TIME
+  | LTIME
+  | SINT
+  | INT
+  | DINT
+  | LINT
+  | USINT
+  | UINT
+  | UDINT
+  | ULINT
+  | REAL
+  | LREAL
+  | DATE
+  | LDATE
+  | TIME_OF_DAY
+  | TOD
+  | LTOD
+  | DATE_AND_TIME
+  | LDATE_AND_TIME
+  | DT
+  | LDT
+  | BOOL
+  | BYTE
+  | WORD
+  | DWORD
+  | LWORD
+
+and generic_ty =
+  | ANY
+  | ANY_DERIVED
+  | ANY_ELEMENTARY
+  | ANY_MAGNITUDE
+  | ANY_NUM
+  | ANY_REAL
+  | ANY_INT
+  | ANY_BIT
+  | ANY_STRING
+  | ANY_DATE
+
+and derived_ty =
+ | DTyUseSingleElement of single_element_ty_spec
+ (* | DTyUseArrayType *)
+ (* | DTyUseStructType *)
+ | DTyUseStringType of elementary_ty (** string type spec *) *
+                       int (** length *)
+
+and derived_ty_decl =
+  | DTyDeclSingleElement of single_element_ty_spec (** declaration ty *) *
+                            single_element_ty_spec (** initialization ty *) *
+                            expr option (** initialization expression *)
+  (* | DTyDeclArrayType *)
+  (* | DTyDeclStructType *)
+  | DTyDeclStringType of derived_ty (** declaration ty *) *
+                         derived_ty (** initialization ty *) *
+                         string (** initialization value *) option
+
+and single_element_ty_spec =
+  | DTySpecElementary of elementary_ty
+  | DTySpecSimple of string
+
+and constant =
+  | CInteger of int * TI.t
+  | CBool of bool * TI.t
+  | CReal of float * TI.t
+  | CString of string * TI.t
+  | CTimeValue of TimeValue.t * TI.t
+[@@deriving show]
+
+and statement =
+  | StmAssign of TI.t *
+                 variable *
+                 expr
+  | StmElsif of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmIf of TI.t *
+             expr * (** condition *)
+             statement list * (** body *)
+             statement list * (** elsif statements *)
+             statement list (** else *)
+  | StmCase of TI.t *
+               expr * (** condition *)
+               case_selection list *
+               statement list (* else *)
+  | StmFor of (TI.t *
+               SymVar.t * (** control variable *)
+               expr * (** range start *)
+               expr * (** range end *)
+               expr option * (** range step *)
+               statement list (** body statements *) [@opaque])
+  | StmWhile of TI.t *
+                expr * (** condition *)
+                statement list (** body *)
+  | StmRepeat of TI.t *
+                 statement list * (** body *)
+                 expr (** condition *)
+  | StmFuncParamAssign of string option * (** function param name *)
+                          expr * (** assignment expression *)
+                          bool (** has inversion in output assignment *)
+  | StmFuncCall of TI.t *
+                   Function.t *
+                   statement list (** params assignment *)
+[@@deriving show { with_path = false }]
+and expr =
+  | Variable of variable
+  | Constant of constant
+  | BinExpr of expr * operator * expr
+  | UnExpr of operator * expr
+  | FuncCall of statement
+[@@deriving show]
+and case_selection = {case: expr list; body: statement list}
+[@@deriving show]
+(* }}} *)
+
+(* {{{ Functions to work with constants *)
+let c_is_zero c =
+  match c with
+  | CInteger (v, _) -> phys_equal v 0
+  | CBool (v, _) -> phys_equal v false
+  | CReal (v, _) -> phys_equal v 0.0
+  | CString _ -> false
+  | CTimeValue (tv, _) -> TimeValue.is_zero tv
+
+let c_get_str_value c =
+  match c with
+  | CInteger (v, _) -> string_of_int v
+  | CBool (v, _) -> string_of_bool v
+  | CReal (v, _) -> string_of_float v
+  | CString (v, _) -> v
+  | CTimeValue (v, _) -> TimeValue.to_string v
+
+let c_get_ti c =
+  match c with
+  | CInteger (_, ti) -> ti
+  | CBool (_, ti) -> ti
+  | CReal (_, ti) -> ti
+  | CString (_, ti) -> ti
+  | CTimeValue (_, ti) -> ti
+
+let c_add c1 c2 =
+  match (c1, c2) with
+  | CInteger (v1, ti), CInteger (v2, _) ->
+    let v = v1 + v2 in
+    CInteger (v, ti)
+  | CBool (v1, ti), CBool (v2, _) ->
+    let v = v1 || v2 in
+    CBool (v, ti)
+  | CReal (v1, ti), CReal (v2, _) ->
+    let v = v1 +. v2 in
+    CReal (v, ti)
+  | CString (v1, ti), CString (v2, _) ->
+    let v = v1 ^ v2 in
+    CString (v, ti)
+  | CTimeValue (v1, ti), CTimeValue (v2, _) ->
+    let v = TimeValue.( + ) v1 v2 in
+    CTimeValue (v, ti)
+  | _ -> raise @@ InternalError "Incompatible types"
+
+let c_from_expr = function
+  | Constant(v) -> Some v
+  | _ -> None
+
+let c_from_expr_exn = function
+  | Constant(v) -> v
+  | _ -> raise @@ InternalError "Incompatible types"
+(* }}} *)
 
 (* {{{ Configuration objects *)
 module Task = struct
@@ -368,61 +418,6 @@ module ProgramConfig = struct
 
   let get_name t = t.name
 end
-(* }}} *)
-
-(* {{{ Statements and expressions *)
-type statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-  | StmElsif of TI.t *
-                expr * (** condition *)
-                statement list (** body *)
-  | StmIf of TI.t *
-             expr * (** condition *)
-             statement list * (** body *)
-             statement list * (** elsif statements *)
-             statement list (** else *)
-  | StmCase of TI.t *
-               expr * (** condition *)
-               case_selection list *
-               statement list (* else *)
-  | StmFor of (TI.t *
-               SymVar.t * (** control variable *)
-               expr * (** range start *)
-               expr * (** range end *)
-               expr option * (** range step *)
-               statement list (** body statements *) [@opaque])
-  | StmWhile of TI.t *
-                expr * (** condition *)
-                statement list (** body *)
-  | StmRepeat of TI.t *
-                 statement list * (** body *)
-                 expr (** condition *)
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-  | StmFuncCall of TI.t *
-                   Function.t *
-                   statement list (** params assignment *)
-[@@deriving show { with_path = false }]
-and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-  | FuncCall of statement
-[@@deriving show]
-and case_selection = {case: int list; body: statement list}
-[@@deriving show]
-
-let c_from_expr = function
-  | Constant(v) -> Some v
-  | _ -> None
-
-let c_from_expr_exn = function
-  | Constant(v) -> v
-  | _ -> raise @@ InternalError "Incompatible types"
 (* }}} *)
 
 (* {{{ Declarations *)
@@ -512,11 +507,13 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
+  | IECType of derived_ty_decl
 
 let get_pou_vars_decl = function
   | IECFunction f -> f.variables
   | IECFunctionBlock fb -> fb.variables
   | IECProgram p -> p.variables
   | IECConfiguration _ -> []
+  | IECType _ -> []
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

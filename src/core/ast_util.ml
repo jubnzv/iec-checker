@@ -7,6 +7,7 @@ let get_var_decl elems =
     | S.IECFunctionBlock fb -> fb.variables
     | S.IECProgram p -> p.variables
     | S.IECConfiguration c -> c.variables
+    | S.IECType _ -> []
   in
   List.fold_left elems
     ~f:(fun x e ->
@@ -69,6 +70,7 @@ let get_pou_stmts = function
   | S.IECProgram p ->
       List.fold_left p.statements ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
   | S.IECConfiguration _ -> []
+  | S.IECType _ -> []
 
 let get_stmts elems =
   List.fold_left elems
@@ -79,7 +81,7 @@ let get_stmts elems =
 
 (** Bound declaration of global variables in global env. *)
 let fill_global_env env = function
-  | S.IECFunction _ | S.IECFunctionBlock _ | S.IECProgram _ -> env
+  | S.IECFunction _ | S.IECFunctionBlock _ | S.IECProgram _ | S.IECType _ -> env
   | S.IECConfiguration cfg ->
       List.fold_left cfg.variables ~f:(fun s v -> Env.add_vdecl s v) ~init:env
 

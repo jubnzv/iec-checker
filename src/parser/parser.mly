@@ -219,6 +219,7 @@ let library_element_declaration :=
   | ~ = func_decl; <S.IECFunction>
   | ~ = fb_decl; <S.IECFunctionBlock>
   | ~ = config_decl; <S.IECConfiguration>
+  | ~ = type_decl; <S.IECType>
 (* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
@@ -380,7 +381,7 @@ duration:
     | _ -> E.raise E.InternalError "Unknown constant type"
   }
 
-(* Helper symbol for duration. *)
+(* Helper rule for duration. *)
 time_type_helper:
   | v = time_type_name T_SHARP
   { v }
@@ -578,7 +579,7 @@ let string_type_name :=
   | T_CHAR; { (S.CHAR, 1) }
   | T_WCHAR; { (S.WCHAR, 1) }
 
-(* Helper symbol for string_type_name *)
+(* Helper rule for string_type_name *)
 string_type_length:
   | T_LBRACK c = unsigned_int T_RBRACK
   {
@@ -638,10 +639,10 @@ multibits_type_name:
 
 (* {{{ Table 11 -- Derived data types *)
 let derived_type_access :=
-  | ~ = single_element_type_access; <S.DTySingleElementTy>
+  | ~ = single_elem_type_access; <S.DTyUseSingleElement>
   (* | ~ = array_type_access; <> *)
   (* | ~ = struct_type_access; <> *)
-  | ty_def = string_type_access; { let (ty, len) = ty_def in S.DTyStringTy(ty, len) }
+  | ty_def = string_type_access; { let (ty, len) = ty_def in S.DTyUseStringType(ty, len) }
   (* | ~ = class_type_access; <> *)
   (* | ~ = ref_type_access; <> *)
   (* | ~ = interface_type_access; <> *)
@@ -649,20 +650,16 @@ let derived_type_access :=
 let string_type_access :=
   | ~ = string_type_name; <>
 
-single_element_type_access:
-  | name = simple_type_access
-  { S.SETySETy(name) }
-  (* | n = subrange_type_access
-  { n } *)
-  (* | n = enum_type_access
-    { n } *)
+let single_elem_type_access :=
+  | ~ = simple_type_access; <S.DTySpecSimple>
+  (* | ~ = subrange_type_access; <> *)
+  (* | ~ = enum_type_access; <> *)
 
 let simple_type_access :=
   | ~ = simple_type_name; <>
 
-(* subrange_type_access: *)
-  (* | id = T_IDENTIFIER *)
-  (* { } *)
+(* let subrange_type_access := *)
+  (* | ~ = subrange_type_name; <> *)
 
 (* enum_type_access: *)
   (* | id = T_IDENTIFIER *)
@@ -711,49 +708,42 @@ struct_type_name:
     name
   }
 
-(* data_type_decl:
-  | T_TYPE dtl = data_type_decl_list T_END_TYPE
-  { dtl } *)
+let data_type_decl :=
+  | T_TYPE; ~ = separated_list(T_SEMICOLON, type_decl); T_END_TYPE; <>
 
-(* Helper for data_type_decl *)
-(* data_type_decl_list:
-  | t = type_decl T_SEMICOLON
-  { t :: [] }
-  | tl = data_type_decl_list t = type_decl T_SEMICOLON
-  { t :: tl } *)
+let type_decl :=
+  | ~ = simple_type_decl; <>
+  (* | ~ = subrange_type_decl; <> *)
+  (* | ~ = enum_type_decl; <> *)
+  (* | ~ = array_type_decl; <> *)
+  (* | ~ = struct_type_decl; <> *)
+  | ~ = str_type_decl; <>
+  (* | ~ = ref_type_decl; <> *)
 
-(* Return derived_ty_decl *)
-type_decl:
-  | td = simple_type_decl
-  { td }
-  (* | td = subrange_type_decl *)
-  (* { td } *)
-  (* | td = enum_type_decl *)
-  (* { td } *)
-  (* | td = array_type_decl *)
-  (* { td } *)
-  (* | td = struct_type_decl *)
-  (* { td } *)
-  (* | td = str_type_decl *)
-  (* { td } *)
-  (* | td = ref_type_decl *)
-  (* { td } *)
+let simple_type_decl :=
+  | ty_decl_name = simple_type_name; T_COLON; init_vals = simple_spec_init;
+  {
+    let ty_decl_spec = S.DTySpecSimple(ty_decl_name) in
+    let (ty_init_spec, const_val_init) = init_vals in
+    S.DTyDeclSingleElement(ty_decl_spec, ty_init_spec, const_val_init)
+  }
 
-simple_type_decl:
-  | name = simple_type_name T_COLON spec = simple_spec_init
-  { S.DTySingleElementTy(name, spec) }
+let simple_spec_init :=
+  | ty = simple_spec; ci = assign_constant_expr?;
+  {
+    let ci_opt = match ci with
+    | None -> None
+    | Some ci -> Some ci
+    in (ty, ci)
+  }
 
-(* Return S.single_element_ty_spec *)
-simple_spec_init:
-  | ty = simple_spec
-  { ty }
-  (* Should add initial value in HT *)
-  (* | s = simple_spec ASSIGN c = constant *)
-  (* { } *)
+(* Helper rule for simple_spec_init *)
+let assign_constant_expr :=
+  | T_ASSIGN; ~ = constant_expr; <>
 
 let simple_spec :=
-  | ~ = elem_type_name; <S.SETyElementaryTy>
-  | ~ = simple_type_access; <S.SETySETy>
+  | ~ = elem_type_name; <S.DTySpecElementary>
+  | ~ = simple_type_access; <S.DTySpecSimple>
 
 (* subrange_type_decl:
   | n = subrange_type_access COLON s = subrange_spec_init
@@ -816,7 +806,7 @@ struct_elem_name:
     name
   }
 
-(* Helper symbol for struct_elem_name *)
+(* Helper rule for struct_elem_name *)
 struct_elem_name_list:
   | n = struct_elem_name;
   { n :: [] }
@@ -827,7 +817,20 @@ struct_elem_name_list:
 
 (* struct_elem_init: *)
 
-(* str_type_decl: *)
+let str_type_decl :=
+  | ty_def = string_type_name; T_COLON; ty_init = string_type_name; v = option(opt_char_str);
+  {
+    let (ty_d, len_d) = ty_def in
+    let ty_spec_decl = S.DTyUseStringType(ty_d, len_d) in
+    let (ty_i, len_i) = ty_init in
+    let ty_spec_init = S.DTyUseStringType(ty_i, len_i) in
+    S.DTyDeclStringType(ty_spec_decl, ty_spec_init, v)
+  }
+
+(* Helper for str_type_decl *)
+let opt_char_str :=
+  | T_ASSIGN; const = char_str;
+  { match const with | S.CString (v, _) -> v | _ -> E.raise E.InternalError "Unexpected constant type" }
 
 (* }}} *)
 
@@ -924,14 +927,15 @@ input_decl:
 
 (* edge_decl: *)
 
-var_decl_init:
+let var_decl_init :=
   | vs = variable_list; T_COLON; simple_spec_init;
-  { List.map ~f:(fun (n, ti) -> (
-    let v = S.SymVar.create n ti in
-    S.SymVar(v)
-  )) vs }
+  {
+    List.map vs ~f:(fun (n, ti) -> (
+      let v = S.SymVar.create n ti in
+      S.SymVar(v)))
+  }
 
-(* Helper symbol for var_decl_init *)
+(* Helper rule for var_decl_init *)
 var_decl_init_list:
   | v = var_decl_init T_SEMICOLON
   { v }
@@ -1023,7 +1027,7 @@ var_decl:
   (* | vs = variable_list; T_COLON; array_var_decl; *)
   (* | vs = variable_list; T_COLON; struct_var_decl; *)
 
-(* Helper symbol for var_decl *)
+(* Helper rule for var_decl *)
 var_decl_list:
   | v = var_decl T_SEMICOLON
   { v }
@@ -1072,7 +1076,7 @@ temp_var_decls:
   (* | ref_var_decl *)
   (* | interface_var_decl *)
 
-(* Helper symbol for temp_var_decls_list. *)
+(* Helper rule for temp_var_decls_list. *)
 temp_var_decl:
   | vs = var_decl_list
   {
@@ -1114,7 +1118,7 @@ global_var_name:
     S.SymVar.create n ti
   }
 
-(* Helper symbol for global_var_name *)
+(* Helper rule for global_var_name *)
 global_var_list:
   | out = global_var_name;
   {
@@ -1141,12 +1145,10 @@ global_var_decls:
     List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QConstant)) vdsr
   }
 
-(* Return S.VarDecl.t list *)
-global_var_decl:
-  | ss = global_var_spec; T_COLON loc_var_spec_init;
-  { ss }
+let global_var_decl :=
+  | ~ = global_var_spec; T_COLON; loc_var_spec_init; <>
 
-(* Helper symbol for gloval_var_decl *)
+(* Helper rule for gloval_var_decl *)
 global_var_decl_list:
   | v = global_var_decl T_SEMICOLON
   { v }
@@ -1249,12 +1251,12 @@ func_decl:
     }
   }
 
-(* Helper symbol for func_decl *)
+(* Helper rule for func_decl *)
 let function_ty :=
   | ~ = elem_type_name; <S.TyElementary>
   | ~ = derived_type_access; <S.TyDerived>
 
-(* Helper symbol for func_decl *)
+(* Helper rule for func_decl *)
 function_vars:
   | vs = io_var_decls
   { vs }
@@ -1308,7 +1310,7 @@ fb_decl:
   | T_FUNCTION_BLOCK id = derived_fb_name; vds = fb_var_decls_list; ss = fb_body; T_END_FUNCTION_BLOCK
   { { S.id = id; S.variables = vds; S.statements = ss } }
 
-(* Helper symbol for fb_decl *)
+(* Helper rule for fb_decl *)
 fb_var_decls_list:
   | vds = fb_io_var_decls
   { vds }
@@ -1479,7 +1481,7 @@ config_decl:
     | T_CONFIGURATION name = config_name; vds = global_var_decls; rd = resource_decls; access_decls; config_init; T_END_CONFIGURATION
     { { S.name = name; S.resources = rd; S.variables = vds; S.access_paths = [] } }
 
-(* Helper symbol for config_decl *)
+(* Helper rule for config_decl *)
 resource_decls:
     | rcs = single_resource_decl
     { [rcs] }
@@ -1561,7 +1563,7 @@ prog_name:
     S.ProgramConfig.create name ti
   }
 
-(* Helper symbol for prog_name *)
+(* Helper rule for prog_name *)
 prog_name_qual:
   | p = prog_name;
   { p }
@@ -1631,7 +1633,7 @@ prog_config:
         pc
     }
 
-(* Helper symbol for prog_config *)
+(* Helper rule for prog_config *)
 prog_config_list:
     | pc = prog_config; T_SEMICOLON
     { pc :: [] }
@@ -1710,22 +1712,10 @@ expression:
 (* According IEC61131-3 constant expression should be evaluated at compile-time.
 
    There are no examples or more formal rules for supported compile-time expressions
-   in a Standard text, so I don't know what does this means. For now I replace this
-   rule from a previous version of standard which replaces constant expression with
-   a following BNF rule:
-
-   signed_integer | enumerated_value
-
+   in a Standard text, so I don't know what does this means.
 *)
-constant_expr:
-  | v = signed_int
-  {
-    match v with
-    | CInteger(v, _) -> v
-    | _ -> raise (SyntaxError "Incorrect constant expression value")
-  }
-  (* | v = enum_value
-  { v } *)
+let constant_expr :=
+  | ~ = constant; <>
 
 xor_expr:
   | s = and_expr
@@ -1797,7 +1787,7 @@ variable_access:
   | v = variable_expr
   { v }
 
-(* Helper symbol for variable_access.
+(* Helper rule for variable_access.
  * This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
 variable_expr:
   | id = T_IDENTIFIER
@@ -1901,7 +1891,7 @@ if_stmt:
   | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
   { S.StmIf(ti, cond, if_stmts, elsif_stmts, else_stmts) }
 
-(* Helper symbol for if_stmt *)
+(* Helper rule for if_stmt *)
 if_stmt_elsif_list:
   | ti = T_ELSIF cond = expression T_THEN stmts = stmt_list
   {
@@ -1981,7 +1971,7 @@ repeat_stmt:
 (* }}} *)
 
 (* {{{ Other symbols
- * Helper symbols and symbols which doesn't defined in standard grammar explicitly *)
+ * Helper rules and symbols which doesn't defined in standard grammar explicitly *)
 
 (* Generic data types *)
 generic_type_name:

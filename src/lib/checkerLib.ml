@@ -13,6 +13,8 @@ let print_element (e : S.iec_library_element) =
   | S.IECProgram p -> Printf.printf "Running check for program %s\n" p.name
   | S.IECConfiguration c ->
       Printf.printf "Running check for configuration %s\n" c.name
+  | S.IECType _ ->
+      Printf.printf "Running check for derived type\n"
 
 let[@warning "-27"] run_all_checks elements envs =
   List.iter elements ~f:(fun e -> print_element e);
