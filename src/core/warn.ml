@@ -1,5 +1,7 @@
-type t = { name : string; msg : string }
+type t = { linenr: int; column: int; id: string; msg: string; } [@@deriving yojson]
 
-let mk name msg = { name; msg }
+let mk linenr column id msg = { linenr; column; id; msg }
 
-let print w = Printf.printf "%s: %s" w.name w.msg
+let to_string w =
+  Printf.sprintf "%d:%d %s: %s" w.linenr w.column w.id w.msg
+

@@ -9,12 +9,8 @@ let check_stmt func_name = function
   | S.StmFuncCall (ti, f, _) ->
       Printf.printf "%s - %s" func_name (S.Function.get_name f);
       if String.equal (S.Function.get_name f) func_name then
-        let msg =
-          Printf.sprintf
-            "(%d:%d): POUs shall not call themselves directly or indirectly"
-            ti.linenr ti.col
-        in
-        let w = Warn.mk "PLCOPEN-CP13" msg in
+        let msg = "POUs shall not call themselves directly or indirectly" in
+        let w = Warn.mk ti.linenr ti.col "PLCOPEN-CP13" msg in
         Some w
       else None
   | _ -> None

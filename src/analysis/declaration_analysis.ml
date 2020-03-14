@@ -23,7 +23,7 @@ let check_str_size_w ty_decl ty_init =
           "String declaration and initialization doesn't match (%d <> %d)" len_d
           len_i
       in
-      let w = Warn.mk "DeclarationAnalysis" msg in
+      let w = Warn.mk 0 0 "DeclarationAnalysis" msg in
       [ w ]
 
 (** Compare length of declared string with initializer string size. *)
@@ -44,7 +44,7 @@ let check_str_init_size_w ty_init init_val =
           "String size doesn't match size of initialization literal (%d <> %d)"
           len_i len_c
       in
-      let w = Warn.mk "DeclarationAnalysis" msg in
+      let w = Warn.mk 0 0 "DeclarationAnalysis" msg in
       [ w ]
 
 let check_ty_decl = function

@@ -8,16 +8,7 @@ module DA = Declaration_analysis
 module Lib = CheckerLib
 module TI = Tok_info
 module W = Warn
-
-let read_all filename =
-  let chan = open_in filename in
-  try
-    let res = really_input_string chan (in_channel_length chan) in
-    let _ = close_in chan in
-    res
-  with e ->
-    close_in_noerr chan;
-    raise e
+module WO = Warn_output
 
 let print_position outx (lexbuf : Lexing.lexbuf) =
   let pos = lexbuf.lex_curr_p in
@@ -29,14 +20,14 @@ let parse_with_error lexbuf =
   let l = Lexer.initial tokinfo in
   try Parser.main l lexbuf with
   | Lexer.LexingError msg ->
-      fprintf stderr "%a: %s\n" print_position lexbuf msg;
-      []
+    fprintf stderr "%a: %s\n" print_position lexbuf msg;
+    []
   | Parser.Error ->
-      Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf;
-      []
+    Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf;
+    []
   | Failure msg ->
-      Printf.fprintf stderr "%a: %s-n" print_position lexbuf msg;
-      []
+    Printf.fprintf stderr "%a: %s-n" print_position lexbuf msg;
+    []
 
 let parse_elements lexbuf =
   let node = parse_with_error lexbuf in
@@ -50,18 +41,46 @@ let parse_file (filename : string) : S.iec_library_element list =
   In_channel.close inx;
   elements
 
-let _ =
-  if Array.length Sys.argv < 2 then (
-    Printf.printf "Usage: %s <file>\n" Sys.argv.(0);
-    exit 1 )
+let run_checker filename fmt =
+  if not (Sys.file_exists filename) then
+    failwith ("File " ^ filename ^ " doesn't exists")
   else
-    let filename = Sys.argv.(1) in
-    if not (Sys.file_exists filename) then
-      failwith ("File " ^ filename ^ " doesn't exists")
-    else
-      let elements = parse_file filename in
-      let envs = Ast_util.create_envs elements in
-      let decl_warnings = DA.run_declaration_analysis elements envs in
-      List.iter decl_warnings ~f:(fun w -> W.print w);
-      let lib_warnings = Lib.run_all_checks elements envs in
-      List.iter lib_warnings ~f:(fun w -> W.print w)
+    let elements = parse_file filename in
+    let envs = Ast_util.create_envs elements in
+    (* let decl_warnings = DA.run_declaration_analysis elements envs in
+    List.iter decl_warnings ~f:(fun w -> W.print w); *)
+    let lib_warnings = Lib.run_all_checks elements envs in
+    WO.print_report lib_warnings fmt
+
+let command =
+  Command.basic ~summary:"IEC61131-3 static analysis"
+    Command.Let_syntax.(let%map_open
+                         output_format = flag "-output-format" (optional string) ~doc:"Output format"
+                        and
+                          files = anon (sequence ("filename" %: Core.Filename.arg_type))
+                        in
+                        fun () ->
+                          let fmt = match output_format with
+                            | Some s -> (
+                                if String.equal s "json" then
+                                  WO.Json
+                                else if String.equal s "plain" then
+                                  WO.Plain
+                                else (
+                                  Printf.eprintf "Unknown output format '%s'!\n\n" s;
+                                  Printf.eprintf "Supported formats:\n" ;
+                                  Printf.eprintf "  plain\n" ;
+                                  Printf.eprintf "  json\n" ;
+                                  exit 22
+                                ))
+                            | None -> WO.Plain
+                          in
+                          match files with
+                          | [] -> (
+                              Printf.eprintf "No input files\n";
+                              exit 1)
+                          | _ -> List.iter files ~f:(fun f -> run_checker f fmt)
+                       )
+
+let () =
+  Core.Command.run command

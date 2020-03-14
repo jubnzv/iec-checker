@@ -1,7 +1,7 @@
 (executable
  (name iec_checker)
  (libraries core re iec_checker.lib iec_checker.parser iec_checker.core iec_checker.analysis)
- (preprocess (pps ppx_variants_conv)))
+ (preprocess (pps ppx_variants_conv ppx_jane)))
 
 ; Make warnings non-fatal
 (env (dev (flags (:standard -warn-error -A))))
