@@ -1,11 +1,8 @@
 (* This demo includes some declaration errors *)
-PROGRAM program0
-  VAR
-    s0 : STRING[5];             (* OK *)
-    s1 : STRING[5] := 'foo';    (* OK *)
-    s2 : STRING[5] := 'foobar'; (* Incorrect size *)
-  END_VAR
-
-  s1 := "bar";
-
-END_PROGRAM
+TYPE
+    ST0 : STRING[5];                               (* OK *)
+    ST0 : STRING;                                  (* OK *)
+    ST1 : STRING[5] := 'foo';                      (* OK *)
+    ST1 : STRING := 'platform_dependent';          (* OK *)
+    ST2 : STRING[5] := "foobar";                   (* Error *)
+END_TYPE

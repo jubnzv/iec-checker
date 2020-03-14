@@ -47,10 +47,9 @@ let run_checker filename fmt =
   else
     let elements = parse_file filename in
     let envs = Ast_util.create_envs elements in
-    (* let decl_warnings = DA.run_declaration_analysis elements envs in
-    List.iter decl_warnings ~f:(fun w -> W.print w); *)
+    let decl_warnings = DA.run_declaration_analysis elements envs in
     let lib_warnings = Lib.run_all_checks elements envs in
-    WO.print_report lib_warnings fmt
+    WO.print_report (decl_warnings @ lib_warnings) fmt
 
 let command =
   Command.basic ~summary:"IEC61131-3 static analysis"

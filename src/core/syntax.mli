@@ -181,9 +181,9 @@ and derived_ty_decl =
                             expr option (** initialization expression *)
   (* | DTyDeclArrayType *)
   (* | DTyDeclStructType *)
-  | DTyDeclStringType of derived_ty (** declaration ty *) *
-                         derived_ty (** initialization ty *) *
-                         string (** initialization value *) option
+  | DTyDeclStringType of string (** ty name *) *
+                         derived_ty (** declaration ty *) *
+                         string (** initial value *) option
 
 (** Single element type specification (it works like typedef in C). *)
 and single_element_ty_spec =
@@ -398,7 +398,7 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
-  | IECType of derived_ty_decl
+  | IECType of derived_ty_decl list
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
 (** Return variables declared for given POU *)

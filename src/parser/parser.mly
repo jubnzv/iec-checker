@@ -219,7 +219,7 @@ let library_element_declaration :=
   | ~ = func_decl; <S.IECFunction>
   | ~ = fb_decl; <S.IECFunctionBlock>
   | ~ = config_decl; <S.IECConfiguration>
-  | ~ = type_decl; <S.IECType>
+  | ~ = data_type_decl; <S.IECType>
 (* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
@@ -709,16 +709,16 @@ struct_type_name:
   }
 
 let data_type_decl :=
-  | T_TYPE; ~ = separated_list(T_SEMICOLON, type_decl); T_END_TYPE; <>
+  | T_TYPE; ~ = list(type_decl); T_END_TYPE; <>
 
 let type_decl :=
-  | ~ = simple_type_decl; <>
-  (* | ~ = subrange_type_decl; <> *)
-  (* | ~ = enum_type_decl; <> *)
-  (* | ~ = array_type_decl; <> *)
-  (* | ~ = struct_type_decl; <> *)
-  | ~ = str_type_decl; <>
-  (* | ~ = ref_type_decl; <> *)
+  | ~ = simple_type_decl; T_SEMICOLON; <>
+  (* | ~ = subrange_type_decl; T_SEMICOLON; <> *)
+  (* | ~ = enum_type_decl; T_SEMICOLON; <> *)
+  (* | ~ = array_type_decl; T_SEMICOLON; <> *)
+  (* | ~ = struct_type_decl; T_SEMICOLON; <> *)
+  | ~ = str_type_decl; T_SEMICOLON; <>
+  (* | ~ = ref_type_decl; T_SEMICOLON; <> *)
 
 let simple_type_decl :=
   | ty_decl_name = simple_type_name; T_COLON; init_vals = simple_spec_init;
@@ -817,14 +817,22 @@ struct_elem_name_list:
 
 (* struct_elem_init: *)
 
+(* NOTE: This rule contains a typo in the IEC61131-3 standard.
+
+   The original definition was:
+     string_type_name ':' string_type_name ( ':=' char_str )?
+
+   It's just contradicts examples from the Standard text and common sense,
+   my replacement based on IEC61131-3 2nd edition is:
+     type_name ':' string_type_name ( ':=' char_str )?
+*)
 let str_type_decl :=
-  | ty_def = string_type_name; T_COLON; ty_init = string_type_name; v = option(opt_char_str);
+  | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = string_type_name; v = option(opt_char_str);
   {
-    let (ty_d, len_d) = ty_def in
-    let ty_spec_decl = S.DTyUseStringType(ty_d, len_d) in
-    let (ty_i, len_i) = ty_init in
-    let ty_spec_init = S.DTyUseStringType(ty_i, len_i) in
-    S.DTyDeclStringType(ty_spec_decl, ty_spec_init, v)
+    let ty_name, _ = ty_name_id in
+    let (ty_i, len_i) = ty_decl in
+    let ty_spec_decl = S.DTyUseStringType(ty_i, len_i) in
+    S.DTyDeclStringType(ty_name, ty_spec_decl, v)
   }
 
 (* Helper for str_type_decl *)

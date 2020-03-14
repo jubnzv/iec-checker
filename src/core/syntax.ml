@@ -247,9 +247,9 @@ and derived_ty_decl =
                             expr option (** initialization expression *)
   (* | DTyDeclArrayType *)
   (* | DTyDeclStructType *)
-  | DTyDeclStringType of derived_ty (** declaration ty *) *
-                         derived_ty (** initialization ty *) *
-                         string (** initialization value *) option
+  | DTyDeclStringType of string (** ty name *) *
+                         derived_ty (** declaration ty *) *
+                         string (** initial value *) option
 
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
@@ -507,7 +507,7 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
-  | IECType of derived_ty_decl
+  | IECType of derived_ty_decl list
 
 let get_pou_vars_decl = function
   | IECFunction f -> f.variables
