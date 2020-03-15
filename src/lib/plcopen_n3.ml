@@ -169,17 +169,10 @@ let reserved_keywords =
     "UDINT";
   ]
 
-let startswith s1 s2 =
-  let len1 = String.length s1 and len2 = String.length s2 in
-  if len1 < len2 then false
-  else
-    let sub = String.sub s1 ~pos:0 ~len:len2 in
-    String.equal sub s2
-
 let check_name var =
   let name = S.vget_name var in
   let ti = S.vget_ti var in
-  let m = List.find reserved_keywords ~f:(fun k -> startswith name k) in
+  let m = List.find reserved_keywords ~f:(fun k -> String.equal name k) in
   match m with
   | Some _ ->
     let msg = "IEC data types and standard library objects must be avoided" in
