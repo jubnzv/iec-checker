@@ -24,5 +24,24 @@ PROGRAM square_root
   END_IF;
 
 END_PROGRAM
-(* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)
 
+PROGRAM test
+  VAR
+    i, j : INT;
+    flag : INT;
+    counter : INT := 0;
+    some_var : INT;
+  END_VAR
+
+  FOR i := 0 TO 10 DO
+    FOR j := 10 TO 100 BY 2 DO
+      IF flag THEN
+        EXIT;
+      END_IF;
+      counter := counter + 1;
+      IF j = 10 THEN
+        CONTINUE;
+      END_IF;
+    END_FOR;
+  END_FOR;
+END_PROGRAM

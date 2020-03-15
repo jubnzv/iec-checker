@@ -55,6 +55,8 @@ let rec stmts_to_list stmt =
   | S.StmRepeat (_, ns, e) ->
       [ stmt ] @ expr_to_stmts e
       @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.StmExit _ -> [ stmt ]
+  | S.StmContinue _ -> [ stmt ]
   | S.StmFuncParamAssign (_, e, _) -> [ stmt ] @ expr_to_stmts e
   | S.StmFuncCall (_, _, ns) ->
       stmt

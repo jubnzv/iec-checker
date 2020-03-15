@@ -167,6 +167,7 @@
 %token<IECCheckerCore.Tok_info.t> T_CASE T_OF T_END_CASE
 %token<IECCheckerCore.Tok_info.t> T_FOR T_TO T_BY T_DO T_END_FOR
 %token<IECCheckerCore.Tok_info.t> T_WHILE T_END_WHILE T_REPEAT T_END_REPEAT T_UNTIL
+%token<IECCheckerCore.Tok_info.t> T_EXIT T_CONTINUE
 (* }}} *)
 
 (* {{{ Helpers for date and time literals
@@ -1964,17 +1965,12 @@ case_list_elem:
   | e = constant_expr
   { e }
 
-iteration_stmt:
-  | s = for_stmt
-  { s }
-  | s = while_stmt
-  { s }
-  | s = repeat_stmt
-  { s }
-  (* | T_EXIT
-  { } *)
-  (* | T_CONTINUE
-  { } *)
+let iteration_stmt :=
+  | ~ = for_stmt; <>
+  | ~ = while_stmt; <>
+  | ~ = repeat_stmt; <>
+  | ~ = T_EXIT; <S.StmExit>
+  | ~ = T_CONTINUE; <S.StmContinue>
 
 for_stmt:
   | ti = T_FOR cv = control_variable T_ASSIGN fl = for_list T_DO sl = stmt_list T_END_FOR

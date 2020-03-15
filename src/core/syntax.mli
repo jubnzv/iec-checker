@@ -233,6 +233,8 @@ and statement =
   | StmRepeat of TI.t *
                  statement list * (** body *)
                  expr (** condition *)
+  | StmExit of TI.t
+  | StmContinue of TI.t
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)

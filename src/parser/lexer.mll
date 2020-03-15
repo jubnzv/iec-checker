@@ -219,6 +219,8 @@ rule initial tokinfo =
   | "REPEAT"         { let ti = tokinfo lexbuf in T_REPEAT(ti) }
   | "END_REPEAT"     { let ti = tokinfo lexbuf in T_END_REPEAT(ti) }
   | "UNTIL"          { let ti = tokinfo lexbuf in T_UNTIL(ti) }
+  | "EXIT"           { let ti = tokinfo lexbuf in T_EXIT(ti) }
+  | "CONTINUE"       { let ti = tokinfo lexbuf in T_CONTINUE(ti) }
 (* }}} *)
 
   (* {{{ Integer literals *)
