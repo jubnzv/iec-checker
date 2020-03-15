@@ -11,7 +11,7 @@ let print_report warnings fmt =
   let out =
     match fmt with
     | Plain -> List.fold_left warnings
-                 ~f:(fun out w -> out ^ (W.to_string w))
+                 ~f:(fun out w -> out ^ (W.to_string w) ^ "\n")
                  ~init:""
     | Json -> (let json_list = List.fold_left warnings
                    ~f:(fun out w ->

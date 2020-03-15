@@ -11,7 +11,7 @@ let next_id =
 let create lexbuf =
   let id = next_id () in
   let linenr = lexbuf.Lexing.lex_curr_p.pos_lnum in
-  let col = lexbuf.Lexing.lex_curr_p.pos_bol in
+  let col = lexbuf.Lexing.lex_curr_p.pos_cnum - lexbuf.Lexing.lex_curr_p.pos_bol in
   { id; linenr; col }
 
 let create_dummy =

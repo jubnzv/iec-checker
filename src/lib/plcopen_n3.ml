@@ -182,7 +182,7 @@ let check_name var =
   let m = List.find reserved_keywords ~f:(fun k -> startswith name k) in
   match m with
   | Some _ ->
-    let msg = "IEC data types and standard library objects must be avoided\n" in
+    let msg = "IEC data types and standard library objects must be avoided" in
     let w = Warn.mk ti.linenr ti.col "PLCOPEN-N3" msg in
     Some w
   | None -> None
