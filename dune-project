@@ -1,6 +1,8 @@
 (lang dune 2.0)
 (using menhir 2.0)
 
+(generate_opam_files true)
+
 (name iec_checker)
 (version 0.0.1)
 (authors "Georgy Komarov")
