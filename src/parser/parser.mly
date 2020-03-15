@@ -528,7 +528,7 @@ let data_type_access :=
 let elem_type_name :=
   | ~ = numeric_type_name; <>
   | ~ = bit_str_type_name; <>
-  | ty_def = string_type_name; { let (ty, _) = ty_def in ty }
+  | ~ = string_type_name; <>
   | ~ = date_type_name; <>
   | ~ = time_type_name; <>
   (* NOTE: TOD and DT types are not defined as part of elem_type_name in 3rd edition of IEC61131-3
@@ -572,12 +572,12 @@ real_type_name:
   { S.LREAL }
 
 let string_type_name :=
-  | T_STRING; l = string_type_length; { (S.STRING, l) }
-  | T_WSTRING; l = string_type_length; { (S.WSTRING, l) }
-  | T_STRING; { (S.STRING, Cfg.max_string_len) }
-  | T_WSTRING; { (S.WSTRING, Cfg.max_string_len) }
-  | T_CHAR; { (S.CHAR, 1) }
-  | T_WCHAR; { (S.WCHAR, 1) }
+  | T_STRING; l = string_type_length; { S.STRING(l) }
+  | T_WSTRING; l = string_type_length; { S.WSTRING(l) }
+  | T_STRING; { S.STRING(Cfg.max_string_len) }
+  | T_WSTRING; { S.WSTRING(Cfg.max_string_len) }
+  | T_CHAR; { S.CHAR(1) }
+  | T_WCHAR; { S.WCHAR(1) }
 
 (* Helper rule for string_type_name *)
 string_type_length:
@@ -642,7 +642,7 @@ let derived_type_access :=
   | ~ = single_elem_type_access; <S.DTyUseSingleElement>
   (* | ~ = array_type_access; <> *)
   (* | ~ = struct_type_access; <> *)
-  | ty_def = string_type_access; { let (ty, len) = ty_def in S.DTyUseStringType(ty, len) }
+  | ty_def = string_type_access; <S.DTyUseStringType>
   (* | ~ = class_type_access; <> *)
   (* | ~ = ref_type_access; <> *)
   (* | ~ = interface_type_access; <> *)
@@ -673,69 +673,76 @@ let simple_type_access :=
   | id = T_IDENTIFIER
   { } *)
 
-simple_type_name:
-  | id = T_IDENTIFIER
-  {
-    let name, _ = id in
-    name
-  }
+let simple_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-subrange_type_name:
-  | id = T_IDENTIFIER
-  {
-    let name, _ = id in
-    name
-  }
+let subrange_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-enum_type_name:
-  | id = T_IDENTIFIER
-  {
-    let name, _ = id in
-    name
-  }
+(** Helper rule for str_type_decl *)
+let str_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-array_type_name:
-  | id = T_IDENTIFIER
-  {
-    let name, _ = id in
-    name
-  }
+let enum_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-struct_type_name:
-  | id = T_IDENTIFIER
-  {
-    let name, _ = id in
-    name
-  }
+let array_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
+
+let struct_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
 let data_type_decl :=
   | T_TYPE; ~ = list(type_decl); T_END_TYPE; <>
 
 let type_decl :=
   | ~ = simple_type_decl; T_SEMICOLON; <>
-  (* | ~ = subrange_type_decl; T_SEMICOLON; <> *)
+  | ~ = subrange_type_decl; T_SEMICOLON; <>
   (* | ~ = enum_type_decl; T_SEMICOLON; <> *)
   (* | ~ = array_type_decl; T_SEMICOLON; <> *)
   (* | ~ = struct_type_decl; T_SEMICOLON; <> *)
   | ~ = str_type_decl; T_SEMICOLON; <>
   (* | ~ = ref_type_decl; T_SEMICOLON; <> *)
 
+(* Helper rules to resolve shift/reduce conflicts in types declaration *)
+let type_decl_helper :=
+  | name_id = T_IDENTIFIER; T_COLON; ty = type_spec_helper;
+  { let name, _ = name_id in (name, ty) }
+(* Same as elem_type_name, but with length of strings. *)
+let type_spec_helper :=
+  | ~ = numeric_type_name; <>
+  | ~ = bit_str_type_name; <>
+  | ~ = string_type_name; <>
+  | ~ = date_type_name; <>
+  | ~ = time_type_name; <>
+  | ~ = tod_type_name; <>
+  | ~ = dt_type_name; <>
+
+(* Implementation is modified to avoid shift/reduce conflicts *)
 let simple_type_decl :=
-  | ty_decl_name = simple_type_name; T_COLON; init_vals = simple_spec_init;
+  (* | ty_decl_name = simple_type_name; T_COLON; init_vals = simple_spec_init; *)
+  | name_type = type_decl_helper; ci = assign_constant_expr?;
   {
-    let ty_decl_spec = S.DTySpecSimple(ty_decl_name) in
-    let (ty_init_spec, const_val_init) = init_vals in
-    S.DTyDeclSingleElement(ty_decl_spec, ty_init_spec, const_val_init)
+    let (ty_name, ty_decl) = name_type in
+    let ty_spec = S.DTySpecElementary(ty_decl) in
+    S.DTyDeclSingleElement(ty_name, ty_spec, ci)
+  }
+  | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = simple_type_access; ci = assign_constant_expr?;
+  {
+    let ty_name, _ = ty_name_id in
+    let ty_spec = S.DTySpecSimple(ty_decl) in
+    S.DTyDeclSingleElement(ty_name, ty_spec, ci)
   }
 
 let simple_spec_init :=
   | ty = simple_spec; ci = assign_constant_expr?;
-  {
-    let ci_opt = match ci with
-    | None -> None
-    | Some ci -> Some ci
-    in (ty, ci)
-  }
+  { (ty, ci) }
 
 (* Helper rule for simple_spec_init *)
 let assign_constant_expr :=
@@ -745,29 +752,44 @@ let simple_spec :=
   | ~ = elem_type_name; <S.DTySpecElementary>
   | ~ = simple_type_access; <S.DTySpecSimple>
 
-(* subrange_type_decl:
-  | n = subrange_type_access COLON s = subrange_spec_init
+(* Implementation is modified to avoid shift/reduce conflicts *)
+let subrange_type_decl :=
+  | ~ = subrange_spec_init; <>
+
+let subrange_spec_init :=
+  | s = subrange_spec; T_ASSIGN; ic = signed_int;
+  {
+    match s with
+    | S.DTyDeclSubrange(ty_name, ty_spec, _) ->
+      S.DTyDeclSubrange(ty_name, ty_spec, (cget_int_val ic))
+    | _ -> E.raise E.InternalError "Unexpected subrange type"
+  }
+  | ~ = subrange_spec; <>
+
+let subrange_spec :=
+  | name_type = type_decl_helper; T_LPAREN; s = subrange; T_RPAREN;
+  {
+    let (ty_name, ty_decl) = name_type in
+    if not (S.ety_is_integer ty_decl) then
+        raise (SyntaxError ("Subrange types must be integer"))
+    else
+      let (lb, ub) = s in
+      (* According the Standard, the initial value is assigned to lower bound by default. *)
+      S.DTyDeclSubrange(ty_name, (ty_decl, lb, ub), lb)
+  }
+  (* | tn = subrange_type_access;
   { } *)
 
-(* subrange_spec_init:
-  | s = subrange_spec
-  { s } *)
-  (* | s = subrange_spec ASSIGN i = signed_int *)
-  (* { s , i } *)
+(* NOTE: In the Standard subrange could be described with constant expressions as
+   follows:
+     constant_expr '..' constant_expr
 
-(* subrange_spec:
-  | tn = int_type_name LBRACE s = subrange RBRACE
-  { }
-  | tn = subrange_type_access
-    { tn } *)
-
-(* subrange:
-  | min = signed_int RANGE max = signed_int
-  {
-    let (vmin, _) = min in
-    let (vmax, _) = max in
-    (vmin, vmax)
-  } *)
+   I don't know how to evaluate constant expressions in compile time and have no
+   any examples, so I suppose that we always have integer values here.
+*)
+let subrange :=
+  | lbc = signed_int; T_RANGE; ubc = signed_int;
+  { ((cget_int_val lbc), (cget_int_val ubc)) }
 
 (* enum_type_decl: *)
 
@@ -827,19 +849,29 @@ struct_elem_name_list:
      type_name ':' string_type_name ( ':=' char_str )?
 *)
 let str_type_decl :=
-  | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = string_type_name; v = option(opt_char_str);
+  | name_type = type_decl_helper; init_expr = option(assign_constant_expr);
   {
-    let ty_name, _ = ty_name_id in
-    let (ty_i, len_i) = ty_decl in
-    let ty_spec_decl = S.DTyUseStringType(ty_i, len_i) in
-    S.DTyDeclStringType(ty_name, ty_spec_decl, v)
+    let (ty_name, ty_decl) = name_type in
+    if not (S.ety_is_string ty_decl) then
+        raise (SyntaxError ("Expected string type"))
+    else
+      let ty_spec = S.DTySpecElementary(ty_decl) in
+      (* Check optional initial value *)
+      let initial_value =
+        match init_expr with
+          | Some(expr) ->
+            begin
+              match expr with
+              | S.Constant(c) ->
+                match c with
+                  | S.CString(str, _) -> init_expr
+                  | _ -> E.raise E.InternalError "Unexpected constant type"
+              | _ -> E.raise E.InternalError "Unexpected expression"
+            end
+          | None -> None
+      in
+      S.DTyDeclSingleElement(ty_name, ty_spec, initial_value)
   }
-
-(* Helper for str_type_decl *)
-let opt_char_str :=
-  | T_ASSIGN; const = char_str;
-  { match const with | S.CString (v, _) -> v | _ -> E.raise E.InternalError "Unexpected constant type" }
-
 (* }}} *)
 
 (* {{{ Table 16 -- Direct variables *)
@@ -1789,16 +1821,14 @@ primary_expr:
   | T_LPAREN e = expression T_RPAREN
   { e }
 
-variable_access:
-  | v = variable_expr multibit_part_access
-  { v }
-  | v = variable_expr
+let variable_access :=
+  | v = variable_expr; option(multibit_part_access);
   { v }
 
 (* Helper rule for variable_access.
  * This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
-variable_expr:
-  | id = T_IDENTIFIER
+let variable_expr :=
+  | id = T_IDENTIFIER;
   {
     let (name, ti) = id in
     let sv = S.SymVar.create name ti in

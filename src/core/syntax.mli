@@ -121,10 +121,10 @@ type iec_data_type =
 
 and elementary_ty =
   | NIL (* TODO: replace with an empty symbol *)
-  | STRING
-  | WSTRING
-  | CHAR
-  | WCHAR
+  | STRING of int (** length *)
+  | WSTRING of int (** length *)
+  | CHAR of int (** length *)
+  | WCHAR of int (** length *)
   | TIME
   | LTIME
   | SINT
@@ -169,26 +169,33 @@ and derived_ty =
   | DTyUseSingleElement of single_element_ty_spec
   (* | DTyUseArrayType *)
   (* | DTyUseStructType *)
-  | DTyUseStringType of elementary_ty (** string type spec *) *
-                        int (** length *)
+  | DTyUseStringType of elementary_ty
 
 (** Declaration of a derived type.
     This include "use" symbol value of a declared type and optional
     initialization values. *)
 and derived_ty_decl =
-  | DTyDeclSingleElement of single_element_ty_spec (** declaration ty *) *
-                            single_element_ty_spec (** initialization ty *) *
+  (* Elementary type synonyms and strings *)
+  | DTyDeclSingleElement of string (** type name *) *
+                            single_element_ty_spec (** declaration ty *) *
                             expr option (** initialization expression *)
+  (* Reference: ch. 6.4.4.4 *)
+  | DTyDeclSubrange of string (** type name *) *
+                       subrange_ty_spec *
+                       int (** initial value *)
   (* | DTyDeclArrayType *)
   (* | DTyDeclStructType *)
-  | DTyDeclStringType of string (** ty name *) *
-                         derived_ty (** declaration ty *) *
-                         string (** initial value *) option
 
-(** Single element type specification (it works like typedef in C). *)
+(** Single element type specification (it works like typedef in C) *)
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string (** derived ty name *)
+
+(** Subrange type specification *)
+and subrange_ty_spec =
+  elementary_ty (** integer ty *) *
+  int (** lower bound *) *
+  int (** upper bound *)
 
 and constant =
   | CInteger of int * TI.t
@@ -265,6 +272,11 @@ val c_from_expr : expr -> constant option
 
 val c_from_expr_exn : expr -> constant
 (** Convert given expr to const. Raise an InternalError exception if given expr is not constant.  *)
+(* }}} *)
+
+(* {{{ Elementary type helpers *)
+val ety_is_integer : elementary_ty -> bool
+val ety_is_string : elementary_ty -> bool
 (* }}} *)
 
 (* {{{ Configuration objects *)

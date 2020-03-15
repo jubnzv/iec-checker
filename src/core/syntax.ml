@@ -191,10 +191,10 @@ type iec_data_type =
 
 and elementary_ty =
   | NIL (* TODO: replace with an empty symbol *)
-  | STRING
-  | WSTRING
-  | CHAR
-  | WCHAR
+  | STRING of int (** length *)
+  | WSTRING of int (** length *)
+  | CHAR of int (** length *)
+  | WCHAR of int (** length *)
   | TIME
   | LTIME
   | SINT
@@ -235,25 +235,29 @@ and generic_ty =
   | ANY_DATE
 
 and derived_ty =
- | DTyUseSingleElement of single_element_ty_spec
- (* | DTyUseArrayType *)
- (* | DTyUseStructType *)
- | DTyUseStringType of elementary_ty (** string type spec *) *
-                       int (** length *)
+  | DTyUseSingleElement of single_element_ty_spec
+  (* | DTyUseArrayType *)
+  (* | DTyUseStructType *)
+  | DTyUseStringType of elementary_ty
 
 and derived_ty_decl =
-  | DTyDeclSingleElement of single_element_ty_spec (** declaration ty *) *
-                            single_element_ty_spec (** initialization ty *) *
+  | DTyDeclSingleElement of string (** type name *) *
+                            single_element_ty_spec (** declaration ty *) *
                             expr option (** initialization expression *)
+  | DTyDeclSubrange of string (** type name *) *
+                       subrange_ty_spec *
+                       int (** initial value *)
   (* | DTyDeclArrayType *)
   (* | DTyDeclStructType *)
-  | DTyDeclStringType of string (** ty name *) *
-                         derived_ty (** declaration ty *) *
-                         string (** initial value *) option
 
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string
+
+and subrange_ty_spec =
+  elementary_ty (** integer ty *) *
+  int (** lower bound *) *
+  int (** upper bound *)
 
 and constant =
   | CInteger of int * TI.t
@@ -360,6 +364,16 @@ let c_from_expr = function
 let c_from_expr_exn = function
   | Constant(v) -> v
   | _ -> raise @@ InternalError "Incompatible types"
+(* }}} *)
+
+(* {{{ Elementary type helpers *)
+let ety_is_integer = function
+  | SINT | INT | DINT | LINT | USINT | UINT | UDINT | ULINT -> true
+  | _ -> false
+
+let ety_is_string = function
+  | STRING _ | WSTRING _ | CHAR _ | WCHAR _ -> true
+  | _ -> false
 (* }}} *)
 
 (* {{{ Configuration objects *)

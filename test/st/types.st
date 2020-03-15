@@ -1,17 +1,14 @@
 (* This file contains variables with valid type definitions. *)
-PROGRAM program0
-  VAR
-    (* character strings *)
-    s : STRING;
-    s1 : STRING[5];
-    ws : WSTRING;
-    ws1 : WSTRING[5];
-    c : CHAR;
-    wc : WCHAR;
-  END_VAR
+TYPE
+  (* Character strings *)
+  S : STRING;
+  S1 : STRING[5];
+  WS : WSTRING;
+  WS1 : WSTRING[5];
+  WS1 : WSTRING[25] := 'spaces_disallowed';
+  C : CHAR;
+  WC : WCHAR;
 
-  a := 0;
-  s := "foo";
-  s1 := "bar";
-
-END_PROGRAM
+  (* Subrange types *)
+  ANALOG_DATA : INT (-4095 .. 4095);
+END_TYPE
