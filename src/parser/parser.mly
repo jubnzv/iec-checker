@@ -1543,15 +1543,12 @@ single_resource_decl:
     | pis = prog_config_list
     { { S.name = None; S.tasks = []; S.variables = []; S.programs = pis } }
 
-resource_name:
-    | id = T_IDENTIFIER
-    {
-        let name, _ = id in
-        name
-    }
+let resource_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-  let access_decls :=
-    | T_VAR_ACCESS; ~ = list(access_decl); T_END_VAR; <>
+let access_decls :=
+  | T_VAR_ACCESS; ~ = list(access_decl); T_END_VAR; <>
 
 access_decl:
     | access_name; T_COLON access_path; T_COLON data_type_access T_SEMICOLON
@@ -1583,34 +1580,24 @@ global_var_access:
     | separated_list(T_DOT, resource_name); out = global_var_name; struct_elem_name_list
     { S.SymVar(out) }
 
-access_name:
-    | id = T_IDENTIFIER
-    {
-        let name, _ = id in
-        name
-    }
+let access_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-prog_output_access:
-  | p = prog_name T_DOT v = symbolic_variable
-  {
-    let vv = S.SymVar(v) in
-    let n = S.ProgramConfig.get_name p in (n, vv)
-  }
+let prog_output_access :=
+  | p = prog_name; T_DOT; v = symbolic_variable;
+  { let vv = S.SymVar(v) in let n = S.ProgramConfig.get_name p in (n, vv) }
 
-prog_name:
-  | id = T_IDENTIFIER
-  {
-    let (name, ti) = id in
-    S.ProgramConfig.create name ti
-  }
+let prog_name :=
+  | id = T_IDENTIFIER;
+  { let (name, ti) = id in S.ProgramConfig.create name ti }
 
 (* Helper rule for prog_name *)
-prog_name_qual:
-  | p = prog_name;
-  { p }
-  | p = prog_name; T_RETAIN
+let prog_name_qual :=
+  | ~ = prog_name; <>
+  | p = prog_name; T_RETAIN;
   { S.ProgramConfig.set_qualifier p S.ProgramConfig.QRetain }
-  | p = prog_name; T_NON_RETAIN
+  | p = prog_name; T_NON_RETAIN;
   { S.ProgramConfig.set_qualifier p S.ProgramConfig.QNonRetain }
 
 access_direction:
@@ -1623,12 +1610,9 @@ task_config:
   | T_TASK t = task_name; i = task_init; T_SEMICOLON
   { t }
 
-task_name:
-    | id = T_IDENTIFIER
-    {
-        let (name, ti) = id in
-        S.Task.create name ti
-    }
+let task_name :=
+  | id = T_IDENTIFIER;
+  { let (name, ti) = id in S.Task.create name ti }
 
 task_init:
     | T_LPAREN T_SINGLE s = data_source; T_COMMA T_INTERVAL i = data_source; T_COMMA T_PRIORITY T_ASSIGN p = unsigned_int; T_RPAREN
