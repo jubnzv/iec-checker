@@ -25,7 +25,7 @@ PROGRAM square_root
 
 END_PROGRAM
 
-PROGRAM test
+PROGRAM test_for
   VAR
     i, j : INT;
     flag : INT;
@@ -44,4 +44,25 @@ PROGRAM test
       END_IF;
     END_FOR;
   END_FOR;
+END_PROGRAM
+
+PROGRAM test_switch_case
+  VAR
+    TW : INT;
+    THUMBWHEEL : WORD;
+    TW_ERROR : INT;
+    some_var : INT;
+  END_VAR
+
+  TW := WORD_BCD_TO_INT(THUMBWHEEL);
+  TW_ERROR:= 0;
+  CASE TW OF
+    1,5:     DISPLAY := OVEN_TEMP;
+    2:       DISPLAY := MOTOR_SPEED;
+    3:       DISPLAY := GROSS - TARE;
+    4,6..10: DISPLAY := STATUS(TW-4);
+  ELSE DISPLAY := 0;
+       TW_ERROR:= 1;
+  END_CASE;
+  QW100:= INT_TO_BCD(DISPLAY);
 END_PROGRAM

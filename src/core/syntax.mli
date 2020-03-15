@@ -203,6 +203,7 @@ and constant =
   | CReal of float * TI.t
   | CString of string * TI.t
   | CTimeValue of TimeValue.t * TI.t
+  | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
 [@@deriving show]
 
 and statement =

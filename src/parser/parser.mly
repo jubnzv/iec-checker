@@ -774,7 +774,7 @@ let subrange_spec :=
     if not (S.ety_is_integer ty_decl) then
         raise (SyntaxError ("Subrange types must be integer"))
     else
-      let (lb, ub) = s in
+      let (_, lb, ub) = s in
       (* According the Standard, the initial value is assigned to lower bound by default. *)
       S.DTyDeclSubrange(ty_name, (ty_decl, lb, ub), lb)
   }
@@ -790,7 +790,7 @@ let subrange_spec :=
 *)
 let subrange :=
   | lbc = signed_int; T_RANGE; ubc = signed_int;
-  { ((cget_int_val lbc), (cget_int_val ubc)) }
+  { ((S.c_get_ti lbc), (cget_int_val lbc), (cget_int_val ubc)) }
 
 (* enum_type_decl: *)
 
@@ -1953,17 +1953,13 @@ case_selection:
   | cl = case_list T_COLON sl = stmt_list
   { {S.case = cl; S.body = sl} }
 
-case_list:
-  | e = case_list_elem
-  { e :: [] }
-  | es = case_list T_COMMA e = case_list_elem
-  { e :: es }
+let case_list :=
+  | ~ = separated_list(T_COMMA, case_list_elem); <>
 
-case_list_elem:
-  (* | e = subrange
-  {  } *)
-  | e = constant_expr
-  { e }
+let case_list_elem :=
+  | specs = subrange;
+  { let (ti, lb, ub) = specs in S.Constant(S.CRange(ti, lb, ub)) }
+  | ~ = constant_expr; <>
 
 let iteration_stmt :=
   | ~ = for_stmt; <>

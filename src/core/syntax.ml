@@ -265,6 +265,7 @@ and constant =
   | CReal of float * TI.t
   | CString of string * TI.t
   | CTimeValue of TimeValue.t * TI.t
+  | CRange of TI.t * int * int
 [@@deriving show]
 
 and statement =
@@ -323,6 +324,7 @@ let c_is_zero c =
   | CReal (v, _) -> phys_equal v 0.0
   | CString _ -> false
   | CTimeValue (tv, _) -> TimeValue.is_zero tv
+  | CRange (_, lb, ub) -> (phys_equal lb 0) && (phys_equal ub 0)
 
 let c_get_str_value c =
   match c with
@@ -331,6 +333,7 @@ let c_get_str_value c =
   | CReal (v, _) -> string_of_float v
   | CString (v, _) -> v
   | CTimeValue (v, _) -> TimeValue.to_string v
+  | CRange (_, lb, ub) -> Printf.sprintf "%d..%d" lb ub
 
 let c_get_ti c =
   match c with
@@ -339,6 +342,7 @@ let c_get_ti c =
   | CReal (_, ti) -> ti
   | CString (_, ti) -> ti
   | CTimeValue (_, ti) -> ti
+  | CRange (ti, _, _) -> ti
 
 let c_add c1 c2 =
   match (c1, c2) with
