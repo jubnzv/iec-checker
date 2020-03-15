@@ -38,13 +38,23 @@ let check_str_init_expr ty_init init_expr =
   | Some (len_decl, len_init) when (len_init > len_decl) ->
     let msg =
       Printf.sprintf
-        "Length of initialization string literal exceeds string length (%d > %d)"
+        "Length of initialization string literal exceeds string length (%d > %d)\n"
         len_init len_decl
     in
     let w = Warn.mk 0 0 "DeclarationAnalysis" msg in
     [ w ]
   | Some _ -> [] (* no violations *)
   | None -> []
+
+(** Search for errors in subrange initialization *)
+let check_subrange_init_val ty_spec init_val =
+  let (_, lb, ub) = ty_spec in
+  if (init_val < lb) || (init_val > ub) then
+    let msg =
+      Printf.sprintf "Initial subrange value %d does not fit specified range (%d .. %d)\n"
+        init_val lb ub
+    in let w = Warn.mk 0 0 "DeclarationAnalysis" msg in [ w ]
+  else []
 
 let check_ty_decl = function
   | S.DTyDeclSingleElement (_, ty_spec, init_expr) ->
@@ -53,7 +63,7 @@ let check_ty_decl = function
       | S.DTySpecElementary ty_decl -> (check_str_init_expr ty_decl init_expr)
       | S.DTySpecSimple _ -> []
     end
-  | S.DTyDeclSubrange _ -> []
+  | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
 
 let check_elem (el : S.iec_library_element) =
   match el with
