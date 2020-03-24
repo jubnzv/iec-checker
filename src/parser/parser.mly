@@ -575,8 +575,8 @@ real_type_name:
 let string_type_name :=
   | T_STRING; l = string_type_length; { S.STRING(l) }
   | T_WSTRING; l = string_type_length; { S.WSTRING(l) }
-  | T_STRING; { S.STRING(Cfg.max_string_len) }
-  | T_WSTRING; { S.WSTRING(Cfg.max_string_len) }
+  | T_STRING; { S.STRING(Config.max_string_len) }
+  | T_WSTRING; { S.WSTRING(Config.max_string_len) }
   | T_CHAR; { S.CHAR(1) }
   | T_WCHAR; { S.WCHAR(1) }
 
