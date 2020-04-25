@@ -4,7 +4,11 @@ module S = Syntax
 (** IEC program scheme used in yojson serialization. *)
 type dump_scheme = {
     version: string; (** Scheme version *)
-    elements: S.iec_library_element list;
+    functions: S.function_decl list;
+    function_blocks: S.fb_decl list;
+    programs: S.program_decl list;
+    configurations: S.configuration_decl list;
+    types: S.derived_ty_decl list;
     environments: Env.t list;
 } [@@deriving to_yojson]
 
