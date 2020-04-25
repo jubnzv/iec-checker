@@ -4,11 +4,11 @@ open IECCheckerParser
 open IECCheckerLib
 open IECCheckerAnalysis
 module S = Syntax
-module DA = Declaration_analysis
 module Lib = CheckerLib
 module TI = Tok_info
 module W = Warn
 module WO = Warn_output
+module CFA = Control_flow_analysis
 
 let print_position outx (lexbuf : Lexing.lexbuf) =
   let pos = lexbuf.lex_curr_p in
@@ -47,9 +47,11 @@ let run_checker filename fmt =
   else
     let elements = parse_file filename in
     let envs = Ast_util.create_envs elements in
-    let decl_warnings = DA.run_declaration_analysis elements envs in
+    let pou_cfgs = List.fold_left ~f:(fun cfgs e -> (Cfg.mk e) :: cfgs) ~init:[] elements in
+    let decl_warnings = Declaration_analysis.run elements envs in
+    let flow_warnings = CFA.run pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs in
-    WO.print_report (decl_warnings @ lib_warnings) fmt
+    WO.print_report (decl_warnings @ flow_warnings @ lib_warnings) fmt
 
 let command =
   Command.basic ~summary:"IEC61131-3 static analysis"

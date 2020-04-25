@@ -71,7 +71,7 @@ let check_elem (el : S.iec_library_element) =
     List.fold_left ty_decls ~f:(fun warns ty -> List.append warns (check_ty_decl ty)) ~init:[]
   | _ -> []
 
-let[@warning "-27"] run_declaration_analysis elements envs =
+let[@warning "-27"] run elements envs =
   List.fold_left elements
     ~f:(fun warns e ->
         let ws = check_elem e in
