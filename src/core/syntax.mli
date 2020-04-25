@@ -441,11 +441,11 @@ type configuration_decl = {
 (* }}} *)
 
 type iec_library_element =
-  | IECFunction of function_decl [@to_yojson "func"]
-  | IECFunctionBlock of fb_decl [@to_yojson "fb"]
-  | IECProgram of program_decl [@to_yojson "prog"]
-  | IECConfiguration of configuration_decl [@to_yojson "cfg"]
-  | IECType of derived_ty_decl list [@to_yojson "ty"]
+  | IECFunction of function_decl [@name "Function"]
+  | IECFunctionBlock of fb_decl [@name "FunctionBlock"]
+  | IECProgram of program_decl [@name "Program"]
+  | IECConfiguration of configuration_decl [@name "Configuration"]
+  | IECType of derived_ty_decl list [@name "Type"]
 [@@deriving to_yojson]
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list

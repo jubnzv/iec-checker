@@ -17,3 +17,4 @@ iec_checker.native
 doc/grammar.html
 
 _build/
+.dump.json
