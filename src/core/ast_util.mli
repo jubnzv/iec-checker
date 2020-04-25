@@ -1,6 +1,13 @@
 (** Helpers to work with AST *)
 module S = Syntax
 
+(** IEC program scheme used in yojson serialization. *)
+type dump_scheme = {
+    version: string; (** Scheme version *)
+    elements: S.iec_library_element list;
+    environments: Env.t list;
+} [@@deriving to_yojson]
+
 val expr_to_stmts : S.expr -> S.statement list
 (** Convert given expression to a list of statements *)
 
@@ -19,5 +26,5 @@ val get_stmts : S.iec_library_element list -> S.statement list
 val create_envs : S.iec_library_element list -> Env.t list
 (** Create the environments for a given configuration elements *)
 
-val create_dump : S.iec_library_element list -> string (** source filename *) -> unit
+val create_dump : S.iec_library_element list -> Env.t list -> string (** source filename *) -> unit
 (** Save input AST in a JSON file.  *)

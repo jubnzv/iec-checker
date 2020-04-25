@@ -391,6 +391,8 @@ module VarDecl : sig
   val get_direction : t -> direction option
 
   val set_direction : t -> direction -> t
+
+  val to_yojson : t -> Yojson.Safe.t
 end
 
 (** Function declaration *)
@@ -445,9 +447,6 @@ type iec_library_element =
   | IECConfiguration of configuration_decl [@to_yojson "cfg"]
   | IECType of derived_ty_decl list [@to_yojson "ty"]
 [@@deriving to_yojson]
-
-(** Stupid hack for yojson serialization. *)
-and iec_library_element_list = iec_library_element list [@@deriving to_yojson]
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
 (** Return variables declared for given POU *)

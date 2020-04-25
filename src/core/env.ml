@@ -10,21 +10,29 @@ module VarDeclMap = struct
 
   let lookup m (name : string) = Map.find m name
 
-  (* let lookup_exn m name = match Map.find m name with
-    | Some var_decl -> var_decl
-    | None -> E.raise E.UnboundIdentifier name *)
-
   let add m name var_decl = Map.set m ~key:name ~data:var_decl
 
   let to_list m =
     Map.to_alist m
     |> List.fold_left ~init:[] ~f:(fun vds (_, vd) -> vds @ [ vd ])
+
+  let to_yojson (m : t) : Yojson.Safe.t =
+    let items = Map.fold m ~init:[] ~f:(fun ~key ~data lst ->
+        `Assoc [key, S.VarDecl.to_yojson data] :: lst
+      ) in
+    `List items
 end
 
 type t = {
   parent : t option;  (** Parent env *)
-  var_decls : VarDeclMap.t;  (** Varaibles declared in this env *)
+  var_decls : VarDeclMap.t;  (** Variables declared in this env *)
 }
+
+let to_yojson env : Yojson.Safe.t =
+  let var_decls = env.var_decls in
+  `Assoc [
+    "var_decls", VarDeclMap.to_yojson var_decls;
+  ]
 
 let empty = { parent = None; var_decls = VarDeclMap.empty }
 

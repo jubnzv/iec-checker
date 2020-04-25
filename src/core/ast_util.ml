@@ -1,6 +1,12 @@
 open Core_kernel
 module S = Syntax
 
+type dump_scheme = {
+    version: string; (** Scheme version *)
+    elements: S.iec_library_element list;
+    environments: Env.t list;
+} [@@deriving to_yojson]
+
 let get_var_decl elems =
   let get_vd = function
     | S.IECFunction f -> f.variables
@@ -114,6 +120,7 @@ let create_envs elems =
         envs @ [ local_env ])
     ~init:[ global_env ]
 
-let create_dump elements src_filename =
+let create_dump elements envs src_filename =
   let dest_filename = Printf.sprintf "%s.dump.json" src_filename in
-  Yojson.Safe.to_file dest_filename (S.iec_library_element_list_to_yojson elements)
+  let scheme = { version = "0.1"; elements = elements; environments = envs; } in
+  Yojson.Safe.to_file dest_filename (dump_scheme_to_yojson scheme)

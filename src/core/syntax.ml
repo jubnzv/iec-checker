@@ -516,6 +516,8 @@ module VarDecl = struct
   let get_direction dcl = dcl.dir
 
   let set_direction dcl d = { dcl with dir = Some d }
+
+  let to_yojson t = to_yojson t
 end
 
 type function_decl = {
@@ -565,9 +567,6 @@ type iec_library_element =
   | IECConfiguration of configuration_decl
   | IECType of derived_ty_decl list
 [@@deriving to_yojson]
-
-(** Stupid hack for yojson serialization. *)
-and iec_library_element_list = iec_library_element list [@@deriving to_yojson]
 
 let get_pou_vars_decl = function
   | IECFunction f -> f.variables

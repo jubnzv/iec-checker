@@ -30,3 +30,5 @@ val get_vdecls : t -> S.VarDecl.t list
 
 val lookup_vdecl : t -> string -> S.VarDecl.t option
 (** Search for a given identifier name in the given environment *)
+
+val to_yojson : t -> Yojson.Safe.t

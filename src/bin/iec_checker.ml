@@ -46,9 +46,9 @@ let run_checker filename fmt create_dumps =
     failwith ("File " ^ filename ^ " doesn't exists")
   else
     let elements = parse_file filename in
-    if create_dumps then
-      Ast_util.create_dump elements filename;
     let envs = Ast_util.create_envs elements in
+    if create_dumps then
+      Ast_util.create_dump elements envs filename;
     let pou_cfgs = List.fold_left ~f:(fun cfgs e -> (Cfg.mk e) :: cfgs) ~init:[] elements in
     let decl_warnings = Declaration_analysis.run elements envs in
     let flow_warnings = CFA.run pou_cfgs in
