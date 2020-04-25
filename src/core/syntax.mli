@@ -445,7 +445,7 @@ type iec_library_element =
   | IECFunctionBlock of fb_decl [@name "FunctionBlock"]
   | IECProgram of program_decl [@name "Program"]
   | IECConfiguration of configuration_decl [@name "Configuration"]
-  | IECType of derived_ty_decl list [@name "Type"]
+  | IECType of derived_ty_decl [@name "Type"]
 [@@deriving to_yojson]
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list

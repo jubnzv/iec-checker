@@ -65,15 +65,18 @@ let check_ty_decl = function
     end
   | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
 
-let check_elem (el : S.iec_library_element) =
-  match el with
-  | S.IECType ty_decls ->
-    List.fold_left ty_decls ~f:(fun warns ty -> List.append warns (check_ty_decl ty)) ~init:[]
-  | _ -> []
+(* let check_elem (el : S.iec_library_element) =                                                  *)
+(*   match el with                                                                                *)
+(*   | S.IECType ty_decls ->                                                                      *)
+(*     List.fold_left ty_decls ~f:(fun warns ty -> List.append warns (check_ty_decl ty)) ~init:[] *)
+(*   | _ -> []                                                                                    *)
 
 let[@warning "-27"] run elements envs =
   List.fold_left elements
     ~f:(fun warns e ->
-        let ws = check_elem e in
+        let ws = match e with
+            | S.IECType ty -> check_ty_decl ty
+            | _ -> []
+        in
         warns @ ws)
     ~init:[]

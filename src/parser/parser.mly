@@ -211,16 +211,29 @@
 
 %%
 let main :=
-  | ~ = list(library_element_declaration); T_EOF; <>
+  | ~ = library_element_declarations; T_EOF; <>
   | T_EOF; { [] }
 
 (* {{{ Programming model *)
+(* This is required because data_type_decl defined as a list in IEC61131-3 grammar. *)
+let library_element_declarations :=
+  | ll = library_element_declarations; e = library_element_declaration;
+  { List.append ll [e] }
+  | e = library_element_declaration;
+  { [e] }
+  | ll = library_element_declarations; dl = data_type_decl;
+  {
+    let type_defs = List.map ~f:(fun t -> S.IECType(t)) dl in
+    ll @ type_defs
+  }
+  | dl = data_type_decl;
+  { List.map ~f:(fun t -> S.IECType(t)) dl }
+
 let library_element_declaration :=
   | ~ = prog_decl; <S.IECProgram>
   | ~ = func_decl; <S.IECFunction>
   | ~ = fb_decl; <S.IECFunctionBlock>
   | ~ = config_decl; <S.IECConfiguration>
-  | ~ = data_type_decl; <S.IECType>
 (* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
