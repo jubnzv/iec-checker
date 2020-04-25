@@ -113,3 +113,7 @@ let create_envs elems =
         let local_env = fill_pou_env local_env e in
         envs @ [ local_env ])
     ~init:[ global_env ]
+
+let create_dump elements src_filename =
+  let dest_filename = Printf.sprintf "%s.dump.json" src_filename in
+  Yojson.Safe.to_file dest_filename (S.iec_library_element_list_to_yojson elements)

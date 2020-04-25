@@ -41,11 +41,13 @@ let parse_file (filename : string) : S.iec_library_element list =
   In_channel.close inx;
   elements
 
-let run_checker filename fmt =
+let run_checker filename fmt create_dumps =
   if not (Sys.file_exists filename) then
     failwith ("File " ^ filename ^ " doesn't exists")
   else
     let elements = parse_file filename in
+    if create_dumps then
+      Ast_util.create_dump elements filename;
     let envs = Ast_util.create_envs elements in
     let pou_cfgs = List.fold_left ~f:(fun cfgs e -> (Cfg.mk e) :: cfgs) ~init:[] elements in
     let decl_warnings = Declaration_analysis.run elements envs in
@@ -55,33 +57,40 @@ let run_checker filename fmt =
 
 let command =
   Command.basic ~summary:"IEC61131-3 static analysis"
-    Command.Let_syntax.(let%map_open
-                         output_format = flag "-output-format" (optional string) ~doc:"Output format"
-                        and
-                          files = anon (sequence ("filename" %: Core.Filename.arg_type))
-                        in
-                        fun () ->
-                          let fmt = match output_format with
-                            | Some s -> (
-                                if String.equal s "json" then
-                                  WO.Json
-                                else if String.equal s "plain" then
-                                  WO.Plain
-                                else (
-                                  Printf.eprintf "Unknown output format '%s'!\n\n" s;
-                                  Printf.eprintf "Supported formats:\n" ;
-                                  Printf.eprintf "  plain\n" ;
-                                  Printf.eprintf "  json\n" ;
-                                  exit 22
-                                ))
-                            | None -> WO.Plain
-                          in
-                          match files with
-                          | [] -> (
-                              Printf.eprintf "No input files\n";
-                              exit 1)
-                          | _ -> List.iter files ~f:(fun f -> run_checker f fmt)
-                       )
+    Command.Let_syntax.(
+      let%map_open
+        output_format = flag "-output-format" (optional string) ~doc:"Output format"
+      and
+        create_dumps = flag "-dump" (optional bool) ~doc:"Generate AST dumps in JSON format"
+      and
+        files = anon (sequence ("filename" %: Core.Filename.arg_type))
+      in
+      fun () ->
+        let fmt = match output_format with
+          | Some s -> (
+              if String.equal s "json" then
+                WO.Json
+              else if String.equal s "plain" then
+                WO.Plain
+              else (
+                Printf.eprintf "Unknown output format '%s'!\n\n" s;
+                Printf.eprintf "Supported formats:\n" ;
+                Printf.eprintf "  plain\n" ;
+                Printf.eprintf "  json\n" ;
+                exit 22
+              ))
+          | None -> WO.Plain
+        in
+        let create_dumps = match create_dumps with
+          | Some v -> v
+          | None -> false
+        in
+        match files with
+        | [] -> (
+            Printf.eprintf "No input files\n";
+            exit 1)
+        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps)
+    )
 
 let () =
   Core.Command.run command

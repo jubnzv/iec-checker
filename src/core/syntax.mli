@@ -31,6 +31,8 @@ module TimeValue : sig
   val to_string : t -> string
 
   val is_zero : t -> bool
+
+  val to_yojson : t -> Yojson.Safe.t
 end
 
 (* {{{ Operators *)
@@ -54,7 +56,7 @@ type operator =
   | EQ (** = *)
   | NEQ (** <> *)
   | ASSIGN
-[@@deriving show]
+[@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Variables and identifiers *)
@@ -68,7 +70,10 @@ module type ID = sig
 end
 
 (** Identifier of symbolically represented variable *)
-module SymVar : ID
+module SymVar : sig
+  include ID
+  val to_yojson : t -> Yojson.Safe.t
+end
 
 (** Identifier of directly represented variable *)
 module DirVar : sig
@@ -77,6 +82,7 @@ module DirVar : sig
   (** Location prefixes for directly represented variables.
       See 6.5.5.2 for explainations. *)
   type location = LocI | LocQ | LocM
+  [@@deriving to_yojson]
 
   (** Size prefixes for directly represented variables. *)
   type size =
@@ -86,15 +92,18 @@ module DirVar : sig
     | SizeW    (** word (16 bits) *)
     | SizeD    (** double word (32 bits) *)
     | SizeL    (** quad word (64 bits) *)
+  [@@deriving to_yojson]
 
   val create : string option -> TI.t -> location -> size option -> int list -> t
   val get_name : t -> string
+  val to_yojson : t -> Yojson.Safe.t
 end
 
 (** Function Block identifier *)
 module FunctionBlock : sig
   include ID
   val is_std : t -> bool
+  val to_yojson : t -> Yojson.Safe.t
 end
 
 (** Function identifier *)
@@ -102,9 +111,11 @@ module Function : sig
   include ID
   val is_std : t -> bool
   (** Returns true if function declared in standard library. *)
+  val to_yojson : t -> Yojson.Safe.t
 end
 
 type variable = SymVar of SymVar.t | DirVar of DirVar.t
+[@@deriving to_yojson]
 
 val vget_name : variable -> string
 (** Return name of a given variable *)
@@ -118,6 +129,7 @@ type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
   | TyDerived of derived_ty
+[@@deriving to_yojson]
 
 and elementary_ty =
   | NIL (* TODO: replace with an empty symbol *)
@@ -151,6 +163,7 @@ and elementary_ty =
   | WORD
   | DWORD
   | LWORD
+[@@deriving to_yojson]
 
 and generic_ty =
   | ANY
@@ -163,6 +176,7 @@ and generic_ty =
   | ANY_BIT
   | ANY_STRING
   | ANY_DATE
+[@@deriving to_yojson]
 
 (** "Use" occurence of a derived type *)
 and derived_ty =
@@ -170,6 +184,7 @@ and derived_ty =
   (* | DTyUseArrayType *)
   (* | DTyUseStructType *)
   | DTyUseStringType of elementary_ty
+[@@deriving to_yojson]
 
 (** Declaration of a derived type.
     This include "use" symbol value of a declared type and optional
@@ -183,19 +198,22 @@ and derived_ty_decl =
   | DTyDeclSubrange of string (** type name *) *
                        subrange_ty_spec *
                        int (** initial value *)
-  (* | DTyDeclArrayType *)
-  (* | DTyDeclStructType *)
+(* | DTyDeclArrayType *)
+(* | DTyDeclStructType *)
+[@@deriving to_yojson]
 
 (** Single element type specification (it works like typedef in C) *)
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string (** derived ty name *)
+[@@deriving to_yojson]
 
 (** Subrange type specification *)
 and subrange_ty_spec =
   elementary_ty (** integer ty *) *
   int (** lower bound *) *
   int (** upper bound *)
+[@@deriving to_yojson]
 
 and constant =
   | CInteger of int * TI.t
@@ -204,7 +222,7 @@ and constant =
   | CString of string * TI.t
   | CTimeValue of TimeValue.t * TI.t
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
-[@@deriving show]
+[@@deriving to_yojson, show]
 
 and statement =
   | StmAssign of TI.t *
@@ -242,7 +260,7 @@ and statement =
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
-[@@deriving show]
+[@@deriving to_yojson, show]
 
 and expr =
   | Variable of variable
@@ -250,10 +268,10 @@ and expr =
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
   | FuncCall of statement
-[@@deriving show]
+[@@deriving to_yojson, show]
 
 and case_selection = {case: expr list; body: statement list}
-[@@deriving show]
+[@@deriving to_yojson, show]
 
 (* }}} *)
 
@@ -294,6 +312,7 @@ module Task : sig
     | DSGlobalVar of variable
     | DSDirectVar of variable
     | DSProgOutput of string (** program name *) * variable
+  [@@deriving to_yojson]
 
   val create : string -> TI.t -> t
 
@@ -312,6 +331,7 @@ module ProgramConfig : sig
 
   (** Qualifier of IEC program *)
   type qualifier = QRetain | QNonRetain | QConstant
+  [@@deriving to_yojson]
 
   val create : string -> TI.t -> t
 
@@ -326,6 +346,8 @@ module ProgramConfig : sig
 
   val get_name : t -> string
   (** Get name of a program. *)
+
+  val to_yojson : t -> Yojson.Safe.t
 end
 (* }}} *)
 
@@ -336,9 +358,11 @@ module VarDecl : sig
 
   (** Variable could be connected to input/output data flow of POU. *)
   type direction = Input | Output
+  [@@deriving to_yojson]
 
   (** Qualifier of IEC variable *)
   type qualifier = QRetain | QNonRetain | QConstant
+  [@@deriving to_yojson]
 
   (** Variable specification *)
   type spec =
@@ -353,6 +377,7 @@ module VarDecl : sig
     | SpecTemp
     | SpecConfig of
         string (** resource name *) * string (** program name *) * string (** fb name *)
+  [@@deriving to_yojson]
 
   val create : variable -> spec -> t
 
@@ -375,6 +400,7 @@ type function_decl = {
   variables : VarDecl.t list;
   statements : statement list;
 }
+[@@deriving to_yojson]
 
 (** Function block declaration *)
 type fb_decl = {
@@ -382,6 +408,7 @@ type fb_decl = {
   variables : VarDecl.t list;
   statements : statement list;
 }
+[@@deriving to_yojson]
 
 type program_decl = {
   is_retain : bool;
@@ -389,6 +416,7 @@ type program_decl = {
   variables : VarDecl.t list; (** Variables declared in this program *)
   statements : statement list;
 }
+[@@deriving to_yojson]
 
 type resource_decl = {
   name : string option; (** Resource name. Can be is skipped in case of single resource *)
@@ -396,6 +424,7 @@ type resource_decl = {
   variables : VarDecl.t list; (** Global variables *)
   programs : ProgramConfig.t list; (** Configuration of program instances. *)
 }
+[@@deriving to_yojson]
 
 (** Configuration element.
     See: 2.7 Configuration elements *)
@@ -405,15 +434,20 @@ type configuration_decl = {
   variables : VarDecl.t list; (** Global variables and access lists *)
   access_paths : string list;
 }
+[@@deriving to_yojson]
 
 (* }}} *)
 
 type iec_library_element =
-  | IECFunction of function_decl
-  | IECFunctionBlock of fb_decl
-  | IECProgram of program_decl
-  | IECConfiguration of configuration_decl
-  | IECType of derived_ty_decl list
+  | IECFunction of function_decl [@to_yojson "func"]
+  | IECFunctionBlock of fb_decl [@to_yojson "fb"]
+  | IECProgram of program_decl [@to_yojson "prog"]
+  | IECConfiguration of configuration_decl [@to_yojson "cfg"]
+  | IECType of derived_ty_decl list [@to_yojson "ty"]
+[@@deriving to_yojson]
+
+(** Stupid hack for yojson serialization. *)
+and iec_library_element_list = iec_library_element list [@@deriving to_yojson]
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
 (** Return variables declared for given POU *)

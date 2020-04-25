@@ -6,6 +6,10 @@ module E = Error
 
 exception InternalError of string
 
+(* FIXME: I have no idea what is wrong with yojson. It seems there are problems
+ * with @opaque usage. *)
+[@@@warning "-32"]
+
 module TimeValue = struct
   type t = {
     y : int;
@@ -18,7 +22,7 @@ module TimeValue = struct
     us : float;
     ns : float;
   }
-  [@@deriving show, fields]
+  [@@deriving to_yojson, show, fields]
 
   let mk ?(y = 0) ?(mo = 0) ?(d = 0.) ?(h = 0.) ?(m = 0.) ?(s = 0.) ?(ms = 0.)
       ?(us = 0.) ?(ns = 0.) () =
@@ -54,6 +58,8 @@ module TimeValue = struct
 
   let is_zero tv = phys_equal tv.d 0.
   (* TODO: List.map ~f(fun fv -> phys_equal fv 0.) ???Fields *)
+
+  let to_yojson t = to_yojson t
 end
 
 (* {{{ Operators *)
@@ -76,7 +82,7 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
-[@@deriving show]
+[@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Variables and identifiers *)
@@ -87,8 +93,8 @@ module type ID = sig
   val get_ti : t -> TI.t
 end
 
-module Identifier : ID = struct
-  type t = { name : string; ti : TI.t }
+module SymVar = struct
+  type t = { name : string; ti : TI.t } [@@deriving to_yojson]
 
   let create name ti =
     { name; ti }
@@ -96,12 +102,13 @@ module Identifier : ID = struct
   let get_name id = id.name
 
   let get_ti id = id.ti
-end
 
-module SymVar = Identifier
+  let to_yojson t = to_yojson t
+end
 
 module DirVar = struct
   type location = LocI | LocQ | LocM
+  [@@deriving to_yojson]
 
   let loc_to_string = function
     | LocI -> "I"
@@ -115,6 +122,7 @@ module DirVar = struct
     | SizeW    (** word (16 bits) *)
     | SizeD    (** double word (32 bits) *)
     | SizeL    (** quad word (64 bits) *)
+  [@@deriving to_yojson]
 
   let size_to_string = function
     | None -> ""
@@ -128,7 +136,7 @@ module DirVar = struct
 
   let path_to_string path = List.fold_left path ~f:(fun s p -> s ^ (Printf.sprintf ".%d" p)) ~init:""
 
-  type t = { name: string; ti: TI.t; loc: location; sz: size option; path: int list; }
+  type t = { name: string; ti: TI.t; loc: location; sz: size option; path: int list; } [@@deriving to_yojson]
 
   let create opt_name ti loc sz path =
     let name =
@@ -141,10 +149,13 @@ module DirVar = struct
   let get_name var = var.name
 
   let get_ti var = var.ti
+
+  let to_yojson t = to_yojson t
 end
 
 module FunctionBlock = struct
   type t = { name : string; ti : TI.t; is_std : bool }
+  [@@deriving to_yojson]
 
   let create name ti =
     let is_std = false in
@@ -155,11 +166,13 @@ module FunctionBlock = struct
   let get_ti fb = fb.ti
 
   let is_std fb = fb.is_std
+
+  let to_yojson t = to_yojson t
 end
 
 module Function = struct
   type t = { name : string; ti : TI.t; is_std : bool }
-  [@@deriving show]
+  [@@deriving to_yojson, show]
 
   let create name ti =
     let is_std = false in
@@ -170,10 +183,12 @@ module Function = struct
   let get_ti fn = fn.ti
 
   let is_std fn = fn.is_std
+
+  let to_yojson t = to_yojson t
 end
 
 type variable = SymVar of (SymVar.t [@opaque]) | DirVar of (DirVar.t [@opaque])
-[@@deriving show]
+[@@deriving to_yojson, show]
 
 let vget_name = function
   | SymVar(v) -> (let n = SymVar.get_name(v) in n) | DirVar(v) -> (let n = DirVar.get_name(v) in n)
@@ -188,6 +203,7 @@ type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
   | TyDerived of derived_ty
+[@@deriving to_yojson]
 
 and elementary_ty =
   | NIL (* TODO: replace with an empty symbol *)
@@ -221,6 +237,7 @@ and elementary_ty =
   | WORD
   | DWORD
   | LWORD
+[@@deriving to_yojson]
 
 and generic_ty =
   | ANY
@@ -233,12 +250,14 @@ and generic_ty =
   | ANY_BIT
   | ANY_STRING
   | ANY_DATE
+[@@deriving to_yojson]
 
 and derived_ty =
   | DTyUseSingleElement of single_element_ty_spec
   (* | DTyUseArrayType *)
   (* | DTyUseStructType *)
   | DTyUseStringType of elementary_ty
+[@@deriving to_yojson]
 
 and derived_ty_decl =
   | DTyDeclSingleElement of string (** type name *) *
@@ -247,17 +266,20 @@ and derived_ty_decl =
   | DTyDeclSubrange of string (** type name *) *
                        subrange_ty_spec *
                        int (** initial value *)
-  (* | DTyDeclArrayType *)
-  (* | DTyDeclStructType *)
+(* | DTyDeclArrayType *)
+(* | DTyDeclStructType *)
+[@@deriving to_yojson]
 
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string
+[@@deriving to_yojson]
 
 and subrange_ty_spec =
   elementary_ty (** integer ty *) *
   int (** lower bound *) *
   int (** upper bound *)
+[@@deriving to_yojson]
 
 and constant =
   | CInteger of int * TI.t
@@ -266,7 +288,7 @@ and constant =
   | CString of string * TI.t
   | CTimeValue of TimeValue.t * TI.t
   | CRange of TI.t * int * int
-[@@deriving show]
+[@@deriving to_yojson, show]
 
 and statement =
   | StmAssign of TI.t *
@@ -304,16 +326,16 @@ and statement =
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
-[@@deriving show { with_path = false }]
+[@@deriving to_yojson, show { with_path = false }]
 and expr =
   | Variable of variable
   | Constant of constant
   | BinExpr of expr * operator * expr
   | UnExpr of operator * expr
   | FuncCall of statement
-[@@deriving show]
+[@@deriving to_yojson, show]
 and case_selection = {case: expr list; body: statement list}
-[@@deriving show]
+[@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Functions to work with constants *)
@@ -392,11 +414,13 @@ module Task = struct
     single : data_source option;
     priority : int option;
   }
+  [@@deriving to_yojson]
   and data_source =
     | DSConstant of constant
     | DSGlobalVar of variable
     | DSDirectVar of variable
     | DSProgOutput of string * variable
+  [@@deriving to_yojson]
 
   let create name ti =
     let interval = None in
@@ -415,6 +439,7 @@ end
 module ProgramConfig = struct
   (** Qualifier of IEC program *)
   type qualifier = QRetain | QNonRetain | QConstant
+  [@@deriving to_yojson]
 
   type t = {
     name : string;
@@ -422,7 +447,7 @@ module ProgramConfig = struct
     qual : qualifier option;
     task : Task.t option;
     conn_vars : variable list; (** Variables connected to program data flow. *)
-  }
+  } [@@deriving to_yojson]
 
   let create name ti =
     let qual = None in
@@ -437,6 +462,8 @@ module ProgramConfig = struct
   let set_conn_vars pc conn_vars = { pc with conn_vars }
 
   let get_name t = t.name
+
+  let to_yojson t = to_yojson t
 end
 (* }}} *)
 
@@ -444,8 +471,10 @@ end
 module VarDecl = struct
 
   type direction = Input | Output
+  [@@deriving to_yojson]
 
   type qualifier = QRetain | QNonRetain | QConstant
+  [@@deriving to_yojson]
 
   type spec =
     | Spec of qualifier option
@@ -459,8 +488,10 @@ module VarDecl = struct
     | SpecTemp
     | SpecConfig of
         string (** resource name *) * string (** program name *) * string (** fb name *)
+  [@@deriving to_yojson]
 
   type t = { var : variable; spec : spec; qual: qualifier option; dir: direction option;  }
+  [@@deriving to_yojson]
 
   let create var spec =
     let qual = None in
@@ -493,12 +524,14 @@ type function_decl = {
   variables : VarDecl.t list;
   statements : statement list;
 }
+[@@deriving to_yojson]
 
 type fb_decl = {
   id : FunctionBlock.t;
   variables : VarDecl.t list;
   statements : statement list;
 }
+[@@deriving to_yojson]
 
 type program_decl = {
   is_retain : bool;
@@ -506,6 +539,7 @@ type program_decl = {
   variables : VarDecl.t list;
   statements : statement list;
 }
+[@@deriving to_yojson]
 
 type resource_decl = {
   name : string option;
@@ -513,6 +547,7 @@ type resource_decl = {
   variables : VarDecl.t list;
   programs : ProgramConfig.t list;
 }
+[@@deriving to_yojson]
 
 type configuration_decl = {
   name : string;
@@ -520,6 +555,7 @@ type configuration_decl = {
   variables : VarDecl.t list;
   access_paths : string list;
 }
+[@@deriving to_yojson]
 (* }}} *)
 
 type iec_library_element =
@@ -528,6 +564,10 @@ type iec_library_element =
   | IECProgram of program_decl
   | IECConfiguration of configuration_decl
   | IECType of derived_ty_decl list
+[@@deriving to_yojson]
+
+(** Stupid hack for yojson serialization. *)
+and iec_library_element_list = iec_library_element list [@@deriving to_yojson]
 
 let get_pou_vars_decl = function
   | IECFunction f -> f.variables

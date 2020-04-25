@@ -18,3 +18,6 @@ val get_stmts : S.iec_library_element list -> S.statement list
 
 val create_envs : S.iec_library_element list -> Env.t list
 (** Create the environments for a given configuration elements *)
+
+val create_dump : S.iec_library_element list -> string (** source filename *) -> unit
+(** Save input AST in a JSON file.  *)

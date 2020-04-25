@@ -1,6 +1,6 @@
 (** Describes single token of a parse tree *)
 
-type t = { id : int; linenr : int; col : int } [@@deriving show]
+type t = { id : int; linenr : int; col : int } [@@deriving yojson, show]
 (** Parse tree item *)
 
 val create : Lexing.lexbuf -> t
