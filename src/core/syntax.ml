@@ -282,50 +282,67 @@ and subrange_ty_spec =
 [@@deriving to_yojson]
 
 and constant =
-  | CInteger of int * TI.t
-  | CBool of bool * TI.t
-  | CReal of float * TI.t
-  | CString of string * TI.t
-  | CTimeValue of TimeValue.t * TI.t
-  | CRange of TI.t * int * int
+  | CInteger of TI.t * int
+  [@name "Integer"]
+  | CBool of TI.t * bool
+  [@name "Bool"]
+  | CReal of TI.t * float
+  [@name "Real"]
+  | CString of TI.t * string
+  [@name "String"]
+  | CTimeValue of TI.t * TimeValue.t
+  [@name "TimeValue"]
+  | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
+  [@name "Range"]
 [@@deriving to_yojson, show]
 
 and statement =
   | StmAssign of TI.t *
                  variable *
                  expr
+  [@name "Assign"]
   | StmElsif of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
+  [@name "Elsif"]
   | StmIf of TI.t *
              expr * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
+  [@name "If"]
   | StmCase of TI.t *
                expr * (** condition *)
                case_selection list *
                statement list (* else *)
+  [@name "Case"]
   | StmFor of (TI.t *
                SymVar.t * (** control variable *)
                expr * (** range start *)
                expr * (** range end *)
                expr option * (** range step *)
                statement list (** body statements *) [@opaque])
+  [@name "For"]
   | StmWhile of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
+  [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
                  expr (** condition *)
+  [@name "Repeat"]
   | StmExit of TI.t
+  [@name "Exit"]
   | StmContinue of TI.t
+  [@name "Continue"]
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
+  [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
+  [@name "FuncCall"]
 [@@deriving to_yojson, show { with_path = false }]
 and expr =
   | Variable of variable
@@ -341,48 +358,48 @@ and case_selection = {case: expr list; body: statement list}
 (* {{{ Functions to work with constants *)
 let c_is_zero c =
   match c with
-  | CInteger (v, _) -> phys_equal v 0
-  | CBool (v, _) -> phys_equal v false
-  | CReal (v, _) -> phys_equal v 0.0
+  | CInteger (_, v) -> phys_equal v 0
+  | CBool (_, v) -> phys_equal v false
+  | CReal (_, v) -> phys_equal v 0.0
   | CString _ -> false
-  | CTimeValue (tv, _) -> TimeValue.is_zero tv
+  | CTimeValue (_, tv) -> TimeValue.is_zero tv
   | CRange (_, lb, ub) -> (phys_equal lb 0) && (phys_equal ub 0)
 
 let c_get_str_value c =
   match c with
-  | CInteger (v, _) -> string_of_int v
-  | CBool (v, _) -> string_of_bool v
-  | CReal (v, _) -> string_of_float v
-  | CString (v, _) -> v
-  | CTimeValue (v, _) -> TimeValue.to_string v
+  | CInteger (_, v) -> string_of_int v
+  | CBool (_, v) -> string_of_bool v
+  | CReal (_, v) -> string_of_float v
+  | CString (_, v) -> v
+  | CTimeValue (_, v) -> TimeValue.to_string v
   | CRange (_, lb, ub) -> Printf.sprintf "%d..%d" lb ub
 
 let c_get_ti c =
   match c with
-  | CInteger (_, ti) -> ti
-  | CBool (_, ti) -> ti
-  | CReal (_, ti) -> ti
-  | CString (_, ti) -> ti
-  | CTimeValue (_, ti) -> ti
+  | CInteger (ti, _) -> ti
+  | CBool (ti, _) -> ti
+  | CReal (ti, _) -> ti
+  | CString (ti, _) -> ti
+  | CTimeValue (ti, _) -> ti
   | CRange (ti, _, _) -> ti
 
 let c_add c1 c2 =
   match (c1, c2) with
-  | CInteger (v1, ti), CInteger (v2, _) ->
+  | CInteger (ti, v1), CInteger (_, v2) ->
     let v = v1 + v2 in
-    CInteger (v, ti)
-  | CBool (v1, ti), CBool (v2, _) ->
+    CInteger (ti, v)
+  | CBool (ti, v1), CBool (_, v2) ->
     let v = v1 || v2 in
-    CBool (v, ti)
-  | CReal (v1, ti), CReal (v2, _) ->
+    CBool (ti, v)
+  | CReal (ti, v1), CReal (_, v2) ->
     let v = v1 +. v2 in
-    CReal (v, ti)
-  | CString (v1, ti), CString (v2, _) ->
+    CReal (ti, v)
+  | CString (ti, v1), CString (_, v2) ->
     let v = v1 ^ v2 in
-    CString (v, ti)
-  | CTimeValue (v1, ti), CTimeValue (v2, _) ->
+    CString (ti, v)
+  | CTimeValue (ti, v1), CTimeValue (_, v2) ->
     let v = TimeValue.( + ) v1 v2 in
-    CTimeValue (v, ti)
+    CTimeValue (ti, v)
   | _ -> raise @@ InternalError "Incompatible types"
 
 let c_from_expr = function
@@ -490,7 +507,12 @@ module VarDecl = struct
         string (** resource name *) * string (** program name *) * string (** fb name *)
   [@@deriving to_yojson]
 
-  type t = { var : variable; spec : spec; qual: qualifier option; dir: direction option;  }
+  type t = {
+    var : variable;
+    spec : spec;
+    qual: qualifier option;
+    dir: direction option;
+  }
   [@@deriving to_yojson]
 
   let create var spec =

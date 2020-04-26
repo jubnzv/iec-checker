@@ -216,50 +216,67 @@ and subrange_ty_spec =
 [@@deriving to_yojson]
 
 and constant =
-  | CInteger of int * TI.t
-  | CBool of bool * TI.t
-  | CReal of float * TI.t
-  | CString of string * TI.t
-  | CTimeValue of TimeValue.t * TI.t
+  | CInteger of TI.t * int
+  [@name "Integer"]
+  | CBool of TI.t * bool
+  [@name "Bool"]
+  | CReal of TI.t * float
+  [@name "Real"]
+  | CString of TI.t * string
+  [@name "String"]
+  | CTimeValue of TI.t * TimeValue.t
+  [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
+  [@name "Range"]
 [@@deriving to_yojson, show]
 
 and statement =
   | StmAssign of TI.t *
                  variable *
                  expr
+  [@name "Assign"]
   | StmElsif of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
+  [@name "Elsif"]
   | StmIf of TI.t *
              expr * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
+  [@name "If"]
   | StmCase of TI.t *
                expr * (** condition *)
                case_selection list *
                statement list (* else *)
+  [@name "Case"]
   | StmFor of (TI.t *
                SymVar.t * (** control variable *)
                expr * (** range start *)
                expr * (** range end *)
                expr option * (** range step *)
                statement list (** body statements *) [@opaque])
+  [@name "For"]
   | StmWhile of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
+  [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
                  expr (** condition *)
+  [@name "Repeat"]
   | StmExit of TI.t
+  [@name "Exit"]
   | StmContinue of TI.t
+  [@name "Continue"]
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
+  [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
+  [@name "FuncCall"]
 [@@deriving to_yojson, show]
 
 and expr =

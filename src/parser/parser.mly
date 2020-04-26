@@ -18,15 +18,15 @@
 
   let creal_mk t =
     let (v, ti) = t in
-    S.CReal(v, ti)
+    S.CReal(ti, v)
 
   let ctime_mk fn t =
     let (v, ti) = t in
     let tv = (fn v) in
-    S.CTimeValue(tv, ti)
+    S.CTimeValue(ti, tv)
 
   let cget_int_val = function
-    | S.CInteger (v, _) -> v
+    | S.CInteger (_, v) -> v
     | _ -> E.raise E.InternalError "Unknown constant type"
 
   let mk_global_decl v =
@@ -272,7 +272,7 @@ unsigned_int:
   | vi = T_INTEGER
   {
     let (v, ti) = vi in
-    S.CInteger(v, ti)
+    S.CInteger(ti, v)
   }
 
 signed_int:
@@ -283,28 +283,28 @@ signed_int:
   | T_MINUS res = T_INTEGER
   {
     let (v, ti) = res in
-    S.CInteger(-v, ti)
+    S.CInteger(ti, -v)
   }
 
 binary_int:
   | vi = T_BINARY_INTEGER
   {
     let (v, ti) = vi in
-    S.CInteger(v, ti)
+    S.CInteger(ti, v)
   }
 
 octal_int:
   | vi = T_OCTAL_INTEGER
   {
     let (v, ti) = vi in
-    S.CInteger(v, ti)
+    S.CInteger(ti, v)
   }
 
 hex_int:
   | vi = T_HEX_INTEGER
   {
     let (v, ti) = vi in
-    S.CInteger(v, ti)
+    S.CInteger(ti, v)
   }
 
 real_literal:
@@ -342,7 +342,7 @@ bool_literal:
   | vb = T_BOOL_VALUE
   {
     let (v, ti) = vb in
-    S.CBool(v, ti)
+    S.CBool(ti, v)
   }
 
 (* }}} *)
@@ -359,14 +359,14 @@ s_byte_char_str:
   | str = T_SSTRING_LITERAL
   {
     let(v, ti) = str in
-    S.CString(v, ti)
+    S.CString(ti, v)
   }
 
 d_byte_char_str:
   | str = T_DSTRING_LITERAL
   {
     let(v, ti) = str in
-    S.CString(v, ti)
+    S.CString(ti, v)
   }
 
 (* Implemented in lexer *)
@@ -390,8 +390,8 @@ duration:
   | time_type_helper T_MINUS v = interval
   {
     match v with
-    | S.CTimeValue(tv, ti) ->
-        S.CTimeValue((S.TimeValue.inv tv), ti)
+    | S.CTimeValue(ti, tv) ->
+        S.CTimeValue(ti, (S.TimeValue.inv tv))
     | _ -> E.raise E.InternalError "Unknown constant type"
   }
 
@@ -479,7 +479,7 @@ daytime:
       let mf = float_of_int (cget_int_val cm) in
       let sf = float_of_string ss in
       let tv = S.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
-      S.CTimeValue(tv, ti)
+      S.CTimeValue(ti, tv)
     in
     ctime_of_timevals hi mi ss
   }
@@ -511,7 +511,7 @@ date_literal:
       let moi = (cget_int_val cmo) in
       let df = float_of_int (cget_int_val cd) in
       let tv = S.TimeValue.mk ~y:yi ~mo:moi ~d:df () in
-      S.CTimeValue(tv, ti)
+      S.CTimeValue(ti, tv)
     in
     cdate_of_timevals cy cmo cd
   }
@@ -598,7 +598,7 @@ string_type_length:
   | T_LBRACK c = unsigned_int T_RBRACK
   {
     match c with
-    | CInteger(v, _) -> v
+    | CInteger(_, v) -> v
     | _ -> raise (SyntaxError "Incorrect string length value")
   }
 

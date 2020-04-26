@@ -25,7 +25,7 @@ let check_str_init_size ty_init init_expr =
       | S.Constant(c) ->
         begin
           match c with
-          | S.CString(str, _) -> check_length str
+          | S.CString(_, str) -> check_length str
           | _ -> E.raise E.InternalError "Got unexpected type"
         end
       | _ -> None
@@ -64,12 +64,6 @@ let check_ty_decl = function
       | S.DTySpecSimple _ -> []
     end
   | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
-
-(* let check_elem (el : S.iec_library_element) =                                                  *)
-(*   match el with                                                                                *)
-(*   | S.IECType ty_decls ->                                                                      *)
-(*     List.fold_left ty_decls ~f:(fun warns ty -> List.append warns (check_ty_decl ty)) ~init:[] *)
-(*   | _ -> []                                                                                    *)
 
 let[@warning "-27"] run elements envs =
   List.fold_left elements
