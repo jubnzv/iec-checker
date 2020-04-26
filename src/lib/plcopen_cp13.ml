@@ -7,7 +7,6 @@ module E = IECCheckerCore.Error
 
 let check_stmt func_name = function
   | S.StmFuncCall (ti, f, _) ->
-      Printf.printf "%s - %s" func_name (S.Function.get_name f);
       if String.equal (S.Function.get_name f) func_name then
         let msg = "POUs shall not call themselves directly or indirectly" in
         let w = Warn.mk ti.linenr ti.col "PLCOPEN-CP13" msg in
