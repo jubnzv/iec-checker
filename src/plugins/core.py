@@ -38,7 +38,8 @@ class Error:
 def process_output(json_out: str) -> List[Warning]:
     warnings = []
     for item in ijson.items(io.BytesIO(json_out), ""):
-        warnings.append(Warning.from_dict(item.pop()))
+        if item:
+            warnings.append(Warning.from_dict(item.pop()))
     return warnings
 
 

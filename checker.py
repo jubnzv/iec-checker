@@ -24,8 +24,8 @@ def main(files: List[str]):
         if checker_warnings or plugins_warnings:
             for w in checker_warnings:
                 print(f'{w}')
-            plugins_report = "\n".join(plugins_warnings)
-            print(f'{plugins_report}')
+            for p in plugins_warnings:
+                print(f'{w}')
         else:
             print('No errors found!')
 
