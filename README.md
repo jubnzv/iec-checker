@@ -9,9 +9,9 @@ The following features are currently supported:
 + WIP control and data flow analysis;
 + Dump AST of IEC program in json file (`-dump true` argument);
 
-## Setup
+## Installation
 
-For development you need to install [ocaml](https://ocaml.org/docs/install.html) environment and setup [dune](https://dune.readthedocs.io/en/stable/quick-start.html) build system:
+For development you need to install [ocaml](https://ocaml.org/docs/install.html) environment and [dune](https://dune.readthedocs.io/en/stable/quick-start.html) build system:
 ```bash
 opam switch create 4.08.1
 opam install dune
@@ -27,6 +27,16 @@ Building and installing OCaml package to the current directory:
 dune build @install
 dune install --preifx ./output
 ```
+
+You will also need a Python interpreter with some additional packages:
+```bash
+apt-get install python3 python3-virtualenv
+virtualenv venv --python=/usr/bin/python3
+source venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+## Usage
 
 Checking demo programs written in Structured Text:
 ```bash
