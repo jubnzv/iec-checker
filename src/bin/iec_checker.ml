@@ -41,7 +41,7 @@ let parse_file (filename : string) : S.iec_library_element list =
   In_channel.close inx;
   elements
 
-let run_checker filename fmt create_dumps =
+let run_checker filename fmt create_dumps quiet =
   if not (Sys.file_exists filename) then
     failwith ("File " ^ filename ^ " doesn't exists")
   else
@@ -52,7 +52,7 @@ let run_checker filename fmt create_dumps =
     let pou_cfgs = List.fold_left ~f:(fun cfgs e -> (Cfg.mk e) :: cfgs) ~init:[] elements in
     let decl_warnings = Declaration_analysis.run elements envs in
     let flow_warnings = CFA.run pou_cfgs in
-    let lib_warnings = Lib.run_all_checks elements envs in
+    let lib_warnings = Lib.run_all_checks elements envs quiet in
     WO.print_report (decl_warnings @ flow_warnings @ lib_warnings) fmt
 
 let command =
@@ -62,6 +62,8 @@ let command =
         output_format = flag "-output-format" (optional string) ~doc:"Output format"
       and
         create_dumps = flag "-dump" (optional bool) ~doc:"Generate AST dumps in JSON format"
+      and
+        quiet = flag "-quiet" (optional bool) ~doc:"Print only error messages."
       and
         files = anon (sequence ("filename" %: Core.Filename.arg_type))
       in
@@ -85,11 +87,15 @@ let command =
           | Some v -> v
           | None -> false
         in
+        let quiet = match quiet with
+          | Some v -> v
+          | None -> false
+        in
         match files with
         | [] -> (
             Printf.eprintf "No input files\n";
             exit 1)
-        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps)
+        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps quiet)
     )
 
 let () =
