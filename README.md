@@ -22,7 +22,49 @@ Running unit tests:
 dune runtest
 ```
 
+Building and installing OCaml package to the current directory:
+```bash
+dune build @install
+dune install --preifx ./output
+```
+
 Checking demo programs written in Structured Text:
 ```bash
-dune exe -- src/bin/iec_checker.exe -output-format plain test/st/configurations.st
+for f in test/st/*st; do python3 checker.py $f; done
+```
+
+This will gives the following output:
+```
+Report for test/st/configurations.st:
+No errors found!
+Report for test/st/constant-zero-division.st:
+No errors found!
+Report for test/st/control-statements.st:
+42:8: PLCOPEN-L17: Each IF instruction should have an ELSE clause
+Report for test/st/declaration-analysis.st:
+0:0: DeclarationAnalysis: Length of initialization string literal exceeds string length (6 > 5)
+Report for test/st/function-blocks.st:
+No errors found!
+Report for test/st/function-declaration.st:
+No errors found!
+Report for test/st/literals.st:
+17:6: PLCOPEN-N3: IEC data types and standard library objects must be avoided
+Report for test/st/multiple-pous.st:
+No errors found!
+Report for test/st/multiple-variables.st:
+No errors found!
+Report for test/st/plcopen-cp13.st:
+8:31: PLCOPEN-CP13: POUs shall not call themselves directly or indirectly
+Report for test/st/plcopen-l17.st:
+10:4: PLCOPEN-L17: Each IF instruction should have an ELSE clause
+Report for test/st/plcopen-n3.st:
+6:7: PLCOPEN-N3: IEC data types and standard library objects must be avoided
+Report for test/st/sfc_function_block.st:
+No errors found!
+Report for test/st/st-statements.st:
+No errors found!
+Report for test/st/time-literals.st:
+4:5: PLCOPEN-N3: IEC data types and standard library objects must be avoided
+Report for test/st/types.st:
+No errors found!
 ```
