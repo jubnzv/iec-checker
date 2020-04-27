@@ -8,7 +8,6 @@ module Lib = CheckerLib
 module TI = Tok_info
 module W = Warn
 module WO = Warn_output
-module CFA = Control_flow_analysis
 
 let print_position outx (lexbuf : Lexing.lexbuf) =
   let pos = lexbuf.lex_curr_p in
@@ -49,9 +48,9 @@ let run_checker filename fmt create_dumps quiet =
     let envs = Ast_util.create_envs elements in
     if create_dumps then
       Ast_util.create_dump elements envs filename;
-    let pou_cfgs = List.fold_left ~f:(fun cfgs e -> (Cfg.mk e) :: cfgs) ~init:[] elements in
+    let pou_cfgs = Cfg.create_cfgs elements in
     let decl_warnings = Declaration_analysis.run elements envs in
-    let flow_warnings = CFA.run pou_cfgs in
+    let flow_warnings = Control_flow_analysis.run pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs quiet in
     WO.print_report (decl_warnings @ flow_warnings @ lib_warnings) fmt
 

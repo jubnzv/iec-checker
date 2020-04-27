@@ -2,14 +2,16 @@ open Core_kernel
 
 module S = Syntax
 module AU = Ast_util
+module TI = Tok_info
 
-[@@@warning "-26"]
+[@@@warning "-32"]
 
 type bb_ty =
   | BB (** Regular basic block *)
   | BBInit (** Initial basic block *)
   | BBOut (** Return/exit node *)
   | BBJump (** Indirect jump to/from a node *)
+[@@deriving show { with_path = false }]
 
 and bb =
   {
@@ -17,8 +19,8 @@ and bb =
     ty: bb_ty;
     mutable in_edges : edge list; (** Incoming edges *)
     mutable out_edges : edge list; (** Outcoming edges *)
-    stmt : S.statement;
-    pou : S.iec_library_element; (** The POU that this BB belongs to *)
+    stmt : S.statement; [@opaque]
+    pou : S.iec_library_element; [@opaque] (** The POU that this BB belongs to *)
   }
 
 and edge =
@@ -63,151 +65,134 @@ let mk_edge bb_in bb_out =
   let set_edges bb e_in e_out =
     bb.in_edges <- (List.append bb.in_edges [e_in]);
     bb.out_edges <- (List.append bb.out_edges [e_out]);
-    bb
+    ()
   in
   let e_in = { in_bb = bb_in; out_bb = bb_out } in
   let e_out = { in_bb = bb_out; out_bb = bb_in } in
-  ((set_edges bb_in e_in e_out), (set_edges bb_out e_out e_in))
+  (set_edges bb_in e_in e_out);
+  (set_edges bb_out e_out e_in);
+  ()
 
 (** Insert basic block in a given CFG *)
 let cfg_add_bb bb_map bb =
   let m = BBMap.add bb_map bb in m
-
-(** Create edges between basic blocks in a given map *)
-  let[@warning "-32"] cfg_create_edges bb_map =
-  let map_add_edges m bb_list bb =
-    let update_bb m bb =
-      let map m =
-        match bb.ty with
-        | BB       -> Map.update m bb.id ~f:(fun _ -> Some bb)
-        | BBInit   -> Map.update m bb.id ~f:(fun _ -> Some bb)
-        | BBJump   -> Map.update m bb.id ~f:(fun _ -> Some bb)
-        | BBOut    -> m
-      in map m
-    in
-    let bb_prev =
-      match bb_list with
-      | [] -> None
-      | [bb_first] -> Some bb_first
-      | bb_head :: _ -> Some bb_head
-    in
-    match bb_prev with
-    | None -> bb_map
-    | Some bbp ->
-      begin
-        let (bb, bbp) = mk_edge bb bbp in
-        (* Update the map *)
-        let bb_map = update_bb m bbp in
-        update_bb m bb
-      end
-  in
-  let bb_list bb_map =
-    let alist = BBMap.to_alist bb_map in
-    List.fold_left alist
-      ~f:(fun bbs bb -> let (_, bb_v) = bb in bb_v :: bbs)
-      ~init:[]
-  in
-  []
-  (* List.fold bb_list                         *)
-  (*   ~f:(fun m bb -> map_add_edges m bbs bb) *)
-  (*   ~init:m                                 *)
 
 let empty_cfg () =
   let bb_map = BBMap.empty in
   let init_bb_id = 0 in
   { bb_map; init_bb_id }
 
-(** Recursively create a list of basic blocks for a given statement and nested statements *)
-let rec create_bbs iec_element stmt =
+(** Recursively create a list of basic blocks for a given statement and the
+    nested statements. *)
+let rec create_bbs iec_element stmt bb_parent =
   (** Create list of BBs from the nested statements found in expression *)
-  let expr_to_bbs expr =
+  let expr_to_bbs expr bb_parent =
     let res =
       List.fold_left (AU.expr_to_stmts expr)
-        ~f:(fun bbs s -> bbs @ (create_bbs iec_element s))
+        ~f:(fun bbs s -> bbs @ (create_bbs iec_element s bb_parent))
         ~init:[]
     in res
   in
   (** Create list of BBs from a list of statements *)
-  let stmts_to_bbs stmts =
-    List.fold_left stmts ~f:(fun bbs s -> bbs @ (create_bbs iec_element s)) ~init:[]
+  let stmts_to_bbs stmts bb_parent =
+    List.fold_left stmts ~f:(fun bbs s -> bbs @ (create_bbs iec_element s bb_parent)) ~init:[]
+  in
+  (** Create parent block for a given statement *)
+  let mk_parent stmt iec_element bb_parent ty =
+    let bb = mk_bb iec_element ty stmt in
+    mk_edge bb_parent bb;
+    bb
   in
   match stmt with
   | S.StmAssign (_, _, e) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent :: (expr_to_bbs e bb_stm_parent)
     end
   | S.StmElsif (_, e, stmts) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e) @ (stmts_to_bbs stmts)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent :: (expr_to_bbs e bb_stm_parent) @ (stmts_to_bbs stmts bb_stm_parent)
     end
   | S.StmIf (_, e, stmts_body, stmts_elsif, stmts_else) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e) @
-      (stmts_to_bbs stmts_body) @
-      (stmts_to_bbs stmts_elsif) @
-      (stmts_to_bbs stmts_else)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (expr_to_bbs e bb_stm_parent) @
+      (stmts_to_bbs stmts_body bb_stm_parent) @
+      (stmts_to_bbs stmts_elsif bb_stm_parent) @
+      (stmts_to_bbs stmts_else bb_stm_parent)
     end
   | S.StmCase (_, e, cs_list, stmts_else) ->
     begin
-      let case_bbs =
+      let get_case_bbs bb_stm_parent =
         List.fold_left cs_list
           ~f:(fun bbs cs ->
               begin
                 bbs @
                 (* case expressions *)
                 (List.fold_left cs.S.case
-                   ~f:(fun bbs ec -> bbs @ (expr_to_bbs ec))
+                   ~f:(fun bbs ec -> bbs @ (expr_to_bbs ec bb_stm_parent))
                    ~init:[]) @
                 (* case statements *)
-                (stmts_to_bbs cs.S.body)
+                (stmts_to_bbs cs.S.body bb_stm_parent)
               end)
           ~init:[]
       in
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e) @ case_bbs @ (stmts_to_bbs stmts_else)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (expr_to_bbs e bb_stm_parent) @
+      (get_case_bbs bb_stm_parent) @
+      (stmts_to_bbs stmts_else bb_stm_parent)
     end
   | S.StmFor (_, _, e_start, e_end, e_step, stmts_body) ->
     begin
-      let step_bbs = match e_step with
-        | Some e -> (expr_to_bbs e)
+      let get_step_bbs bb_stm_parent = match e_step with
+        | Some e -> (expr_to_bbs e bb_stm_parent)
         | None -> []
       in
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e_start) @
-      (expr_to_bbs e_end) @
-      step_bbs @
-      (stmts_to_bbs stmts_body)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (expr_to_bbs e_start bb_stm_parent) @
+      (expr_to_bbs e_end bb_stm_parent) @
+      (get_step_bbs bb_stm_parent) @
+      (stmts_to_bbs stmts_body bb_stm_parent)
     end
   | S.StmWhile (_, e, stmts_body) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e) @ (stmts_to_bbs stmts_body)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (expr_to_bbs e bb_stm_parent) @
+      (stmts_to_bbs stmts_body bb_stm_parent)
     end
   | S.StmRepeat (_, stmts, e) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (stmts_to_bbs stmts) @ (expr_to_bbs e)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (stmts_to_bbs stmts bb_stm_parent) @
+      (expr_to_bbs e bb_stm_parent)
     end
-  | S.StmExit _ ->
+  | S.StmExit _
+  | S.StmReturn _ ->
     begin
-      [(mk_bb iec_element BBOut stmt)]
+      [(mk_parent stmt iec_element bb_parent BBOut)]
     end
   | S.StmContinue _ ->
     begin
-      [(mk_bb iec_element BB stmt)]
+      (* TODO: Add jump edge *)
+      [(mk_parent stmt iec_element bb_parent BBJump)]
     end
   | S.StmFuncParamAssign (_, e, _) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (expr_to_bbs e)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (expr_to_bbs e bb_stm_parent)
     end
   | S.StmFuncCall (_, _, stmts_body) ->
     begin
-      (mk_bb iec_element BB stmt) ::
-      (stmts_to_bbs stmts_body)
+      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
+      bb_stm_parent ::
+      (stmts_to_bbs stmts_body bb_stm_parent)
     end
 
 let mk iec_element =
@@ -224,7 +209,7 @@ let mk iec_element =
         (* Create BB for a top-level statement *)
         let bb_top = mk_bb iec_element ty stmt in
         (* Create BBs for a nested statements *)
-        let bbs = bb_top :: (create_bbs iec_element stmt) in
+        let bbs = bb_top :: (create_bbs iec_element stmt bb_top) in
         (* Update basic blocks map *)
         List.iter bbs ~f:(fun bb -> cfg.bb_map <- cfg_add_bb cfg.bb_map bb);
         (* Set initial id *)
@@ -232,6 +217,36 @@ let mk iec_element =
           cfg.init_bb_id <- bb_top.id;
         ()
       end) stmts;
-  (* Create edges for the basic blocks *)
-  (* cfg.bb_map <- cfg_create_edges cfg.bb_map; *)
   cfg
+
+let to_string (cfg : t) : string =
+  BBMap.to_alist cfg.bb_map
+  |> List.fold_left
+    ~init:[]
+    ~f:(fun acc i -> match i with (id, bb) ->
+        begin
+          let edges_to_string (edges : edge list) =
+            List.fold_left edges
+              ~init:[]
+              ~f:(fun acc e -> acc @ [Printf.sprintf "%d->%d" e.in_bb.id e.out_bb.id])
+            |> String.concat ~sep:" "
+          in
+          let bb_repr =
+            Printf.sprintf "[%03d %6s] [in_edges: %s] [out_edges: %s]"
+              id
+              (show_bb_ty bb.ty)
+              (edges_to_string bb.in_edges)
+              (edges_to_string bb.out_edges)
+          in
+          acc @ [bb_repr]
+        end)
+  |> String.concat ~sep:"\n"
+
+let bb_get_ti bb =
+  S.stmt_get_ti bb.stmt
+
+let create_cfgs elements =
+  List.fold_left
+    elements
+    ~f:(fun cfgs e -> (mk e) :: cfgs)
+    ~init:[]

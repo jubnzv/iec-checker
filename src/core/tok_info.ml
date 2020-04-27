@@ -19,3 +19,6 @@ let create_dummy =
   let linenr = -1 in
   let col = -1 in
   { id; linenr; col }
+
+let to_string ti =
+  Printf.sprintf "%d:%d" ti.linenr ti.col

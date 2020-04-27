@@ -283,68 +283,68 @@ and subrange_ty_spec =
 
 and constant =
   | CInteger of TI.t * int
-  [@name "Integer"]
+                [@name "Integer"]
   | CBool of TI.t * bool
-  [@name "Bool"]
+             [@name "Bool"]
   | CReal of TI.t * float
-  [@name "Real"]
+             [@name "Real"]
   | CString of TI.t * string
-  [@name "String"]
+               [@name "String"]
   | CTimeValue of TI.t * TimeValue.t
-  [@name "TimeValue"]
+                  [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
-  [@name "Range"]
+              [@name "Range"]
 [@@deriving to_yojson, show]
 
 and statement =
   | StmAssign of TI.t *
                  variable *
                  expr
-  [@name "Assign"]
+                 [@name "Assign"]
   | StmElsif of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
-  [@name "Elsif"]
+                [@name "Elsif"]
   | StmIf of TI.t *
              expr * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
-  [@name "If"]
+             [@name "If"]
   | StmCase of TI.t *
                expr * (** condition *)
                case_selection list *
                statement list (* else *)
-  [@name "Case"]
+               [@name "Case"]
   | StmFor of (TI.t *
                SymVar.t * (** control variable *)
                expr * (** range start *)
                expr * (** range end *)
                expr option * (** range step *)
                statement list (** body statements *) [@opaque])
-  [@name "For"]
+              [@name "For"]
   | StmWhile of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
-  [@name "While"]
+                [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
                  expr (** condition *)
-  [@name "Repeat"]
+                 [@name "Repeat"]
   | StmExit of TI.t
-  [@name "Exit"]
+               [@name "Exit"]
   | StmContinue of TI.t
-  [@name "Continue"]
+                   [@name "Continue"]
   | StmReturn of TI.t
-  [@name "Return"]
+                 [@name "Return"]
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
-  [@name "FuncParamAssign"]
+                          [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
-  [@name "FuncCall"]
+                   [@name "FuncCall"]
 [@@deriving to_yojson, show { with_path = false }]
 and expr =
   | Variable of variable
@@ -355,6 +355,22 @@ and expr =
 [@@deriving to_yojson, show]
 and case_selection = {case: expr list; body: statement list}
 [@@deriving to_yojson, show]
+(* }}} *)
+
+(* {{{ Functions to work with statements *)
+let stmt_get_ti = function
+  | StmAssign (ti,_,_) -> ti
+  | StmElsif (ti,_,_) -> ti
+  | StmIf (ti,_,_,_,_) -> ti
+  | StmCase (ti,_,_,_) -> ti
+  | StmFor (ti,_,_,_,_,_) -> ti
+  | StmWhile (ti,_,_) -> ti
+  | StmRepeat (ti,_,_) -> ti
+  | StmExit (ti) -> ti
+  | StmContinue (ti) -> ti
+  | StmReturn (ti) -> ti
+  | StmFuncParamAssign _ -> TI.create_dummy  (* TODO *)
+  | StmFuncCall (ti,_,_) -> ti
 (* }}} *)
 
 (* {{{ Functions to work with constants *)

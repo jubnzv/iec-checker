@@ -291,7 +291,10 @@ and expr =
 
 and case_selection = {case: expr list; body: statement list}
 [@@deriving to_yojson, show]
+(* }}} *)
 
+(* {{{ Functions to work with statements *)
+val stmt_get_ti : statement -> TI.t
 (* }}} *)
 
 (* {{{ Functions to work with constants *)

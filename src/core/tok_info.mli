@@ -8,3 +8,5 @@ val create : Lexing.lexbuf -> t
 
 val create_dummy : t
 (** Create a new dummy parse tree element *)
+
+val to_string : t -> string

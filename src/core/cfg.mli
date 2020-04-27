@@ -4,6 +4,7 @@
      connections (edges) between them. This is useful for dead code detection.
 *)
 module S = Syntax
+module TI = Tok_info
 
 type t
 
@@ -34,3 +35,11 @@ and edge =
 
 val mk : S.iec_library_element -> t
 (** Create a new CFG instance for a given iec_library_element *)
+
+val to_string : t -> string
+
+val bb_get_ti : bb -> TI.t
+(** Get token info for the basic block. *)
+
+val create_cfgs : S.iec_library_element list -> t list
+(** Create list of CFGs for a given iec_library_element objects. *)
