@@ -1,4 +1,7 @@
 # IEC Checker
+
+![](https://github.com/jubnzv/iec-checker/workflows/Unit%20tests/badge.svg)
+
 This project aims to implement an open source tool for static code analysis of IEC61131-3 programs.
 
 It is currently at an early stage of development, binary releases and installation instructions will be available later.
