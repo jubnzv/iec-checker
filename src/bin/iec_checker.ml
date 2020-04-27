@@ -9,42 +9,38 @@ module TI = Tok_info
 module W = Warn
 module WO = Warn_output
 
-let print_position outx (lexbuf : Lexing.lexbuf) =
+let str_pos (lexbuf : Lexing.lexbuf) =
   let pos = lexbuf.lex_curr_p in
-  Printf.fprintf outx "%s:%d:%d" pos.pos_fname pos.pos_lnum
+  Printf.sprintf "%s:%d:%d" pos.pos_fname pos.pos_lnum
     (pos.pos_cnum - pos.pos_bol)
 
-let parse_with_error lexbuf =
+let parse_with_error (lexbuf: Lexing.lexbuf) : (S.iec_library_element list * Warn.t list) =
   let tokinfo lexbuf = TI.create lexbuf in
   let l = Lexer.initial tokinfo in
-  try Parser.main l lexbuf with
+  try (Parser.main l lexbuf), [] with
   | Lexer.LexingError msg ->
-    fprintf stderr "%a: %s\n" print_position lexbuf msg;
-    []
+    let err = Printf.sprintf "%s: %s" (str_pos lexbuf) msg in
+    [], [(W.mk_internal ~id:"LexingError" err)]
   | Parser.Error ->
-    Printf.fprintf stderr "%a: syntax error\n" print_position lexbuf;
-    []
+    let err = Printf.sprintf "%s: Syntax error" (str_pos lexbuf) in
+    [], [(W.mk_internal ~id:"ParserError" err)]
   | Failure msg ->
-    Printf.fprintf stderr "%a: %s-n" print_position lexbuf msg;
-    []
+    let err = Printf.sprintf "%s: %s" (str_pos lexbuf) msg in
+    [], [(W.mk_internal err)]
 
-let parse_elements lexbuf =
-  let node = parse_with_error lexbuf in
-  match node with elements -> elements
-
-let parse_file (filename : string) : S.iec_library_element list =
+let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) =
   let inx = In_channel.create filename in
   let lexbuf = Lexing.from_channel inx in
   lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
-  let elements = parse_elements lexbuf in
+  let (elements, warns) = parse_with_error lexbuf in
   In_channel.close inx;
-  elements
+  (elements, warns)
 
 let run_checker filename fmt create_dumps quiet =
   if not (Sys.file_exists filename) then
     failwith ("File " ^ filename ^ " doesn't exists")
   else
-    let elements = parse_file filename in
+    let (elements, parser_warns) = parse_file filename in
     let envs = Ast_util.create_envs elements in
     if create_dumps then
       Ast_util.create_dump elements envs filename;
@@ -52,7 +48,12 @@ let run_checker filename fmt create_dumps quiet =
     let decl_warnings = Declaration_analysis.run elements envs in
     let flow_warnings = Control_flow_analysis.run pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs quiet in
-    WO.print_report (decl_warnings @ flow_warnings @ lib_warnings) fmt
+    WO.print_report (
+      parser_warns @
+      decl_warnings @
+      flow_warnings @
+      lib_warnings)
+      fmt
 
 let command =
   Command.basic ~summary:"IEC61131-3 static analysis"
