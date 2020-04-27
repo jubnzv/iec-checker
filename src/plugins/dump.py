@@ -29,7 +29,7 @@ def process_dump(dump_path: str) -> List[PluginWarning]:
     warnings = []
 
     scheme = None
-    with open(dump_path, 'r') as f:
+    with open(dump_path, 'rb') as f:
         for item in ijson.items(f, ""):
             scheme = Scheme.from_dict(item)
 

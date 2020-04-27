@@ -53,7 +53,9 @@ let run_checker filename fmt create_dumps quiet =
       decl_warnings @
       flow_warnings @
       lib_warnings)
-      fmt
+      fmt;
+    let rc = if not (List.is_empty parser_warns) then 1 else 0 in
+    exit rc
 
 let command =
   Command.basic ~summary:"IEC61131-3 static analysis"
