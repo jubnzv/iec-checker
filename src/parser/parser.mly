@@ -168,6 +168,7 @@
 %token<IECCheckerCore.Tok_info.t> T_FOR T_TO T_BY T_DO T_END_FOR
 %token<IECCheckerCore.Tok_info.t> T_WHILE T_END_WHILE T_REPEAT T_END_REPEAT T_UNTIL
 %token<IECCheckerCore.Tok_info.t> T_EXIT T_CONTINUE
+%token<IECCheckerCore.Tok_info.t> T_RETURN
 (* }}} *)
 
 (* {{{ Helpers for date and time literals
@@ -1876,15 +1877,13 @@ assign_stmt:
 
 (* invocation: *)
 
-subprog_ctrl_stmt:
-  | fc = func_call
-  { fc }
+let subprog_ctrl_stmt :=
+  | ~ = func_call; <>
   (* | invocation
   {  } *)
   (* | T_SUPER T_LPAREN T_RPAREN
   {  } *)
-  (* | T_RETURN
-  {  } *)
+  | ~ = T_RETURN; <S.StmReturn>
 
 param_assign:
   | vn = variable_name T_ASSIGN e = expression

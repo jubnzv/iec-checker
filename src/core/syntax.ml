@@ -335,6 +335,8 @@ and statement =
   [@name "Exit"]
   | StmContinue of TI.t
   [@name "Continue"]
+  | StmReturn of TI.t
+  [@name "Return"]
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)

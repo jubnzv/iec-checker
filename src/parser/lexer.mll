@@ -221,6 +221,7 @@ rule initial tokinfo =
   | "UNTIL"          { let ti = tokinfo lexbuf in T_UNTIL(ti) }
   | "EXIT"           { let ti = tokinfo lexbuf in T_EXIT(ti) }
   | "CONTINUE"       { let ti = tokinfo lexbuf in T_CONTINUE(ti) }
+  | "RETURN"         { let ti = tokinfo lexbuf in T_RETURN(ti) }
 (* }}} *)
 
   (* {{{ Integer literals *)

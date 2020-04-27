@@ -69,6 +69,7 @@ let rec stmts_to_list stmt =
     @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
   | S.StmExit _ -> [ stmt ]
   | S.StmContinue _ -> [ stmt ]
+  | S.StmReturn _ -> [ stmt ]
   | S.StmFuncParamAssign (_, e, _) -> [ stmt ] @ expr_to_stmts e
   | S.StmFuncCall (_, _, ns) ->
     stmt
