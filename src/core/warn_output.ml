@@ -20,4 +20,4 @@ let print_report warnings fmt =
                    ~init:[] in
                Yojson.Safe.to_string (`List json_list))
   in
-  Printf.printf "%s" out
+  Printf.printf "%s\n" out
