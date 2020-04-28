@@ -22,7 +22,7 @@ opam install dune
 
 Running unit tests:
 ```bash
-dune runtest
+pytest
 ```
 
 Building and installing OCaml package to the current directory:
@@ -39,41 +39,29 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-## Usage
+## Try it
 
-Checking demo programs written in Structured Text:
+Check some demo programs written in Structured Text:
 ```bash
 python3 checker.py test/st/*.st
 ```
 
 This will gives the following output:
 ```
-Report for test/st/configurations.st:
-No errors found!
-Report for test/st/constant-zero-division.st:
-No errors found!
-Report for test/st/control-statements.st:
-42:8: PLCOPEN-L17: Each IF instruction should have an ELSE clause
+Report for test/st/dead-code.st:
+[PLCOPEN-L17] 11:8: Each IF instruction should have an ELSE clause
+[PLCOPEN-L17] 15:8: Each IF instruction should have an ELSE clause
 Report for test/st/declaration-analysis.st:
-0:0: DeclarationAnalysis: Length of initialization string literal exceeds string length (6 > 5)
-Report for test/st/function-blocks.st:
-No errors found!
-Report for test/st/function-declaration.st:
-No errors found!
-Report for test/st/literals.st:
-17:6: PLCOPEN-N3: IEC data types and standard library objects must be avoided
-Report for test/st/multiple-pous.st:
-No errors found!
-Report for test/st/multiple-variables.st:
-No errors found!
+[DeclarationAnalysis] Initial subrange value -4096 does not fit specified range (-4095 .. 4095)
+[DeclarationAnalysis] Initial subrange value 4099 does not fit specified range (-4095 .. 4095)
+[DeclarationAnalysis] Length of initialization string literal exceeds string length (6 > 5)
 Report for test/st/plcopen-cp13.st:
-8:31: PLCOPEN-CP13: POUs shall not call themselves directly or indirectly
+[PLCOPEN-CP13] 8:31: POUs shall not call themselves directly or indirectly
 Report for test/st/plcopen-l17.st:
-10:4: PLCOPEN-L17: Each IF instruction should have an ELSE clause
+[PLCOPEN-L17] 10:4: Each IF instruction should have an ELSE clause
 Report for test/st/plcopen-n3.st:
-6:7: PLCOPEN-N3: IEC data types and standard library objects must be avoided
-Report for test/st/st-statements.st:
-No errors found!
-Report for test/st/types.st:
-No errors found!
+[PLCOPEN-N3] 6:7: IEC data types and standard library objects must be avoided
+Report for test/st/zero-division.st:
+[ZeroDivision] 7:12: Constant 19 is divided to zero!
+[ZeroDivision] 9:14: Variable Var2 is divided to zero!
 ```
