@@ -101,6 +101,40 @@ let get_stmts elems =
         x @ es)
     ~init:[]
 
+let get_exprs elems =
+  let all_stmts = get_stmts elems in
+  let rec get_stmt_exprs stmt =
+    let get_nested stmts =
+      List.fold_left stmts ~init:[] ~f:(fun acc es -> acc @ (get_stmt_exprs es))
+    in
+    match stmt with
+    | S.StmAssign (_, _, e) -> [e]
+    | S.StmElsif (_, e, ss) -> [e] @ (get_nested ss)
+    | S.StmIf (_, e, ss1, ss2, ss3) -> (
+        [e] @ (get_nested ss1) @ (get_nested ss2) @ (get_nested ss3)
+      )
+    | S.StmCase (_, e, cs, ss) -> (
+        let case_exprs =
+          List.fold_left cs
+            ~init:[]
+            ~f:(fun acc case_sel -> acc @ (case_sel.case @ (get_nested case_sel.body)))
+        in
+        [e] @ case_exprs @ (get_nested ss)
+      )
+    | S.StmFor (_, _, e1, e2, e3_opt, ss) -> (
+      let e3 = match e3_opt with Some e -> [e] | None -> [] in
+      [e1] @ [e2] @ e3 @ (get_nested ss)
+    )
+    | S.StmWhile (_, e, ss) -> [e] @ (get_nested ss)
+    | S.StmRepeat (_, ss, e) -> (get_nested ss) @ [e]
+    | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+    | S.StmFuncParamAssign (_, e, _) -> [e]
+    | S.StmFuncCall (_, _, ss) -> (get_nested ss)
+  in
+  List.fold_left all_stmts
+    ~init:[]
+    ~f:(fun acc stmt -> List.append acc (get_stmt_exprs stmt))
+
 (** Bound declaration of global variables in global env. *)
 let fill_global_env env = function
   | S.IECFunction _ | S.IECFunctionBlock _ | S.IECProgram _ | S.IECType _ -> env

@@ -6,18 +6,19 @@ import io
 import subprocess
 import ijson
 
-from .om import Error, Warning
+from .om import Warning
 
 
 def process_output(json_out: str) -> List[Warning]:
     warnings = []
-    for item in ijson.items(io.BytesIO(json_out), ""):
-        if item:
-            warnings.append(Warning.from_dict(item.pop()))
+    for warns in ijson.items(io.BytesIO(json_out), ""):
+        for item in warns:
+            if item:
+                warnings.append(Warning.from_dict(item))
     return warnings
 
 
-def run_checker(file_path: str) -> Tuple[List[Warning], List[Error], int]:
+def run_checker(file_path: str) -> Tuple[List[Warning], int]:
     """Run iec-checker core for a given file.
 
     This will execute core inspections and generate JSON dump processed with
@@ -32,4 +33,4 @@ def run_checker(file_path: str) -> Tuple[List[Warning], List[Error], int]:
     p.wait()
     out, err = p.communicate()
     warnings = process_output(out)
-    return (warnings, [], p.returncode)
+    return (warnings, p.returncode)

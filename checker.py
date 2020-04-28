@@ -11,7 +11,7 @@ from python.dump import process_dump, remove_dump  # noqa
 
 def main(files: List[str]):
     for f in files:
-        checker_warnings, errors, rc = run_checker(f)
+        checker_warnings, rc = run_checker(f)
         if rc != 0:
             for w in checker_warnings:
                 print(f'{w}')

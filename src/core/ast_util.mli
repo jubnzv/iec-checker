@@ -27,6 +27,9 @@ val get_top_stmts : S.iec_library_element -> S.statement list
 val get_stmts : S.iec_library_element list -> S.statement list
 (** Collect statements from each POU *)
 
+val get_exprs : S.iec_library_element list -> S.expr list
+(** Collect expressions from each statement of the POUs *)
+
 val create_envs : S.iec_library_element list -> Env.t list
 (** Create the environments for a given configuration elements *)
 

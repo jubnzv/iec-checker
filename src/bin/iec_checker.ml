@@ -30,7 +30,9 @@ let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) 
 
 let run_checker filename fmt create_dumps quiet =
   if not (Sys.file_exists filename) then
-    failwith ("File " ^ filename ^ " doesn't exists")
+    let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" filename) in
+    WO.print_report [err] fmt;
+    exit 127
   else
     let (elements, parser_warns) = parse_file filename in
     let envs = Ast_util.create_envs elements in

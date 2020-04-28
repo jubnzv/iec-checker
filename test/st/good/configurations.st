@@ -25,7 +25,6 @@ PROGRAM program1
   LocalVar0 := 0x42;
 END_PROGRAM
 
-
 CONFIGURATION config
   VAR_GLOBAL
     ConfVar0 : DINT;

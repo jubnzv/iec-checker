@@ -160,9 +160,3 @@ class Warning:
         if self.linenr == 0 and self.column == 0:
             return f"[{self.id}] {self.msg}"
         return f"[{self.id}] {self.linenr}:{self.column}: {self.msg}"
-
-
-@dataclass
-class Error:
-    """Error produced when OCaml core fails."""
-    msg: str
