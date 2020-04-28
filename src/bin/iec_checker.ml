@@ -9,24 +9,16 @@ module TI = Tok_info
 module W = Warn
 module WO = Warn_output
 
-let str_pos (lexbuf : Lexing.lexbuf) =
-  let pos = lexbuf.lex_curr_p in
-  Printf.sprintf "%s:%d:%d" pos.pos_fname pos.pos_lnum
-    (pos.pos_cnum - pos.pos_bol)
-
 let parse_with_error (lexbuf: Lexing.lexbuf) : (S.iec_library_element list * Warn.t list) =
   let tokinfo lexbuf = TI.create lexbuf in
   let l = Lexer.initial tokinfo in
   try (Parser.main l lexbuf), [] with
   | Lexer.LexingError msg ->
-    let err = Printf.sprintf "%s: %s" (str_pos lexbuf) msg in
-    [], [(W.mk_internal ~id:"LexingError" err)]
+    [], [(W.mk_from_lexbuf lexbuf "LexingError" msg)]
   | Parser.Error ->
-    let err = Printf.sprintf "%s: Syntax error" (str_pos lexbuf) in
-    [], [(W.mk_internal ~id:"ParserError" err)]
+    [], [(W.mk_from_lexbuf lexbuf "ParserError" "")]
   | Failure msg ->
-    let err = Printf.sprintf "%s: %s" (str_pos lexbuf) msg in
-    [], [(W.mk_internal err)]
+    [], [(W.mk_from_lexbuf lexbuf "UnknownError" msg)]
 
 let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) =
   let inx = In_channel.create filename in

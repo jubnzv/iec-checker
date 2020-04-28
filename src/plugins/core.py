@@ -15,6 +15,7 @@ class Warning:
     column: int
     id: str
     msg: str
+    type: str
 
     @classmethod
     def from_dict(cls, values):
@@ -23,10 +24,13 @@ class Warning:
         args['column'] = values.get('column', -1)
         args['id'] = values.get('id', -1)
         args['msg'] = values.get('msg', '')
+        args['type'] = values.get('type', 'Inspection')
         return Warning(**args)
 
     def __str__(self):
-        return f"{self.linenr}:{self.column}: {self.id}: {self.msg}"
+        if self.linenr == 0 and self.column == 0:
+            return f"[{self.id}] {self.msg}"
+        return f"[{self.id}] {self.linenr}:{self.column}: {self.msg}"
 
 
 @dataclass
@@ -57,6 +61,5 @@ def run_checker(file_path: str) -> Tuple[List[Warning], List[Error], int]:
                          stderr=subprocess.STDOUT)
     p.wait()
     out, err = p.communicate()
-    # TODO: Errors not in json
     warnings = process_output(out)
     return (warnings, [], p.returncode)

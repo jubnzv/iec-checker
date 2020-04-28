@@ -13,7 +13,8 @@ def main(files: List[str]):
     for f in files:
         checker_warnings, errors, rc = run_checker(f)
         if rc != 0:
-            print(f'Checker fails with rc={rc}!')
+            for w in checker_warnings:
+                print(f'{w}')
             continue
 
         dump_name = f'{f}.dump.json'
