@@ -20,11 +20,6 @@ opam switch create 4.08.1
 opam install dune
 ```
 
-Running unit tests:
-```bash
-pytest
-```
-
 Building and installing OCaml package to the current directory:
 ```bash
 dune build @install
@@ -39,7 +34,13 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-## Try it
+Running unit tests:
+```bash
+pip3 install -r requirements-dev.txt
+pytest
+```
+
+## Usage
 
 Check some demo programs written in Structured Text:
 ```bash
