@@ -1,4 +1,3 @@
-"""Object model for IEC AST."""
 from dataclasses import dataclass
 from typing import List, Dict
 
@@ -136,3 +135,34 @@ class Scheme:
         #     i) for i in values.get('environments', [])]
         args['environments'] = []
         return Scheme(**args)
+
+
+@dataclass
+class Warning:
+    """Warning found by OCaml core."""
+    linenr: int
+    column: int
+    id: str
+    msg: str
+    type: str
+
+    @classmethod
+    def from_dict(cls, values):
+        args = {}
+        args['linenr'] = values.get('linenr', -1)
+        args['column'] = values.get('column', -1)
+        args['id'] = values.get('id', -1)
+        args['msg'] = values.get('msg', '')
+        args['type'] = values.get('type', 'Inspection')
+        return Warning(**args)
+
+    def __str__(self):
+        if self.linenr == 0 and self.column == 0:
+            return f"[{self.id}] {self.msg}"
+        return f"[{self.id}] {self.linenr}:{self.column}: {self.msg}"
+
+
+@dataclass
+class Error:
+    """Error produced when OCaml core fails."""
+    msg: str

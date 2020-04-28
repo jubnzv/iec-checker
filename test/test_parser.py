@@ -3,8 +3,8 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
-from plugins.core import run_checker  # noqa
-from plugins.dump import process_dump, remove_dump  # noqa
+from python.core import run_checker  # noqa
+from python.dump import process_dump, remove_dump  # noqa
 
 
 def test_parser_error():

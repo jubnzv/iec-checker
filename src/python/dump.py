@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List
 import ijson
 
-from .ast import Scheme
+from .om import Scheme
 
 
 log = logging.getLogger('plugins')
