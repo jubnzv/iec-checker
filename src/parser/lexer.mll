@@ -190,7 +190,7 @@ rule initial tokinfo =
   (* {{{ Generic data types *)
   | "ANY" ['_' 'A'-'Z'] as v
   { try Caml.Hashtbl.find generic_types_table v
-      with Not_found -> (let ti = tokinfo lexbuf in T_IDENTIFIER(v, ti)) }
+      with Not_found_s _ -> (let ti = tokinfo lexbuf in T_IDENTIFIER(v, ti)) }
   (* }}} *)
 
   (* {{{ ST operators *)
@@ -401,16 +401,16 @@ and comment tokinfo depth = parse
 {
   let read_file parser (filename: string) =
   try
-    let fh = open_in filename in
+    let fh = In_channel.create filename in
     let lex = Lexing.from_channel fh in
     lex.Lexing.lex_curr_p <- {lex.Lexing.lex_curr_p with Lexing.pos_fname = filename};
     try
       let terms = parser lex in
-      close_in fh;
+      In_channel.close fh;
       terms
     with err ->
       (* Close the file in case of any parsing errors. *)
-      close_in fh;
+      In_channel.close fh;
       raise err
   with err ->
     (* Any errors when opening or closing a file are fatal. *)

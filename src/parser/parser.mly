@@ -887,7 +887,7 @@ let str_type_decl :=
               match expr with
               | S.Constant(c) ->
                 match c with
-                  | S.CString(str, _) -> init_expr
+                  | S.CString _ -> init_expr
                   | _ -> raise (E.InternalError "Unexpected constant type")
               | _ -> raise (E.InternalError "Unexpected expression")
             end
@@ -898,8 +898,8 @@ let str_type_decl :=
 (* }}} *)
 
 (* {{{ Table 16 -- Direct variables *)
-direct_variable:
-  | T_PERCENT loc = dir_var_location_prefix; sz = dir_var_size_prefix; pcs = list(unsigned_int);
+let direct_variable :=
+  | T_PERCENT; loc = dir_var_location_prefix; sz = dir_var_size_prefix; pcs = list(unsigned_int);
   {
     let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
     S.VarDecl.SpecDirect(None)
@@ -1165,8 +1165,8 @@ external_var_decls:
     )) vlr
   }
 
-external_decl:
-  | out = variable_name T_COLON  simple_spec T_SEMICOLON
+let external_decl :=
+  | out = variable_name; T_COLON; simple_spec; T_SEMICOLON;
   {
     let (n, ti) = out in
     let v = S.SymVar.create n ti in
