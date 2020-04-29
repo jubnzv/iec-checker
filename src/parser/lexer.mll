@@ -13,7 +13,7 @@
       Lexing.pos_bol = pos.Lexing.pos_cnum;
     }
 
-  (* Keywords tables are required to get rid of transition table overflow errors.
+  (* Keywords tables that are necessary to get rid of transition table overflow errors.
      See: http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual026.html#toc111 *)
   let generic_types_table  = Caml.Hashtbl.create 97
   let () =
