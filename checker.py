@@ -6,7 +6,7 @@ from typing import List
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "src"))
 from python.core import run_checker  # noqa
-from python.dump import process_dump, remove_dump  # noqa
+from python.dump import DumpManager  # noqa
 
 
 def main(files: List[str]):
@@ -18,8 +18,9 @@ def main(files: List[str]):
             continue
 
         dump_name = f'{f}.dump.json'
-        plugins_warnings = process_dump(dump_name)
-        remove_dump(dump_name)
+        plugins_warnings = []
+        with DumpManager(dump_name) as dm:
+            plugins_warnings = dm.run_all_inspections()
 
         print(f'Report for {f}:')
         if checker_warnings or plugins_warnings:
