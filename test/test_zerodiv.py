@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
 from python.core import run_checker  # noqa
-from python.dump import remove_dump  # noqa
+from python.dump import DumpManager  # noqa
 
 
 def test_zerodiv():
@@ -24,4 +24,5 @@ def test_zerodiv():
     assert cvs[1].column == 14
     assert 'Variable' in cvs[1].msg
 
-    remove_dump(fdump)
+    with DumpManager(fdump):
+        pass

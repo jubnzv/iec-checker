@@ -371,6 +371,10 @@ let stmt_get_ti = function
   | StmReturn (ti) -> ti
   | StmFuncParamAssign _ -> TI.create_dummy  (* TODO *)
   | StmFuncCall (ti,_,_) -> ti
+
+let stmt_get_id stmt =
+  let ti = stmt_get_ti stmt in
+  ti.id
 (* }}} *)
 
 (* {{{ Functions to work with constants *)

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 
 @dataclass
@@ -104,6 +104,45 @@ class Environment:
 
 
 @dataclass
+class BasicBlock:
+    """Basic block of intraprocedural control flow graph."""
+    id: int
+    type: str
+    in_edges: List[Tuple[int, int]]
+    out_edges: List[Tuple[int, int]]
+    stmt_id: int
+    pou_id: int
+
+    @classmethod
+    def from_dict(cls, values):
+        def get_edges(json_list):
+            return [(e.get('in', -1), e.get('out', -1)) for e in json_list]
+        args = {}
+        args['id'] = values.get('id', -1)
+        args['type'] = values.get('type', "")
+        args['in_edges'] = get_edges(values.get('in_edges', -1))
+        args['out_edges'] = get_edges(values.get('in_edges', -1))
+        args['stmt_id'] = values.get('stmt_id', -1)
+        args['pou_id'] = values.get('pou_id', -1)
+        return BasicBlock(**args)
+
+
+@dataclass
+class Cfg:
+    """Intraprocedural control flow graph."""
+    initial_bb_id: int
+    basic_blocks: List[BasicBlock]
+
+    @classmethod
+    def from_dict(cls, values):
+        args = {}
+        args['initial_bb_id'] = values.get('initial_bb_id', -1)
+        args['basic_blocks'] = [BasicBlock.from_dict(
+            bb) for bb in values.get('basic_blocks')]
+        return Cfg(**args)
+
+
+@dataclass
 class Scheme:
     version: str
     functions: List[Function]
@@ -112,6 +151,7 @@ class Scheme:
     configurations: List[Configuration]
     types: List[Type]
     environments: List[Environment]
+    cfgs: List[Cfg]
 
     @classmethod
     def from_dict(cls, values: Dict):
@@ -134,6 +174,8 @@ class Scheme:
         # args['environments'] = [Environment.from_dict(
         #     i) for i in values.get('environments', [])]
         args['environments'] = []
+        args['cfgs'] = [Cfg.from_dict(
+            i) for i in values.get('cfgs', [])]
         return Scheme(**args)
 
 

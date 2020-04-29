@@ -29,14 +29,16 @@ type bb =
 (** Directed edges to represent jumps between basic blocks *)
 and edge =
   {
-    in_bb : bb; (** Input basic block *)
-    out_bb : bb; (** Output basic block *)
+    in_bb : int; (** Input basic block id *)
+    out_bb : int; (** Output basic block id *)
   }
 
 val mk : S.iec_library_element -> t
 (** Create a new CFG instance for a given iec_library_element *)
 
 val to_string : t -> string
+
+val to_yojson : t -> Yojson.Safe.t
 
 val bb_get_ti : bb -> TI.t
 (** Get token info for the basic block. *)

@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
 from python.core import run_checker  # noqa
-from python.dump import process_dump, remove_dump  # noqa
+from python.dump import DumpManager  # noqa
 
 
 def test_lexing_error():
@@ -18,7 +18,8 @@ def test_lexing_error():
     assert cv.id == 'LexingError'
     assert cv.linenr == 9
     assert cv.column == 6
-    remove_dump(fdump)
+    with DumpManager(fdump):
+        pass
 
 
 def test_parser_errors():
@@ -28,7 +29,8 @@ def test_parser_errors():
         checker_warnings, rc = run_checker(f)
         assert rc == 1
         assert len(checker_warnings) > 0
-        remove_dump(fdump)
+        with DumpManager(fdump):
+            pass
 
 
 def test_no_parser_errors():
@@ -37,4 +39,5 @@ def test_no_parser_errors():
         fdump = f'{f}.dump.json'
         checker_warnings, rc = run_checker(f)
         assert rc == 0
-        remove_dump(fdump)
+        with DumpManager(fdump):
+            pass

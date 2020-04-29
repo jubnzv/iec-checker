@@ -11,7 +11,7 @@ type bb_ty =
   | BBInit (** Initial basic block *)
   | BBOut (** Return/exit node *)
   | BBJump (** Indirect jump to/from a node *)
-[@@deriving show { with_path = false }]
+[@@deriving show { with_path = false }, to_yojson]
 
 and bb =
   {
@@ -25,9 +25,31 @@ and bb =
 
 and edge =
   {
-    in_bb : bb; (** Input basic block *)
-    out_bb : bb; (** Output basic block *)
+    in_bb : int [@key "in"]; (** Input basic block id *)
+    out_bb : int [@key "out"]; (** Output basic block id *)
   }
+[@@deriving to_yojson]
+
+let bb_to_yojson bb =
+  let in_edges =
+    List.fold_left bb.in_edges
+      ~init:[]
+      ~f:(fun acc e -> [edge_to_yojson e] @ acc)
+  in
+  let out_edges =
+    List.fold_left bb.out_edges
+      ~init:[]
+      ~f:(fun acc e -> [edge_to_yojson e] @ acc)
+  in
+  `Assoc [
+    "id", `Int(bb.id);
+    "type", bb_ty_to_yojson bb.ty;
+    "in_edges", `List(in_edges);
+    "out_edges", `List(out_edges);
+    "stmt_id", `Int(S.stmt_get_id bb.stmt);
+    (* TODO: *)
+    (* "pou_id", `Int(S.iec_library_element_get_id bb.pou); *)
+  ]
 
 (** Map for basic blocks in CFG accessible by unique identifier *)
 module BBMap = struct
@@ -40,6 +62,16 @@ module BBMap = struct
   let add m bb = Map.set m ~key:bb.id ~data:bb
 
   let to_alist m = Map.to_alist m
+
+  let to_yojson (m : t) : Yojson.Safe.t =
+    let items =
+      Map.fold_right m
+        ~init:[]
+        ~f:(fun[@warning "-27"] ~key ~data lst ->
+            let bb = data in
+            [bb_to_yojson bb] @ lst
+          ) in
+    `List(items)
 end
 
 type t = {
@@ -67,8 +99,8 @@ let mk_edge bb_in bb_out =
     bb.out_edges <- (List.append bb.out_edges [e_out]);
     ()
   in
-  let e_in = { in_bb = bb_in; out_bb = bb_out } in
-  let e_out = { in_bb = bb_out; out_bb = bb_in } in
+  let e_in = { in_bb = bb_in.id; out_bb = bb_out.id } in
+  let e_out = { in_bb = bb_out.id; out_bb = bb_in.id } in
   (set_edges bb_in e_in e_out);
   (set_edges bb_out e_out e_in);
   ()
@@ -228,7 +260,7 @@ let to_string (cfg : t) : string =
           let edges_to_string (edges : edge list) =
             List.fold_left edges
               ~init:[]
-              ~f:(fun acc e -> acc @ [Printf.sprintf "%d->%d" e.in_bb.id e.out_bb.id])
+              ~f:(fun acc e -> acc @ [Printf.sprintf "%d->%d" e.in_bb e.out_bb])
             |> String.concat ~sep:" "
           in
           let bb_repr =
@@ -241,6 +273,13 @@ let to_string (cfg : t) : string =
           acc @ [bb_repr]
         end)
   |> String.concat ~sep:"\n"
+
+let to_yojson (c : t) : Yojson.Safe.t =
+  let m = c.bb_map in
+  `Assoc [
+    "initial_bb_id", `Int (c.init_bb_id);
+    "basic_blocks", BBMap.to_yojson m;
+  ]
 
 let bb_get_ti bb =
   S.stmt_get_ti bb.stmt

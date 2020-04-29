@@ -295,6 +295,7 @@ and case_selection = {case: expr list; body: statement list}
 
 (* {{{ Functions to work with statements *)
 val stmt_get_ti : statement -> TI.t
+val stmt_get_id : statement -> int
 (* }}} *)
 
 (* {{{ Functions to work with constants *)

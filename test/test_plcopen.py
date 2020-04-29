@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
 from python.core import run_checker  # noqa
-from python.dump import remove_dump  # noqa
+from python.dump import DumpManager  # noqa
 
 
 def test_cp13():
@@ -18,7 +18,8 @@ def test_cp13():
     assert cv.id == 'PLCOPEN-CP13'
     assert cv.linenr == 8
     assert cv.column == 31
-    remove_dump(fdump)
+    with DumpManager(fdump):
+        pass
 
 
 def test_l17():
@@ -31,7 +32,8 @@ def test_l17():
     assert cv.id == 'PLCOPEN-L17'
     assert cv.linenr == 10
     assert cv.column == 4
-    remove_dump(fdump)
+    with DumpManager(fdump):
+        pass
 
 
 def test_n3():
@@ -44,4 +46,5 @@ def test_n3():
     assert cv.id == 'PLCOPEN-N3'
     assert cv.linenr == 6
     assert cv.column == 7
-    remove_dump(fdump)
+    with DumpManager(fdump):
+        pass

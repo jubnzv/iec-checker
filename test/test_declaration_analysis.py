@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
 from python.core import run_checker  # noqa
-from python.dump import remove_dump  # noqa
+from python.dump import DumpManager  # noqa
 
 
 def test_initialization_literal():
@@ -17,5 +17,5 @@ def test_initialization_literal():
     assert cv.id == 'DeclarationAnalysis'
     # assert cv.linenr == 8
     # assert cv.column == 31
-    remove_dump(fdump)
-
+    with DumpManager(fdump):
+        pass
