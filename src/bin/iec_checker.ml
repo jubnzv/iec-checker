@@ -4,6 +4,7 @@ open IECCheckerParser
 open IECCheckerLib
 open IECCheckerAnalysis
 module S = Syntax
+module E = Error
 module Lib = CheckerLib
 module TI = Tok_info
 module W = Warn
@@ -17,8 +18,12 @@ let parse_with_error (lexbuf: Lexing.lexbuf) : (S.iec_library_element list * War
     [], [(W.mk_from_lexbuf lexbuf "LexingError" msg)]
   | Parser.Error ->
     [], [(W.mk_from_lexbuf lexbuf "ParserError" "")]
-  | Failure msg ->
-    [], [(W.mk_from_lexbuf lexbuf "UnknownError" msg)]
+  | E.SyntaxError msg ->
+    [], [(W.mk_from_lexbuf lexbuf "SyntaxError" msg)]
+  | E.InternalError msg ->
+    [], [(W.mk_from_lexbuf lexbuf "InternalError" msg)]
+  | e ->
+    [], [(W.mk_from_lexbuf lexbuf "UnknownError" (Exn.to_string e))]
 
 let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) =
   let inx = In_channel.create filename in

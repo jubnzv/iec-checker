@@ -9,7 +9,7 @@ let str_len = function
   | S.WSTRING l -> l
   | S.CHAR l    -> l
   | S.WCHAR l   -> l
-  | _ -> E.raise E.InternalError "Got unexpected type"
+  | _ -> raise (E.InternalError "Got unexpected type")
 
 (** Compare length of declared string with initializer string size. *)
 let check_str_init_size ty_init init_expr =
@@ -26,7 +26,7 @@ let check_str_init_size ty_init init_expr =
         begin
           match c with
           | S.CString(_, str) -> check_length str
-          | _ -> E.raise E.InternalError "Got unexpected type"
+          | _ -> raise (E.InternalError "Got unexpected type")
         end
       | _ -> None
     end

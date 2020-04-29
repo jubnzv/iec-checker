@@ -19,7 +19,7 @@ let check_func_stmts func =
     match func with
     | S.IECFunction (_, fd) -> S.Function.get_name fd.id
     | S.IECFunctionBlock (_, fbd) -> S.FunctionBlock.get_name fbd.id
-    | _ -> E.raise E.InternalError ""
+    | _ -> raise (E.InternalError "Unexpected POU type")
   in
   AU.get_pou_stmts func
   |> List.fold_left
@@ -44,4 +44,4 @@ let do_check elems =
     ~init:[]
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
-         match w with Some w -> w | None -> E.raise E.InternalError "")
+         match w with Some w -> w | None -> raise (E.InternalError ""))

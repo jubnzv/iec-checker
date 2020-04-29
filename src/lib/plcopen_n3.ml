@@ -187,4 +187,4 @@ let do_check elems =
       check_name var)
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
-      match w with Some w -> w | None -> E.raise E.InternalError "")
+      match w with Some w -> w | None -> raise (E.InternalError ""))

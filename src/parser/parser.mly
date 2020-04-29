@@ -6,8 +6,6 @@
   module S = Syntax
   module TI = Tok_info
 
-  exception SyntaxError of string
-
   let creal_inv (vr, ti) =
     let vv = -1.0 *. vr in
     (vv, ti)
@@ -27,7 +25,7 @@
 
   let cget_int_val = function
     | S.CInteger (_, v) -> v
-    | _ -> E.raise E.InternalError "Unknown constant type"
+    | _ -> raise (E.InternalError "Unknown constant type")
 
   let mk_global_decl v =
     let vv = S.SymVar(v) in
@@ -403,7 +401,7 @@ duration:
     match v with
     | S.CTimeValue(ti, tv) ->
         S.CTimeValue(ti, (S.TimeValue.inv tv))
-    | _ -> E.raise E.InternalError "Unknown constant type"
+    | _ -> raise (E.InternalError "Unknown constant type")
   }
 
 (* Helper rule for duration. *)
@@ -610,7 +608,7 @@ string_type_length:
   {
     match c with
     | CInteger(_, v) -> v
-    | _ -> raise (SyntaxError "Incorrect string length value")
+    | _ -> raise (E.SyntaxError "Invalid length of string")
   }
 
 time_type_name:
@@ -787,7 +785,7 @@ let subrange_spec_init :=
     match s with
     | S.DTyDeclSubrange(ty_name, ty_spec, _) ->
       S.DTyDeclSubrange(ty_name, ty_spec, (cget_int_val ic))
-    | _ -> E.raise E.InternalError "Unexpected subrange type"
+    | _ -> raise (E.InternalError "Unexpected subrange type")
   }
   | ~ = subrange_spec; <>
 
@@ -796,7 +794,7 @@ let subrange_spec :=
   {
     let (ty_name, ty_decl) = name_type in
     if not (S.ety_is_integer ty_decl) then
-        raise (SyntaxError ("Subrange types must be integer"))
+        raise (E.SyntaxError "Subrange types must be integer")
     else
       let (_, lb, ub) = s in
       (* According the Standard, the initial value is assigned to lower bound by default. *)
@@ -878,7 +876,7 @@ let str_type_decl :=
   {
     let (ty_name, ty_decl) = name_type in
     if not (S.ety_is_string ty_decl) then
-        raise (SyntaxError ("Expected string type"))
+        raise (E.SyntaxError "Expected string type")
     else
       let ty_spec = S.DTySpecElementary(ty_decl) in
       (* Check optional initial value *)
@@ -890,8 +888,8 @@ let str_type_decl :=
               | S.Constant(c) ->
                 match c with
                   | S.CString(str, _) -> init_expr
-                  | _ -> E.raise E.InternalError "Unexpected constant type"
-              | _ -> E.raise E.InternalError "Unexpected expression"
+                  | _ -> raise (E.InternalError "Unexpected constant type")
+              | _ -> raise (E.InternalError "Unexpected expression")
             end
           | None -> None
       in
@@ -2043,7 +2041,7 @@ dir_var_location_prefix:
       else if String.equal v "M" then
         S.DirVar.LocM
       else
-        raise (SyntaxError ("Unknown direct variable location prefix: " ^ v))
+        raise (E.SyntaxError ("Unknown direct variable location prefix: " ^ v))
   }
 
 dir_var_size_prefix:
@@ -2061,7 +2059,7 @@ dir_var_size_prefix:
       else if String.equal v "L" then
         S.DirVar.SizeL
       else
-        raise (SyntaxError ("Unknown direct variable size prefix: " ^ v))
+        raise (E.SyntaxError ("Unknown direct variable size prefix: " ^ v))
   }
 
 compare_expr_operator:
