@@ -605,18 +605,38 @@ type configuration_decl = {
 (* }}} *)
 
 type iec_library_element =
-  | IECFunction of function_decl [@name "Function"]
-  | IECFunctionBlock of fb_decl [@name "FunctionBlock"]
-  | IECProgram of program_decl [@name "Program"]
-  | IECConfiguration of configuration_decl [@name "Configuration"]
-  | IECType of derived_ty_decl [@name "Type"]
+  | IECFunction of      int (** id *) * function_decl      [@name "Function"]
+  | IECFunctionBlock of int (** id *) * fb_decl            [@name "FunctionBlock"]
+  | IECProgram of       int (** id *) * program_decl       [@name "Program"]
+  | IECConfiguration of int (** id *) * configuration_decl [@name "Configuration"]
+  | IECType of          int (** id *) * derived_ty_decl    [@name "Type"]
 [@@deriving to_yojson]
 
+let next_id =
+  let n = ref (-1) in
+  fun () ->
+    incr n;
+    !n
+
+let mk_pou = function
+  | `Function      decl -> let id = next_id () in IECFunction(id, decl)
+  | `FunctionBlock decl -> let id = next_id () in IECFunctionBlock(id, decl)
+  | `Program       decl -> let id = next_id () in IECProgram(id, decl)
+  | `Configuration decl -> let id = next_id () in IECConfiguration(id, decl)
+  | `Type          decl -> let id = next_id () in IECType(id, decl)
+
+let get_pou_id = function
+  | IECFunction (id, _)      -> id
+  | IECFunctionBlock (id, _) -> id
+  | IECProgram (id, _)       -> id
+  | IECConfiguration (id, _) -> id
+  | IECType (id, _)          -> id
+
 let get_pou_vars_decl = function
-  | IECFunction f -> f.variables
-  | IECFunctionBlock fb -> fb.variables
-  | IECProgram p -> p.variables
-  | IECConfiguration _ -> []
-  | IECType _ -> []
+  | IECFunction (_, f)       -> f.variables
+  | IECFunctionBlock (_, fb) -> fb.variables
+  | IECProgram (_, p)        -> p.variables
+  | IECConfiguration _       -> []
+  | IECType _                -> []
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

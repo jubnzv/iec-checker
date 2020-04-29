@@ -5,13 +5,13 @@ module TI = IECCheckerCore.Tok_info
 
 let print_element (e : S.iec_library_element) =
   match e with
-  | S.IECFunction f ->
+  | S.IECFunction (_, f) ->
       Printf.printf "Running check for function %s\n" (S.Function.get_name f.id)
-  | S.IECFunctionBlock fb ->
+  | S.IECFunctionBlock (_, fb) ->
       Printf.printf "Running check for function block %s\n"
         (S.FunctionBlock.get_name fb.id)
-  | S.IECProgram p -> Printf.printf "Running check for program %s\n" p.name
-  | S.IECConfiguration c ->
+  | S.IECProgram (_, p) -> Printf.printf "Running check for program %s\n" p.name
+  | S.IECConfiguration (_, c) ->
       Printf.printf "Running check for configuration %s\n" c.name
   | S.IECType _ ->
       Printf.printf "Running check for derived type\n"

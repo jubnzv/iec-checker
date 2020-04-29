@@ -47,8 +47,7 @@ let bb_to_yojson bb =
     "in_edges", `List(in_edges);
     "out_edges", `List(out_edges);
     "stmt_id", `Int(S.stmt_get_id bb.stmt);
-    (* TODO: *)
-    (* "pou_id", `Int(S.iec_library_element_get_id bb.pou); *)
+    "pou_id", `Int(S.get_pou_id bb.pou);
   ]
 
 (** Map for basic blocks in CFG accessible by unique identifier *)

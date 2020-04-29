@@ -17,8 +17,8 @@ let check_stmt func_name = function
 let check_func_stmts func =
   let name =
     match func with
-    | S.IECFunction fd -> S.Function.get_name fd.id
-    | S.IECFunctionBlock fbd -> S.FunctionBlock.get_name fbd.id
+    | S.IECFunction (_, fd) -> S.Function.get_name fd.id
+    | S.IECFunctionBlock (_, fbd) -> S.FunctionBlock.get_name fbd.id
     | _ -> E.raise E.InternalError ""
   in
   AU.get_pou_stmts func

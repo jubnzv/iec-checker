@@ -224,17 +224,27 @@ let library_element_declarations :=
   { [e] }
   | ll = library_element_declarations; dl = data_type_decl;
   {
-    let type_defs = List.map ~f:(fun t -> S.IECType(t)) dl in
+    let type_defs =
+      List.map dl
+      ~f:(fun t -> S.mk_pou (`Type t))
+    in
     ll @ type_defs
   }
   | dl = data_type_decl;
-  { List.map ~f:(fun t -> S.IECType(t)) dl }
+  {
+    List.map dl
+    ~f:(fun t -> S.mk_pou (`Type t))
+  }
 
 let library_element_declaration :=
-  | ~ = prog_decl; <S.IECProgram>
-  | ~ = func_decl; <S.IECFunction>
-  | ~ = fb_decl; <S.IECFunctionBlock>
-  | ~ = config_decl; <S.IECConfiguration>
+  | d = prog_decl;
+  { S.mk_pou (`Program d) }
+  | d = func_decl;
+  { S.mk_pou (`Function d) }
+  | d = fb_decl;
+  { S.mk_pou (`FunctionBlock d) }
+  | d = config_decl;
+  { S.mk_pou (`Configuration d) }
 (* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)

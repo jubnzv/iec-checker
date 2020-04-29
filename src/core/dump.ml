@@ -17,27 +17,27 @@ let create_dump elements environments cfgs src_filename =
   let version = "0.1" in
   let functions =
     List.fold_left elements
-      ~f:(fun acc e -> match e with S.IECFunction f -> acc @ [f] | _ -> acc)
+      ~f:(fun acc e -> match e with S.IECFunction (_, f) -> acc @ [f] | _ -> acc)
       ~init:[]
   in
   let function_blocks =
     List.fold_left elements
-      ~f:(fun acc e -> match e with S.IECFunctionBlock fb -> acc @ [fb] | _ -> acc)
+      ~f:(fun acc e -> match e with S.IECFunctionBlock (_, fb) -> acc @ [fb] | _ -> acc)
       ~init:[]
   in
   let programs =
     List.fold_left elements
-      ~f:(fun acc e -> match e with S.IECProgram p -> acc @ [p] | _ -> acc)
+      ~f:(fun acc e -> match e with S.IECProgram (_, p) -> acc @ [p] | _ -> acc)
       ~init:[]
   in
   let configurations =
     List.fold_left elements
-      ~f:(fun acc e -> match e with S.IECConfiguration c -> acc @ [c] | _ -> acc)
+      ~f:(fun acc e -> match e with S.IECConfiguration (_, c) -> acc @ [c] | _ -> acc)
       ~init:[]
   in
   let types =
     List.fold_left elements
-      ~f:(fun acc e -> match e with S.IECType ty -> acc @ [ty] | _ -> acc)
+      ~f:(fun acc e -> match e with S.IECType (_, ty) -> acc @ [ty] | _ -> acc)
       ~init:[]
   in
   let scheme = {

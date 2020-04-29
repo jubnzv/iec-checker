@@ -217,68 +217,68 @@ and subrange_ty_spec =
 
 and constant =
   | CInteger of TI.t * int
-  [@name "Integer"]
+                [@name "Integer"]
   | CBool of TI.t * bool
-  [@name "Bool"]
+             [@name "Bool"]
   | CReal of TI.t * float
-  [@name "Real"]
+             [@name "Real"]
   | CString of TI.t * string
-  [@name "String"]
+               [@name "String"]
   | CTimeValue of TI.t * TimeValue.t
-  [@name "TimeValue"]
+                  [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
-  [@name "Range"]
+              [@name "Range"]
 [@@deriving to_yojson, show]
 
 and statement =
   | StmAssign of TI.t *
                  variable *
                  expr
-  [@name "Assign"]
+                 [@name "Assign"]
   | StmElsif of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
-  [@name "Elsif"]
+                [@name "Elsif"]
   | StmIf of TI.t *
              expr * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
-  [@name "If"]
+             [@name "If"]
   | StmCase of TI.t *
                expr * (** condition *)
                case_selection list *
                statement list (* else *)
-  [@name "Case"]
+               [@name "Case"]
   | StmFor of (TI.t *
                SymVar.t * (** control variable *)
                expr * (** range start *)
                expr * (** range end *)
                expr option * (** range step *)
                statement list (** body statements *) [@opaque])
-  [@name "For"]
+              [@name "For"]
   | StmWhile of TI.t *
                 expr * (** condition *)
                 statement list (** body *)
-  [@name "While"]
+                [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
                  expr (** condition *)
-  [@name "Repeat"]
+                 [@name "Repeat"]
   | StmExit of TI.t
-  [@name "Exit"]
+               [@name "Exit"]
   | StmContinue of TI.t
-  [@name "Continue"]
+                   [@name "Continue"]
   | StmReturn of TI.t
-  [@name "Return"]
+                 [@name "Return"]
   | StmFuncParamAssign of string option * (** function param name *)
                           expr * (** assignment expression *)
                           bool (** has inversion in output assignment *)
-  [@name "FuncParamAssign"]
+                          [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
                    statement list (** params assignment *)
-  [@name "FuncCall"]
+                   [@name "FuncCall"]
 [@@deriving to_yojson, show]
 
 and expr =
@@ -464,14 +464,23 @@ type configuration_decl = {
 (* }}} *)
 
 type iec_library_element =
-  | IECFunction of function_decl [@name "Function"]
-  | IECFunctionBlock of fb_decl [@name "FunctionBlock"]
-  | IECProgram of program_decl [@name "Program"]
-  | IECConfiguration of configuration_decl [@name "Configuration"]
-  | IECType of derived_ty_decl [@name "Type"]
+  | IECFunction of      int (** id *) * function_decl      [@name "Function"]
+  | IECFunctionBlock of int (** id *) * fb_decl            [@name "FunctionBlock"]
+  | IECProgram of       int (** id *) * program_decl       [@name "Program"]
+  | IECConfiguration of int (** id *) * configuration_decl [@name "Configuration"]
+  | IECType of          int (** id *) * derived_ty_decl    [@name "Type"]
 [@@deriving to_yojson]
 
+val mk_pou : [< `Function of function_decl
+              | `FunctionBlock of fb_decl
+              | `Program of program_decl
+              | `Configuration of configuration_decl
+              | `Type of derived_ty_decl ] -> iec_library_element
+
+val get_pou_id : iec_library_element -> int
+(** Get unique identifier of the given library element. *)
+
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
-(** Return variables declared for given POU *)
+(** Return variables declared for the given POU. *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

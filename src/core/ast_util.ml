@@ -3,10 +3,10 @@ module S = Syntax
 
 let get_var_decl elems =
   let get_vd = function
-    | S.IECFunction f -> f.variables
-    | S.IECFunctionBlock fb -> fb.variables
-    | S.IECProgram p -> p.variables
-    | S.IECConfiguration c -> c.variables
+    | S.IECFunction (_, f) -> f.variables
+    | S.IECFunctionBlock (_, fb) -> fb.variables
+    | S.IECProgram (_, p) -> p.variables
+    | S.IECConfiguration (_, c) -> c.variables
     | S.IECType _ -> []
   in
   List.fold_left elems
@@ -66,21 +66,21 @@ let rec stmts_to_list stmt =
     :: (ns @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[])
 
 let get_pou_stmts = function
-  | S.IECFunction f ->
+  | S.IECFunction (_, f) ->
     List.fold_left f.statements ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
-  | S.IECFunctionBlock fb ->
+  | S.IECFunctionBlock (_, fb) ->
     List.fold_left fb.statements
       ~f:(fun ss s -> ss @ stmts_to_list s)
       ~init:[]
-  | S.IECProgram p ->
+  | S.IECProgram (_, p) ->
     List.fold_left p.statements ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
   | S.IECConfiguration _ -> []
   | S.IECType _ -> []
 
 let get_top_stmts = function
-  | S.IECFunction f -> f.statements
-  | S.IECFunctionBlock fb -> fb.statements
-  | S.IECProgram p -> p.statements
+  | S.IECFunction (_, f) -> f.statements
+  | S.IECFunctionBlock (_, fb) -> fb.statements
+  | S.IECProgram (_, p) -> p.statements
   | S.IECConfiguration _ -> []
   | S.IECType _ -> []
 
@@ -128,7 +128,7 @@ let get_exprs elems =
 (** Bound declaration of global variables in global env. *)
 let fill_global_env env = function
   | S.IECFunction _ | S.IECFunctionBlock _ | S.IECProgram _ | S.IECType _ -> env
-  | S.IECConfiguration cfg ->
+  | S.IECConfiguration (_, cfg) ->
     List.fold_left cfg.variables ~f:(fun s v -> Env.add_vdecl s v) ~init:env
 
 (** Bound declaration of local variables to given env. *)
