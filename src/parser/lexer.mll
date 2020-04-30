@@ -17,19 +17,102 @@
 
   (* Keyword tables are necessary to get rid of transition table overflow errors.
      See: http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual026.html#toc111 *)
-  let generic_types_table = Caml.Hashtbl.create 97
+  (* This keyword table is also required to handle case-insensitive syntax of IEC 61131-3. *)
+  let keywords_table = Caml.Hashtbl.create 97
   let () =
-    Caml.List.iter (fun (x,y) -> Caml.Hashtbl.add generic_types_table x y)
-      [ "any",            T_ANY;
-        "any_derived",    T_ANY_DERIVED;
-        "any_elementary", T_ANY_ELEMENTARY;
-        "any_magnitude",  T_ANY_MAGNITUDE;
-        "any_num",        T_ANY_NUM;
-        "any_real",       T_ANY_REAL;
-        "any_int",        T_ANY_INT;
-        "any_bit",        T_ANY_BIT;
-        "any_string",     T_ANY_STRING;
-        "any_date",       T_ANY_DATE; ]
+    Caml.List.iter (fun (x,y) -> Caml.Hashtbl.add keywords_table x y)
+      [
+  (* {{{ Generic data types *)
+      "any",                T_ANY;
+      "any_derived",        T_ANY_DERIVED;
+      "any_elementary",     T_ANY_ELEMENTARY;
+      "any_magnitude",      T_ANY_MAGNITUDE;
+      "any_num",            T_ANY_NUM;
+      "any_real",           T_ANY_REAL;
+      "any_int",            T_ANY_INT;
+      "any_bit",            T_ANY_BIT;
+      "any_string",         T_ANY_STRING;
+      "any_date",           T_ANY_DATE;
+  (* }}} *)
+  (* {{{ Operators *)
+      "equ",                T_EQU;
+      "xor",                T_XOR;
+      "or",                 T_OR;
+      "and",                T_AND;
+  (* }}} *)
+  (* {{{ Elementary data types *)
+      "ltod",               T_LTOD;
+      "tod",                T_TOD;
+      "ltime_of_day",       T_LTIME_OF_DAY;
+      "time_of_day",        T_TIME_OF_DAY;
+      "ldt",                T_LDT;
+      "dt",                 T_DT;
+      "ldate_and_time",     T_LDATE_AND_TIME;
+      "date_and_time",      T_DATE_AND_TIME;
+      "ldate",              T_LDATE;
+      "date",               T_DATE;
+      "ltime",              T_LTIME;
+      "time",               T_TIME;
+      "bool",               T_BOOL;
+      "wchar",              T_WCHAR;
+      "char",               T_CHAR;
+      "string",             T_STRING;
+      "wstring",            T_WSTRING;
+      "ulint",              T_ULINT;
+      "udint",              T_UDINT;
+      "uint",               T_UINT;
+      "usint",              T_USINT;
+      "lint",               T_LINT;
+      "dint",               T_DINT;
+      "int",                T_INT;
+      "sint",               T_SINT;
+      "real",               T_REAL;
+      "lreal",              T_LREAL;
+      "lword",              T_LWORD;
+      "dword",              T_DWORD;
+      "word",               T_WORD;
+      "byte",               T_BYTE;
+      "sint",               T_SINT;
+  (* }}} *)
+  (* {{{ Keywords *)
+      "end_type",           T_END_TYPE;
+      "type",               T_TYPE;
+      "end_var",            T_END_VAR;
+      "var_global",         T_VAR_GLOBAL;
+      "var_config",         T_VAR_CONFIG;
+      "var_access",         T_VAR_ACCESS;
+      "var_external",       T_VAR_EXTERNAL;
+      "var_temp",           T_VAR_TEMP;
+      "var_in_out",         T_VAR_IN_OUT;
+      "var_output",         T_VAR_OUTPUT;
+      "var_input",          T_VAR_INPUT;
+      "var",                T_VAR;
+      "constant",           T_CONSTANT;
+      "task",               T_TASK;
+      "read_only",          T_READ_ONLY;
+      "read_write",         T_READ_WRITE;
+      "priority",           T_PRIORITY;
+      "interval",           T_INTERVAL;
+      "single",             T_SINGLE;
+      "end_resource",       T_END_RESOURCE;
+      "on",                 T_ON;
+      "resource",           T_RESOURCE;
+      "end_configuration",  T_END_CONFIGURATION;
+      "configuration",      T_CONFIGURATION;
+      "end_function_block", T_END_FUNCTION_BLOCK;
+      "function_block",     T_FUNCTION_BLOCK;
+      "end_function",       T_END_FUNCTION;
+      "function",           T_FUNCTION;
+      "end_program",        T_END_PROGRAM;
+      "program",            T_PROGRAM;
+      "non_retain",         T_NON_RETAIN;
+      "retain",             T_RETAIN;
+      "with",               T_WITH;
+      "at",                 T_AT;
+      "mod",                T_MOD;
+      "not",                T_NOT;
+  (* }}} *)
+      ]
 }
 
 let common_char_value = ['!' '#' '%' '&' '('-'@' 'A'-'Z' '['-'`' 'a'-'z' '{'-'~']
@@ -75,7 +158,7 @@ let fix_point_ms = (integer | (integer '.' integer)) "ms"
 let fix_point_us = (integer | (integer '.' integer)) "us"
 let fix_point_ns = (integer | (integer '.' integer)) "ns"
 
-let identifier = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
+let label = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
 
 rule initial tokinfo =
   parse
@@ -94,8 +177,6 @@ rule initial tokinfo =
   | "<"                  { T_LT }
   | "<>"                 { T_NEQ }
   | "="                  { T_EQ }
-  | "NOT"                { T_NOT }
-  | "MOD"                { T_MOD }
   | "/"                  { T_DIV }
   | "**"                 { T_POW }
   | "*"                  { T_MUL }
@@ -108,42 +189,8 @@ rule initial tokinfo =
   | ")"                  { T_RPAREN }
   | ":"                  { T_COLON }
   | ","                  { T_COMMA }
-  | "AT"                 { T_AT }
   | ";"                  { T_SEMICOLON }
   | "#"                  { T_SHARP }
-  | "WITH"               { T_WITH }
-  | "RETAIN"             { T_RETAIN }
-  | "NON_RETAIN"         { T_NON_RETAIN }
-  | "PROGRAM"            { T_PROGRAM }
-  | "END_PROGRAM"        { T_END_PROGRAM }
-  | "FUNCTION"           { T_FUNCTION }
-  | "END_FUNCTION"       { T_END_FUNCTION }
-  | "FUNCTION_BLOCK"     { T_FUNCTION_BLOCK }
-  | "END_FUNCTION_BLOCK" { T_END_FUNCTION_BLOCK }
-  | "CONFIGURATION"      { T_CONFIGURATION }
-  | "END_CONFIGURATION"  { T_END_CONFIGURATION }
-  | "RESOURCE"           { T_RESOURCE }
-  | "ON"                 { T_ON }
-  | "END_RESOURCE"       { T_END_RESOURCE }
-  | "SINGLE"             { T_SINGLE }
-  | "INTERVAL"           { T_INTERVAL }
-  | "PRIORITY"           { T_PRIORITY }
-  | "READ_WRITE"         { T_READ_WRITE }
-  | "READ_ONLY"          { T_READ_ONLY }
-  | "TASK"               { T_TASK }
-  | "CONSTANT"           { T_CONSTANT }
-  | "VAR"                { T_VAR }
-  | "VAR_INPUT"          { T_VAR_INPUT }
-  | "VAR_OUTPUT"         { T_VAR_OUTPUT }
-  | "VAR_IN_OUT"         { T_VAR_IN_OUT }
-  | "VAR_TEMP"           { T_VAR_TEMP }
-  | "VAR_EXTERNAL"       { T_VAR_EXTERNAL }
-  | "VAR_ACCESS"         { T_VAR_ACCESS }
-  | "VAR_CONFIG"         { T_VAR_CONFIG }
-  | "VAR_GLOBAL"         { T_VAR_GLOBAL }
-  | "END_VAR"            { T_END_VAR }
-  | "TYPE"               { T_TYPE }
-  | "END_TYPE"           { T_END_TYPE }
   (* }}} *)
 
   (* {{{ Helpers for datetime types *)
@@ -153,55 +200,12 @@ rule initial tokinfo =
   | "LD#" { T_LDSHARP }
   (* }}} *)
 
-  (* {{{ Elementary data types *)
-  | "SINT"           { T_SINT }
-  | "BYTE"           { T_BYTE }
-  | "WORD"           { T_WORD }
-  | "DWORD"          { T_DWORD }
-  | "LWORD"          { T_LWORD }
-  | "LREAL"          { T_LREAL }
-  | "REAL"           { T_REAL }
-  | "SINT"           { T_SINT }
-  | "INT"            { T_INT }
-  | "DINT"           { T_DINT }
-  | "LINT"           { T_LINT }
-  | "USINT"          { T_USINT }
-  | "UINT"           { T_UINT }
-  | "UDINT"          { T_UDINT }
-  | "ULINT"          { T_ULINT }
-  | "WSTRING"        { T_WSTRING }
-  | "STRING"         { T_STRING }
-  | "CHAR"           { T_CHAR }
-  | "WCHAR"          { T_WCHAR }
-  | "BOOL"           { T_BOOL }
-  | "TIME"           { T_TIME }
-  | "LTIME"          { T_LTIME }
-  | "DATE"           { T_DATE }
-  | "LDATE"          { T_LDATE }
-  | "DATE_AND_TIME"  { T_DATE_AND_TIME }
-  | "LDATE_AND_TIME" { T_LDATE_AND_TIME }
-  | "DT"             { T_DT }
-  | "LDT"            { T_LDT }
-  | "TIME_OF_DAY"    { T_TIME_OF_DAY }
-  | "LTIME_OF_DAY"   { T_LTIME_OF_DAY }
-  | "TOD"            { T_TOD }
-  | "LTOD"           { T_LTOD }
-  (* }}} *)
-
-  (* {{{ Generic data types *)
-  | "any" ['_' 'A'-'Z' 'a'-'z'] as v
-  { try Caml.Hashtbl.find generic_types_table (String.lowercase v)
-      with Not_found_s _ -> (let ti = tokinfo lexbuf in T_IDENTIFIER(v, ti)) }
-  (* }}} *)
-
   (* {{{ ST operators *)
-  | "OR"             { T_OR }
-  | "XOR"            { T_XOR }
-  | "AND" | "&"      { T_AND }
-  | "EQU"            { T_EQU }
+  | "&"      { T_AND }
   (* }}} *)
 
   (* {{{ ST control statements *)
+  (* TODO: Case-insensitive *)
   | "IF"             { let ti = tokinfo lexbuf in T_IF(ti) }
   | "THEN"           { let ti = tokinfo lexbuf in T_THEN(ti) }
   | "ELSIF"          { let ti = tokinfo lexbuf in T_ELSIF(ti) }
@@ -224,6 +228,21 @@ rule initial tokinfo =
   | "CONTINUE"       { let ti = tokinfo lexbuf in T_CONTINUE(ti) }
   | "RETURN"         { let ti = tokinfo lexbuf in T_RETURN(ti) }
 (* }}} *)
+
+  (* {{{ Case-insensitive lexing of identifiers and reserved keywords. *)
+  | label as v
+  {
+    try
+      let keyword = Caml.Hashtbl.find keywords_table (String.lowercase v) in
+      (* Printf.printf "KEYWORD: %s\n" v; *)
+      keyword
+      with Not_found -> (
+        (* Printf.printf "ID: %s\n" v; *)
+        let ti = tokinfo lexbuf in
+        T_IDENTIFIER(v, ti)
+      )
+  }
+  (* }}} *)
 
   (* {{{ Integer literals *)
   | integer as i
@@ -336,15 +355,6 @@ rule initial tokinfo =
       (* Printf.printf "TIME_NS: %s -> %f\n" v vf; *)
       let ti = tokinfo lexbuf in
       T_TIME_INTERVAL_NS(vf, ti)
-  }
-  (* }}} *)
-
-  (* {{{ Identifiers *)
-  | identifier as id
-  {
-      (* Printf.printf "ID: %s\n" id; *)
-      let ti = tokinfo lexbuf in
-      T_IDENTIFIER(id, ti)
   }
   (* }}} *)
 

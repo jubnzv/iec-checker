@@ -321,6 +321,7 @@ and derived_ty_decl =
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string
+  | DTySpecGeneric of generic_ty
 [@@deriving to_yojson]
 
 and subrange_ty_spec =

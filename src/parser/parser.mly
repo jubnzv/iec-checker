@@ -548,6 +548,10 @@ date_and_time:
 let data_type_access :=
   | ~ = elem_type_name; <S.TyElementary>
   | ~ = derived_type_access; <S.TyDerived>
+  (* NOTE:
+     This is not represtned in the IEC 61131-3 3rd ed. grammar. But there are no generic types at all!
+     I believe it should work like in 2nd edition of the Standard. *)
+  | ~ = generic_type_name; <S.TyGeneric>
 
 let elem_type_name :=
   | ~ = numeric_type_name; <>
@@ -775,6 +779,10 @@ let assign_constant_expr :=
 let simple_spec :=
   | ~ = elem_type_name; <S.DTySpecElementary>
   | ~ = simple_type_access; <S.DTySpecSimple>
+  (* NOTE:
+    This is not represented in 3rd edition, search my comment for
+    generic_type_name` bellow. *)
+  | ~ = generic_type_name; <S.DTySpecGeneric>
 
 (* Implementation is modified to avoid shift/reduce conflicts *)
 let subrange_type_decl :=
@@ -965,22 +973,22 @@ variable_name:
 
 (* struct_elem_select: *)
 
-input_decls:
-  | T_VAR_INPUT  vds = input_decl T_END_VAR
+let input_decls :=
+  | T_VAR_INPUT; vds = input_decl; T_END_VAR;
   { List.rev vds }
-  | T_VAR_INPUT T_RETAIN vds = input_decl T_END_VAR
+  | T_VAR_INPUT; T_RETAIN; vds = input_decl; T_END_VAR;
   {
     let vdsr = List.rev vds in
     List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QRetain)) vdsr
   }
-  | T_VAR_INPUT T_NON_RETAIN vds = input_decl T_END_VAR
+  | T_VAR_INPUT; T_NON_RETAIN; vds = input_decl; T_END_VAR;
   {
     let vdsr = List.rev vds in
     List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QNonRetain)) vdsr
   }
 
-input_decl:
-  | vs = var_decl_init_list
+let input_decl :=
+  | vs = var_decl_init_list;
   {
     let vsr = List.rev vs in
     List.map ~f:(fun v -> (
@@ -1000,10 +1008,10 @@ let var_decl_init :=
   }
 
 (* Helper rule for var_decl_init *)
-var_decl_init_list:
-  | v = var_decl_init T_SEMICOLON
+let var_decl_init_list :=
+  | v = var_decl_init; T_SEMICOLON;
   { v }
-  | vs = var_decl_init_list; v = var_decl_init T_SEMICOLON
+  | vs = var_decl_init_list; v = var_decl_init; T_SEMICOLON;
   { List.append vs v }
 
 (* ref_var_decl: *)
@@ -2009,27 +2017,27 @@ repeat_stmt:
  * Helper rules and symbols which doesn't defined in standard grammar explicitly *)
 
 (* Generic data types *)
-generic_type_name:
-    | T_ANY
-    { S.ANY }
-    | T_ANY_DERIVED
-    { S.ANY_DERIVED }
-    | T_ANY_ELEMENTARY
-    { S.ANY_ELEMENTARY }
-    | T_ANY_MAGNITUDE
-    { S.ANY_MAGNITUDE }
-    | T_ANY_NUM
-    { S.ANY_NUM }
-    | T_ANY_REAL
-    { S.ANY_REAL }
-    | T_ANY_INT
-    { S.ANY_INT }
-    | T_ANY_BIT
-    { S.ANY_BIT }
-    | T_ANY_STRING
-    { S.ANY_STRING }
-    | T_ANY_DATE
-    { S.ANY_DATE }
+let generic_type_name :=
+  | T_ANY;
+  { S.ANY }
+  | T_ANY_DERIVED;
+  { S.ANY_DERIVED }
+  | T_ANY_ELEMENTARY;
+  { S.ANY_ELEMENTARY }
+  | T_ANY_MAGNITUDE;
+  { S.ANY_MAGNITUDE }
+  | T_ANY_NUM;
+  { S.ANY_NUM }
+  | T_ANY_REAL;
+  { S.ANY_REAL }
+  | T_ANY_INT;
+  { S.ANY_INT }
+  | T_ANY_BIT;
+  { S.ANY_BIT }
+  | T_ANY_STRING;
+  { S.ANY_STRING }
+  | T_ANY_DATE;
+  { S.ANY_DATE }
 
 let dir_var_location_prefix :=
   | id = T_IDENTIFIER;
