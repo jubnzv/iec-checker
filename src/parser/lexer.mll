@@ -239,7 +239,7 @@ rule initial tokinfo =
       with Not_found -> (
         (* Printf.printf "ID: %s\n" v; *)
         let ti = tokinfo lexbuf in
-        T_IDENTIFIER(v, ti)
+        T_IDENTIFIER(String.uppercase(v), ti)
       )
   }
   (* }}} *)

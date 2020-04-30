@@ -1,10 +1,11 @@
-(* Keywords are case-insensitive *)
+(* Keywords and identifiers are case-insensitive *)
 Program simple
   VaR
     v01 : DiNt;
   eND_var
 
   v01 := 92;
+  V01 := 92;
 END_PROGRAM
 
 PRoGRAM square_root
