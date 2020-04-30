@@ -11,4 +11,5 @@ TYPE
 
   (* Subrange types *)
   ANALOG_DATA : INT (-4095 .. 4095);
+
 END_TYPE

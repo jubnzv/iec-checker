@@ -1,4 +1,4 @@
-(* Based on IEC61131-3 3rd edition ANNEX A - Formal specification of language elements. *)
+(* Based on IEC61131-3 3rd edition: ANNEX A - Formal specification of language elements *)
 {
   open Parser
   open Lexing
@@ -15,21 +15,21 @@
       Lexing.pos_bol = pos.Lexing.pos_cnum;
     }
 
-  (* Keywords tables that are necessary to get rid of transition table overflow errors.
+  (* Keyword tables are necessary to get rid of transition table overflow errors.
      See: http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual026.html#toc111 *)
-  let generic_types_table  = Caml.Hashtbl.create 97
+  let generic_types_table = Caml.Hashtbl.create 97
   let () =
     Caml.List.iter (fun (x,y) -> Caml.Hashtbl.add generic_types_table x y)
-      [ "ANY",            T_ANY;
-        "ANY_DERIVED",    T_ANY_DERIVED;
-        "ANY_ELEMENTARY", T_ANY_ELEMENTARY;
-        "ANY_MAGNITUDE",  T_ANY_MAGNITUDE;
-        "ANY_NUM",        T_ANY_NUM;
-        "ANY_REAL",       T_ANY_REAL;
-        "ANY_INT",        T_ANY_INT;
-        "ANY_BIT",        T_ANY_BIT;
-        "ANY_STRING",     T_ANY_STRING;
-        "ANY_DATE",       T_ANY_DATE; ]
+      [ "any",            T_ANY;
+        "any_derived",    T_ANY_DERIVED;
+        "any_elementary", T_ANY_ELEMENTARY;
+        "any_magnitude",  T_ANY_MAGNITUDE;
+        "any_num",        T_ANY_NUM;
+        "any_real",       T_ANY_REAL;
+        "any_int",        T_ANY_INT;
+        "any_bit",        T_ANY_BIT;
+        "any_string",     T_ANY_STRING;
+        "any_date",       T_ANY_DATE; ]
 }
 
 let common_char_value = ['!' '#' '%' '&' '('-'@' 'A'-'Z' '['-'`' 'a'-'z' '{'-'~']
@@ -40,7 +40,7 @@ let whitespace = ['\r' '\t' ' ']
 let letter	    = ['A'-'Z' 'a'-'z']
 let digit		= ['0'-'9']
 let octal_digit	= ['0'-'7']
-let hex_digit   = digit | ['A'-'F']
+let hex_digit   = digit | ['A'-'F'] | ['a'-'f']
 
 let integer = digit+(('_')?digit)*
 let bit = ['0' '1']
@@ -75,7 +75,7 @@ let fix_point_ms = (integer | (integer '.' integer)) "ms"
 let fix_point_us = (integer | (integer '.' integer)) "us"
 let fix_point_ns = (integer | (integer '.' integer)) "ns"
 
-let identifier  = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
+let identifier = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
 
 rule initial tokinfo =
   parse
@@ -189,8 +189,8 @@ rule initial tokinfo =
   (* }}} *)
 
   (* {{{ Generic data types *)
-  | "ANY" ['_' 'A'-'Z'] as v
-  { try Caml.Hashtbl.find generic_types_table v
+  | "any" ['_' 'A'-'Z' 'a'-'z'] as v
+  { try Caml.Hashtbl.find generic_types_table (String.lowercase v)
       with Not_found_s _ -> (let ti = tokinfo lexbuf in T_IDENTIFIER(v, ti)) }
   (* }}} *)
 
