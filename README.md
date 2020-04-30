@@ -4,13 +4,11 @@
 
 This project aims to implement an open source tool for static code analysis of IEC61131-3 programs.
 
-It is currently at an early stage of development, binary releases and installation instructions will be available later.
-
-The following features are currently supported:
+The following features are currently implemented:
 + IEC61131-3 3 ed. parser for [Structured Text](https://en.wikipedia.org/wiki/Structured_text) written using modern [menhir](http://gallium.inria.fr/~fpottier/menhir/) syntax. Almost all IEC syntax constructions are supported, excluding some user-defines types and OO features.
 + Some checks for [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines);
-+ declaration analysis;
-+ WIP control flow analysis;
++ Simple declaration analysis;
++ Control flow analysis (WIP);
 + Ability to dump AST of the IEC program into JSON file (`-dump true` argument);
 
 ## Installation
@@ -48,22 +46,24 @@ Check some demo programs written in Structured Text:
 python3 checker.py test/st/*.st
 ```
 
-This will gives the following output:
+This will gives you the following output:
 ```
+Report for test/st/cfg.st:
+No errors found!
 Report for test/st/dead-code.st:
-[PLCOPEN-L17] 11:8: Each IF instruction should have an ELSE clause
-[PLCOPEN-L17] 15:8: Each IF instruction should have an ELSE clause
+[PLCOPEN-L17] 11:8 Each IF instruction should have an ELSE clause
+[PLCOPEN-L17] 15:8 Each IF instruction should have an ELSE clause
 Report for test/st/declaration-analysis.st:
 [DeclarationAnalysis] Initial subrange value -4096 does not fit specified range (-4095 .. 4095)
 [DeclarationAnalysis] Initial subrange value 4099 does not fit specified range (-4095 .. 4095)
 [DeclarationAnalysis] Length of initialization string literal exceeds string length (6 > 5)
 Report for test/st/plcopen-cp13.st:
-[PLCOPEN-CP13] 8:31: POUs shall not call themselves directly or indirectly
+[PLCOPEN-CP13] 8:31 POUs shall not call themselves directly or indirectly
 Report for test/st/plcopen-l17.st:
-[PLCOPEN-L17] 10:4: Each IF instruction should have an ELSE clause
+[PLCOPEN-L17] 10:4 Each IF instruction should have an ELSE clause
 Report for test/st/plcopen-n3.st:
-[PLCOPEN-N3] 6:7: IEC data types and standard library objects must be avoided
+[PLCOPEN-N3] 6:7 IEC data types and standard library objects must be avoided
 Report for test/st/zero-division.st:
-[ZeroDivision] 7:12: Constant 19 is divided to zero!
-[ZeroDivision] 9:14: Variable Var2 is divided to zero!
+[ZeroDivision] 7:12 Constant 19 is divided to zero!
+[ZeroDivision] 9:14 Variable Var2 is divided to zero!
 ```

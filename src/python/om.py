@@ -201,4 +201,4 @@ class Warning:
     def __str__(self):
         if self.linenr == 0 and self.column == 0:
             return f"[{self.id}] {self.msg}"
-        return f"[{self.id}] {self.linenr}:{self.column}: {self.msg}"
+        return f"[{self.id}] {self.linenr}:{self.column} {self.msg}"
