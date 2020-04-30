@@ -110,11 +110,6 @@ module DirVar = struct
   type location = LocI | LocQ | LocM
   [@@deriving to_yojson]
 
-  let loc_to_string = function
-    | LocI -> "I"
-    | LocQ -> "Q"
-    | LocM -> "M"
-
   type size =
     | SizeX    (** single bit *)
     | SizeNone (** single bit *)
@@ -124,31 +119,84 @@ module DirVar = struct
     | SizeL    (** quad word (64 bits) *)
   [@@deriving to_yojson]
 
-  let size_to_string = function
-    | None -> ""
-    | Some(s) -> (match s with
-        | SizeX    -> "X"
-        | SizeNone -> ""
-        | SizeB    -> "B"
-        | SizeW    -> "W"
-        | SizeD    -> "D"
-        | SizeL    -> "L")
+  let path_to_string path =
+    List.fold_left path
+      ~init:""
+      ~f:(fun s p -> s ^ (Printf.sprintf ".%d" p))
 
-  let path_to_string path = List.fold_left path ~f:(fun s p -> s ^ (Printf.sprintf ".%d" p)) ~init:""
+  type t = {
+    name: string;
+    ti: TI.t;
+    loc: location option;
+    sz: size option;
+    is_partly_located: bool; (** Variable is defined using '*' symbol *)
+    path: int list;
+  } [@@deriving to_yojson]
 
-  type t = { name: string; ti: TI.t; loc: location; sz: size option; path: int list; } [@@deriving to_yojson]
-
-  let create opt_name ti loc sz path =
-    let name =
-      match opt_name with
-      | None -> let n = Printf.sprintf "%s%s%s" (loc_to_string loc) (size_to_string sz) (path_to_string path) in n
-      | Some(n) -> n
-    in
-    { name; ti; loc; sz; path; }
+  let create ti =
+    let name = "" in
+    let loc = None in
+    let sz = None in
+    let is_partly_located = false in
+    let path = [] in
+    { name; ti; loc; sz; is_partly_located; path }
 
   let get_name var = var.name
-
   let get_ti var = var.ti
+  let get_loc var = var.loc
+  let get_size var = var.sz
+  let get_is_partly_located var = var.is_partly_located
+  let get_path var = var.path
+
+  let set_name var v =
+    { var with name = v }
+  let set_ti var v =
+    { var with ti = v }
+  let set_loc var v =
+    { var with loc = Some(v) }
+  let set_size var v =
+    { var with sz = Some(v) }
+  let set_is_partly_located var v =
+    { var with is_partly_located = v }
+  let set_path var v =
+    { var with path = v }
+
+  let size_to_string = function
+    | SizeX    -> "X"
+    | SizeNone -> "" (* TODO: Always single-byte value? *)
+    | SizeB    -> "B"
+    | SizeW    -> "W"
+    | SizeD    -> "D"
+    | SizeL    -> "L"
+
+  let size_of_string v =
+    if String.equal v "X" then
+      Some(SizeX)
+    else if String.equal v "B" then
+      Some(SizeB)
+    else if String.equal v "W" then
+      Some(SizeW)
+    else if String.equal v "D" then
+      Some(SizeD)
+    else if String.equal v "L" then
+      Some(SizeL)
+    else
+      None
+
+  let location_to_string = function
+    | LocI -> "I"
+    | LocQ -> "Q"
+    | LocM -> "M"
+
+  let location_of_string v =
+    if String.equal v "I" then
+      Some(LocI)
+    else if String.equal v "Q" then
+      Some(LocQ)
+    else if String.equal v "M" then
+      Some(LocM)
+    else
+      None
 
   let to_yojson t = to_yojson t
 end

@@ -27,7 +27,7 @@ def test_parser_errors():
         f = os.path.join('./test/st/bad/', fname)
         fdump = f'{f}.dump.json'
         checker_warnings, rc = run_checker(f)
-        assert rc == 1
+        assert rc == 1, f"Incorrect exit code for {f}"
         assert len(checker_warnings) > 0
         with DumpManager(fdump):
             pass
@@ -38,6 +38,15 @@ def test_no_parser_errors():
         f = os.path.join('./test/st/good/', fname)
         fdump = f'{f}.dump.json'
         checker_warnings, rc = run_checker(f)
-        assert rc == 0
+        assert rc == 0, f"Incorrect exit code for {f}"
         with DumpManager(fdump):
             pass
+
+
+def test_direct_variables():
+    f = './test/st/good/direct-variables.st'
+    fdump = f'{f}.dump.json'
+    checker_warnings, rc = run_checker(f)
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme

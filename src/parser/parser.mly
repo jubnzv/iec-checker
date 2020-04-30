@@ -60,7 +60,6 @@
 %token T_LBRACK    "["
 %token T_RBRACK    "]"
 %token T_SHARP     "#"
-%token T_PERCENT   "%"
 %token T_COLON     ":"
 %token T_PLUS      "+"
 %token T_MINUS     "-"
@@ -193,6 +192,8 @@
 
 %token <string * IECCheckerCore.Tok_info.t> T_SSTRING_LITERAL
 %token <string * IECCheckerCore.Tok_info.t> T_DSTRING_LITERAL
+
+%token <IECCheckerCore.Syntax.DirVar.t * IECCheckerCore.Tok_info.t> T_DIR_VAR
 
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_D
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_H
@@ -899,7 +900,7 @@ let str_type_decl :=
 
 (* {{{ Table 16 -- Direct variables *)
 let direct_variable :=
-  | T_PERCENT; loc = dir_var_location_prefix; sz = dir_var_size_prefix; pcs = list(unsigned_int);
+  | dir_var = T_DIR_VAR; pcs = list(unsigned_int);
   {
     let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
     S.VarDecl.SpecDirect(None)
@@ -929,10 +930,10 @@ let direct_variable :=
 (* }}} *)
 
 (* {{{ Table 13 -- Variables declaration / Table 14 -- Variables initialization *)
-variable:
-  (* | v = direct_variable *)
+let variable :=
+  (* | v = direct_variable; *)
   (* | {} *)
-  | v = symbolic_variable
+  | v = symbolic_variable;
   { S.SymVar(v) }
 
 symbolic_variable:
@@ -1246,27 +1247,27 @@ let located_at :=
 
 (* d_byte_str_spec: *)
 
-loc_partly_var_decl:
-    | T_VAR vl = list(loc_partly_var) T_END_VAR
-    { List.rev vl }
-    | T_VAR T_RETAIN vl = list(loc_partly_var) T_END_VAR
-    { List.rev vl } (* TODO: add qualifier *)
-    | T_VAR T_NON_RETAIN vl = list(loc_partly_var) T_END_VAR
-    { List.rev vl } (* TODO: add qualifier *)
+let loc_partly_var_decl :=
+  | T_VAR; vl = list(loc_partly_var); T_END_VAR;
+  { List.rev vl }
+  | T_VAR; T_RETAIN; vl = list(loc_partly_var); T_END_VAR;
+  { List.rev vl } (* TODO: Add retain *)
+  | T_VAR; T_NON_RETAIN; vl = list(loc_partly_var); T_END_VAR;
+  { List.rev vl } (* TODO: Add non-retain *)
 
-loc_partly_var:
-    | out = variable_name; T_AT T_PERCENT l = dir_var_location_prefix T_MUL T_COLON s = var_spec T_SEMICOLON
-    {
-        let (n, ti) = out in
-        let v = S.SymVar.create n ti in
-        let vv = S.SymVar(v) in
-        let s = S.VarDecl.SpecDirect(None) in
-        S.VarDecl.create vv s
-    }
+let loc_partly_var :=
+  | out = variable_name; T_AT; dir_var = T_DIR_VAR; T_COLON; s = var_spec; T_SEMICOLON;
+  {
+    let (n, ti) = out in
+    let v = S.SymVar.create n ti in
+    let vv = S.SymVar(v) in
+    let s = S.VarDecl.SpecDirect(None) in
+    S.VarDecl.create vv s
+  }
 
-var_spec:
-    | ty = simple_spec
-    { ty }
+let var_spec :=
+  | ty = simple_spec;
+  { ty }
 
 (* }}} *)
 
@@ -1842,12 +1843,12 @@ let variable_expr :=
     S.SymVar(sv)
   }
 
-multibit_part_access:
-  | T_DOT v = unsigned_int
+let multibit_part_access :=
+  | T_DOT; v = unsigned_int;
   {  }
-  | T_DOT T_PERCENT sz = dir_var_size_prefix v = unsigned_int
+  | T_DOT; dir_var = T_DIR_VAR; v = unsigned_int;
   {  }
-  | T_DOT T_PERCENT v = unsigned_int
+  | T_DOT; v = unsigned_int;
   {  }
 
 func_call:
@@ -2030,67 +2031,49 @@ generic_type_name:
     | T_ANY_DATE
     { S.ANY_DATE }
 
-dir_var_location_prefix:
-  | id = T_IDENTIFIER
+let dir_var_location_prefix :=
+  | id = T_IDENTIFIER;
   {
-    let (v, _) = id in
-      if String.equal v "I" then
-        S.DirVar.LocI
-      else if String.equal v "Q" then
-        S.DirVar.LocQ
-      else if String.equal v "M" then
-        S.DirVar.LocM
-      else
-        raise (E.SyntaxError ("Unknown direct variable location prefix: " ^ v))
+    let (id_str, _) = id in
+    get_dir_var_loc_exn id_str
   }
 
-dir_var_size_prefix:
-  | id = T_IDENTIFIER
+let dir_var_size_prefix :=
+  | id = T_IDENTIFIER;
   {
-    let (v, _) = id in
-      if String.equal v "X" then
-        S.DirVar.SizeX
-      else if String.equal v "B" then
-        S.DirVar.SizeB
-      else if String.equal v "W" then
-        S.DirVar.SizeW
-      else if String.equal v "D" then
-        S.DirVar.SizeD
-      else if String.equal v "L" then
-        S.DirVar.SizeL
-      else
-        raise (E.SyntaxError ("Unknown direct variable size prefix: " ^ v))
+    let (id_str, _) = id in
+    get_dir_var_size_exn id_str
   }
 
-compare_expr_operator:
-    | T_GT
-    | { S.GT }
-    | T_LT
-    | { S.LT }
-    | T_GE
-    | { S.GE }
-    | T_LE
-    | { S.LE }
+let compare_expr_operator :=
+  | T_GT;
+  { S.GT }
+  | T_LT;
+  { S.LT }
+  | T_GE;
+  { S.GE }
+  | T_LE;
+  { S.LE }
 
-add_operator:
-    | T_PLUS
-    | { S.ADD }
-    | T_MINUS
-    | { S.SUB }
+let add_operator :=
+  | T_PLUS;
+  { S.ADD }
+  | T_MINUS;
+  { S.SUB }
 
-multiply_operator:
-    | T_MUL
-    { S.MUL }
-    | T_DIV
-    { S.DIV }
-    | T_MOD
-    { S.MOD }
+let multiply_operator :=
+  | T_MUL;
+  { S.MUL }
+  | T_DIV;
+  { S.DIV }
+  | T_MOD;
+  { S.MOD }
 
-unary_operator:
-    | T_MINUS
-    { S.NEG }
-    | T_NOT
-    { S.NEG }
+let unary_operator :=
+  | T_MINUS;
+  { S.NEG }
+  | T_NOT;
+  { S.NEG }
 (* }}} *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)

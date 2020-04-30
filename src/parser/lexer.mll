@@ -4,6 +4,8 @@
   open Lexing
   open Core_kernel
 
+  open IECCheckerCore
+
   exception LexingError of string
 
   let incr_linenum lexbuf =
@@ -109,7 +111,6 @@ rule initial tokinfo =
   | "AT"                 { T_AT }
   | ";"                  { T_SEMICOLON }
   | "#"                  { T_SHARP }
-  | "%"                  { T_PERCENT }
   | "WITH"               { T_WITH }
   | "RETAIN"             { T_RETAIN }
   | "NON_RETAIN"         { T_NON_RETAIN }
@@ -347,14 +348,15 @@ rule initial tokinfo =
   }
   (* }}} *)
 
-  (* {{{ etc. *)
+  (* {{{ Misc. *)
+  | "(*"             { comment tokinfo 1 lexbuf }
+  | "%"              { let ti = tokinfo lexbuf in direct_variable (Syntax.DirVar.create ti) ti lexbuf }
+  | "STRING#" '\''   { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
+  | '\''             { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
+  | "STRING#" '"'    { let ti = tokinfo lexbuf in dstring_literal (Buffer.create 19) ti lexbuf }
+  | '"'              { let ti = tokinfo lexbuf in dstring_literal (Buffer.create 19) ti lexbuf }
   | eof              { T_EOF }
-  | "(*" { comment tokinfo 1 lexbuf }
-  | "STRING#" '\'' { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
-  | '\'' { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
-  | "STRING#" '"' { let ti = tokinfo lexbuf in dstring_literal (Buffer.create 19) ti lexbuf }
-  | '"' { let ti = tokinfo lexbuf in dstring_literal (Buffer.create 19) ti lexbuf }
-  | _ { raise (LexingError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
+  | _                { raise (LexingError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
   (* }}} *)
 
   (* {{{ String literals *)
@@ -370,8 +372,8 @@ and sstring_literal buf ti = parse
     (* Printf.printf "SSTRING: %s" (Buffer.contents buf); *)
     T_SSTRING_LITERAL((Buffer.contents buf), ti)
   }
-  | _ { raise (LexingError ("Illegal string character: " ^ (Lexing.lexeme lexbuf))) }
-  | eof { raise (LexingError ("String is not terminated")) }
+  | eof { raise (LexingError "String is not terminated") }
+  | _   { raise (LexingError ("Illegal string character: " ^ (Lexing.lexeme lexbuf))) }
 
 and dstring_literal buf ti = parse
   | '\'' { Buffer.add_char buf '\''; dstring_literal buf ti lexbuf }
@@ -385,8 +387,73 @@ and dstring_literal buf ti = parse
     (* Printf.printf "DSTRING: %s" (Buffer.contents buf); *)
     T_DSTRING_LITERAL((Buffer.contents buf), ti)
   }
-  | _ { raise (LexingError ("Illegal string character: " ^ (Lexing.lexeme lexbuf))) }
-  | eof { raise (LexingError ("String is not terminated")) }
+  | eof { raise (LexingError "String is not terminated") }
+  | _   { raise (LexingError ("Illegal string character: " ^ (Lexing.lexeme lexbuf))) }
+  (* }}}*)
+
+  (* {{{ Direct variables *)
+and direct_variable var ti = parse
+  | "I" | "Q" | "M"
+  {
+    match (Syntax.DirVar.get_loc var) with
+    (* Can't set twice *)
+    | Some _ -> raise (LexingError ("Invalid direct variable location: " ^ (Lexing.lexeme lexbuf)))
+    | None   -> (
+      let loc_opt = Syntax.DirVar.location_of_string (Lexing.lexeme lexbuf) in
+      match loc_opt with
+      | None      -> raise (LexingError ("Invalid direct variable location: " ^ (Lexing.lexeme lexbuf)))
+      | Some(loc) -> (
+        let var = Syntax.DirVar.set_loc var loc in
+        direct_variable var ti lexbuf
+      )
+    )
+  }
+  | "X" | "B" | "W" | "D" | "L"
+  {
+    match (Syntax.DirVar.get_size var) with
+    (* Can't set twice *)
+    | Some _ -> raise (LexingError ("Invalid direct variable size: " ^ (Lexing.lexeme lexbuf)))
+    | None   -> (
+      let size_opt = Syntax.DirVar.size_of_string (Lexing.lexeme lexbuf) in
+      match size_opt with
+      | None     -> raise (LexingError ("Invalid direct variable size: " ^ (Lexing.lexeme lexbuf)))
+      | Some(sz) -> (
+        let var = Syntax.DirVar.set_size var sz in
+        direct_variable var ti lexbuf
+      )
+    )
+  }
+  | digit+
+  {
+    (* First digit in the path *)
+    let path_value = int_of_string (Lexing.lexeme lexbuf) in
+    let var = Syntax.DirVar.set_path var [path_value] in
+    direct_variable var ti lexbuf
+  }
+  | '.' digit+
+  {
+    let str_val = (Lexing.lexeme lexbuf) in
+    let new_item = int_of_string (String.slice str_val 1 (String.length str_val)) in
+    let path_value = Syntax.DirVar.get_path var in
+    if List.is_empty path_value then
+      (* something like '%QD.1' *)
+      raise (LexingError ("Invalid direct variable path: " ^ (Lexing.lexeme lexbuf)))
+    else
+      let new_path = path_value @ [new_item] in
+      let var = Syntax.DirVar.set_path var new_path in
+      direct_variable var ti lexbuf
+  }
+  | '*'
+  {
+    if (Syntax.DirVar.get_is_partly_located var) then
+      (* Can't set twice *)
+      raise (LexingError ("Invalid direct variable definition: " ^ (Lexing.lexeme lexbuf)))
+    else
+      let var = Syntax.DirVar.set_is_partly_located var true in
+      direct_variable var ti lexbuf
+  }
+  | eof { T_EOF }
+  | _   { T_DIR_VAR(var, ti) }
   (* }}}*)
 
   (* {{{ Comments *)

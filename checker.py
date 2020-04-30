@@ -13,6 +13,7 @@ def main(files: List[str]):
     for f in files:
         checker_warnings, rc = run_checker(f)
         if rc != 0:
+            print(f'Report for {f}:')
             for w in checker_warnings:
                 print(f'{w}')
             continue

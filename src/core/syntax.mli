@@ -94,8 +94,29 @@ module DirVar : sig
     | SizeL    (** quad word (64 bits) *)
   [@@deriving to_yojson]
 
-  val create : string option -> TI.t -> location -> size option -> int list -> t
+  val create : TI.t -> t
+  (** Create an empty instance of the direct variable. *)
+
   val get_name : t -> string
+  val get_ti : t -> TI.t
+  val get_loc : t -> location option
+  val get_size : t -> size option
+  val get_is_partly_located : t -> bool
+  val get_path : t -> int list
+
+  val set_name : t -> string -> t
+  val set_ti : t -> TI.t -> t
+  val set_loc : t -> location -> t
+  val set_size : t -> size -> t
+  val set_is_partly_located : t -> bool -> t
+  val set_path : t -> int list -> t
+
+  val size_to_string : size -> string
+  val size_of_string : string -> size option
+
+  val location_to_string : location -> string
+  val location_of_string : string -> location option
+
   val to_yojson : t -> Yojson.Safe.t
 end
 

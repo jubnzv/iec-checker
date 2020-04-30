@@ -22,7 +22,7 @@ PROGRAM program1
     LocalVar0 : DINT;
   END_VAR
 
-  LocalVar0 := 0x42;
+  LocalVar0 := 16#42;
 END_PROGRAM
 
 CONFIGURATION config

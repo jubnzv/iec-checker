@@ -19,6 +19,6 @@ FUNCTION test_dead_code : INT
   END_FOR;
 
   RETURN;
-  some_var := SQRT(0x42); (* CFA error: unreachable code *)
+  some_var := SQRT(16#42); (* CFA error: unreachable code *)
 END_FUNCTION
 
