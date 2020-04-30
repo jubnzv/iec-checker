@@ -11,8 +11,8 @@ type t
 (** Type of a basic block. *)
 type bb_ty =
   | BB (** Regular basic block *)
-  | BBInit (** Initial basic block *)
-  | BBOut (** Return/exit node *)
+  | BBEntry (** Point of entry *)
+  | BBExit (** Point of exit *)
   | BBJump (** Indirect jump to/from a node *)
 
 (** Basic block *)
@@ -20,17 +20,10 @@ type bb =
   {
     id : int;
     ty: bb_ty;
-    mutable in_edges : edge list; (** Incoming edges *)
-    mutable out_edges : edge list; (** Outcoming edges *)
+    mutable preds : int list; (** Ids of predecessor nodes *)
+    mutable succs : int list; (** Ids of successor nodes *)
     stmt : S.statement;
     pou : S.iec_library_element; (** The POU that this BB belongs to *)
-  }
-
-(** Directed edges to represent jumps between basic blocks *)
-and edge =
-  {
-    in_bb : int; (** Input basic block id *)
-    out_bb : int; (** Output basic block id *)
   }
 
 val mk : S.iec_library_element -> t

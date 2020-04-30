@@ -8,8 +8,8 @@ module TI = Tok_info
 
 type bb_ty =
   | BB (** Regular basic block *)
-  | BBInit (** Initial basic block *)
-  | BBOut (** Return/exit node *)
+  | BBEntry (** Point of entry *)
+  | BBExit (** Point of exit *)
   | BBJump (** Indirect jump to/from a node *)
 [@@deriving show { with_path = false }, to_yojson]
 
@@ -17,35 +17,23 @@ and bb =
   {
     id : int;
     ty: bb_ty;
-    mutable in_edges : edge list; (** Incoming edges *)
-    mutable out_edges : edge list; (** Outcoming edges *)
+    mutable preds : int list; (** Ids of predecessor nodes *)
+    mutable succs : int list; (** Ids of successor nodes *)
     stmt : S.statement; [@opaque]
     pou : S.iec_library_element; [@opaque] (** The POU that this BB belongs to *)
   }
 
-and edge =
-  {
-    in_bb : int [@key "in"]; (** Input basic block id *)
-    out_bb : int [@key "out"]; (** Output basic block id *)
-  }
-[@@deriving to_yojson]
-
 let bb_to_yojson bb =
-  let in_edges =
-    List.fold_left bb.in_edges
+  let yojson_ints (ids : int list) : Yojson.Safe.t list =
+      List.fold_left ids
       ~init:[]
-      ~f:(fun acc e -> [edge_to_yojson e] @ acc)
-  in
-  let out_edges =
-    List.fold_left bb.out_edges
-      ~init:[]
-      ~f:(fun acc e -> [edge_to_yojson e] @ acc)
+      ~f:(fun acc i -> acc @ [`Int(i)])
   in
   `Assoc [
     "id", `Int(bb.id);
     "type", bb_ty_to_yojson bb.ty;
-    "in_edges", `List(in_edges);
-    "out_edges", `List(out_edges);
+    "preds", `List(yojson_ints bb.preds);
+    "succs", `List(yojson_ints bb.succs);
     "stmt_id", `Int(S.stmt_get_id bb.stmt);
     "pou_id", `Int(S.get_pou_id bb.pou);
   ]
@@ -86,22 +74,15 @@ let mk_id =
 (** Create basic block instance from a statement *)
 let mk_bb pou ty stmt =
   let id = mk_id () in
-  let in_edges = [] in
-  let out_edges = [] in
+  let preds = [] in
+  let succs = [] in
   let pou = pou in
-  { id; ty; in_edges; out_edges; stmt; pou }
+  { id; ty; preds; succs; stmt; pou }
 
-(** Add edge between two basic blocks *)
-let mk_edge bb_in bb_out =
-  let set_edges bb e_in e_out =
-    bb.in_edges <- (List.append bb.in_edges [e_in]);
-    bb.out_edges <- (List.append bb.out_edges [e_out]);
-    ()
-  in
-  let e_in = { in_bb = bb_in.id; out_bb = bb_out.id } in
-  let e_out = { in_bb = bb_out.id; out_bb = bb_in.id } in
-  (set_edges bb_in e_in e_out);
-  (set_edges bb_out e_out e_in);
+(** Bound two nodes of CFG with an edge. *)
+let bound_blocks prec suc =
+  prec.succs <- (List.append prec.succs [suc.id]);
+  suc.preds <- (List.append suc.preds [prec.id]);
   ()
 
 (** Insert basic block in a given CFG *)
@@ -131,7 +112,7 @@ let rec create_bbs iec_element stmt bb_parent =
   (** Create parent block for a given statement *)
   let mk_parent stmt iec_element bb_parent ty =
     let bb = mk_bb iec_element ty stmt in
-    mk_edge bb_parent bb;
+    bound_blocks bb_parent bb;
     bb
   in
   match stmt with
@@ -206,7 +187,7 @@ let rec create_bbs iec_element stmt bb_parent =
   | S.StmExit _
   | S.StmReturn _ ->
     begin
-      [(mk_parent stmt iec_element bb_parent BBOut)]
+      [(mk_parent stmt iec_element bb_parent BBExit)]
     end
   | S.StmContinue _ ->
     begin
@@ -233,8 +214,8 @@ let mk iec_element =
       begin
         (* Detect block type *)
         let ty =
-          if phys_equal i 0 then BBInit
-          else if phys_equal i (List.length stmts) then BBOut
+          if phys_equal i 0 then BBEntry
+          else if phys_equal i (List.length stmts) then BBExit
           else BB
         in
         (* Create BB for a top-level statement *)
@@ -256,18 +237,18 @@ let to_string (cfg : t) : string =
     ~init:[]
     ~f:(fun acc i -> match i with (id, bb) ->
         begin
-          let edges_to_string (edges : edge list) =
-            List.fold_left edges
+          let edges_to_string (ids: int list) =
+            List.fold_left ids
               ~init:[]
-              ~f:(fun acc e -> acc @ [Printf.sprintf "%d->%d" e.in_bb e.out_bb])
+              ~f:(fun acc id -> acc @ [string_of_int id])
             |> String.concat ~sep:" "
           in
           let bb_repr =
-            Printf.sprintf "[%03d %6s] [in_edges: %s] [out_edges: %s]"
+            Printf.sprintf "[%03d %6s] [preds: %s] [succs: %s]"
               id
               (show_bb_ty bb.ty)
-              (edges_to_string bb.in_edges)
-              (edges_to_string bb.out_edges)
+              (edges_to_string bb.preds)
+              (edges_to_string bb.succs)
           in
           acc @ [bb_repr]
         end)

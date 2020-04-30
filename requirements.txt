@@ -1,1 +1,3 @@
 ijson==3.0.3
+graphviz==0.14
+pygraphviz==1.5

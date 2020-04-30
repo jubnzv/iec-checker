@@ -108,20 +108,18 @@ class BasicBlock:
     """Basic block of intraprocedural control flow graph."""
     id: int
     type: str
-    in_edges: List[Tuple[int, int]]
-    out_edges: List[Tuple[int, int]]
+    preds: List[int]
+    succs: List[int]
     stmt_id: int
     pou_id: int
 
     @classmethod
     def from_dict(cls, values):
-        def get_edges(json_list):
-            return [(e.get('in', -1), e.get('out', -1)) for e in json_list]
         args = {}
         args['id'] = values.get('id', -1)
         args['type'] = values.get('type', "")
-        args['in_edges'] = get_edges(values.get('in_edges', -1))
-        args['out_edges'] = get_edges(values.get('in_edges', -1))
+        args['preds'] = values.get('preds', [])
+        args['succs'] = values.get('succs', [])
         args['stmt_id'] = values.get('stmt_id', -1)
         args['pou_id'] = values.get('pou_id', -1)
         return BasicBlock(**args)
