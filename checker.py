@@ -12,6 +12,8 @@ from python.plugins.cfg_plotter import CFGPlotter  # noqa
 
 def main(files: List[str], draw_cfg: str = ""):
     for f in files:
+        if not os.path.isfile(f):
+            continue
         checker_warnings, rc = run_checker(f)
         if rc != 0:
             print(f'Report for {f}:')
