@@ -1,6 +1,7 @@
 open Core_kernel
 
 module S = Syntax
+module E = Error
 module AU = Ast_util
 module TI = Tok_info
 
@@ -25,7 +26,7 @@ and bb =
 
 let bb_to_yojson bb =
   let yojson_ints (ids : int list) : Yojson.Safe.t list =
-      List.fold_left ids
+    List.fold_left ids
       ~init:[]
       ~f:(fun acc i -> acc @ [`Int(i)])
   in
@@ -49,6 +50,8 @@ module BBMap = struct
   let add m bb = Map.set m ~key:bb.id ~data:bb
 
   let to_alist m = Map.to_alist m
+
+  let find m k = Map.find m k
 
   let to_yojson (m : t) : Yojson.Safe.t =
     let items =
@@ -230,6 +233,18 @@ let mk iec_element =
         ()
       end) stmts;
   cfg
+
+let list_basic_blocks cfg =
+  BBMap.to_alist cfg.bb_map
+  |> List.fold_left
+    ~init:[]
+    ~f:(fun acc i -> match i with (_, bb) -> acc @ [bb])
+
+let bb_by_id_exn cfg (id : int) =
+  match (BBMap.find cfg.bb_map id) with
+  | Some v -> v
+  (* | None -> raise (E.InternalError (Printf.sprintf "Block %d doesn't exists" id)) *)
+  | None -> raise Caml.Not_found
 
 let to_string (cfg : t) : string =
   BBMap.to_alist cfg.bb_map

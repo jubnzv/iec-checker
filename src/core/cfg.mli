@@ -29,12 +29,19 @@ type bb =
 val mk : S.iec_library_element -> t
 (** Create a new CFG instance for a given iec_library_element *)
 
-val to_string : t -> string
+val list_basic_blocks : t -> bb list
+(** Get list of basic blocks from a given CFG instance. *)
 
-val to_yojson : t -> Yojson.Safe.t
+val bb_by_id_exn : t -> int -> bb
+(** Get basic block entry from a given id. Raise an exception if not found. *)
+
+val to_string : t -> string
 
 val bb_get_ti : bb -> TI.t
 (** Get token info for the basic block. *)
 
 val create_cfgs : S.iec_library_element list -> t list
 (** Create list of CFGs for a given iec_library_element objects. *)
+
+val to_yojson : t -> Yojson.Safe.t
+
