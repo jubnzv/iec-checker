@@ -1873,11 +1873,11 @@ func_call:
     S.StmFuncCall(ti, f, stmts)
   }
 
-stmt_list:
-  | s = stmt T_SEMICOLON
-  { s :: [] }
-  | sl = stmt_list; s = stmt T_SEMICOLON
-  { s :: sl }
+let stmt_list :=
+  | s = stmt; T_SEMICOLON;
+  { [s] }
+  | sl = stmt_list; s = stmt; T_SEMICOLON;
+  { sl @ [s] }
 
 let stmt :=
   | ~ = assign_stmt; <>
