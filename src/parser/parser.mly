@@ -2,9 +2,11 @@
   open Core_kernel
   open IECCheckerCore
 
-  module E = Error
   module S = Syntax
   module TI = Tok_info
+
+  (* Raised when parser found simple semnatics errors while constructing AST. *)
+  exception SemanticError of string
 
   let creal_inv (vr, ti) =
     let vv = -1.0 *. vr in
@@ -25,7 +27,7 @@
 
   let cget_int_val = function
     | S.CInteger (_, v) -> v
-    | _ -> raise (E.InternalError "Unknown constant type")
+    | _ -> assert false
 
   let mk_global_decl v =
     let vv = S.SymVar(v) in
@@ -402,7 +404,7 @@ duration:
     match v with
     | S.CTimeValue(ti, tv) ->
         S.CTimeValue(ti, (S.TimeValue.inv tv))
-    | _ -> raise (E.InternalError "Unknown constant type")
+    | _ -> assert false
   }
 
 (* Helper rule for duration. *)
@@ -613,7 +615,7 @@ string_type_length:
   {
     match c with
     | CInteger(_, v) -> v
-    | _ -> raise (E.SyntaxError "Invalid length of string")
+    | _ -> assert false
   }
 
 time_type_name:
@@ -794,7 +796,7 @@ let subrange_spec_init :=
     match s with
     | S.DTyDeclSubrange(ty_name, ty_spec, _) ->
       S.DTyDeclSubrange(ty_name, ty_spec, (cget_int_val ic))
-    | _ -> raise (E.InternalError "Unexpected subrange type")
+    | _ -> assert false
   }
   | ~ = subrange_spec; <>
 
@@ -803,7 +805,7 @@ let subrange_spec :=
   {
     let (ty_name, ty_decl) = name_type in
     if not (S.ety_is_integer ty_decl) then
-        raise (E.SyntaxError "Subrange types must be integer")
+        raise (SemanticError "Subrange types must be integer")
     else
       let (_, lb, ub) = s in
       (* According the Standard, the initial value is assigned to lower bound by default. *)
@@ -885,7 +887,7 @@ let str_type_decl :=
   {
     let (ty_name, ty_decl) = name_type in
     if not (S.ety_is_string ty_decl) then
-        raise (E.SyntaxError "Expected string type")
+        raise (SemanticError "Expected string type")
     else
       let ty_spec = S.DTySpecElementary(ty_decl) in
       (* Check optional initial value *)
@@ -897,8 +899,8 @@ let str_type_decl :=
               | S.Constant(c) ->
                 match c with
                   | S.CString _ -> init_expr
-                  | _ -> raise (E.InternalError "Unexpected constant type")
-              | _ -> raise (E.InternalError "Unexpected expression")
+                  | _ -> raise (SemanticError "Unexpected constant type")
+              | _ -> raise (SemanticError "Unexpected expression")
             end
           | None -> None
       in

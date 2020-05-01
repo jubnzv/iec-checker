@@ -2,7 +2,6 @@
     model of Structured Text language. See Annex B of IEC61131-3 for reference. *)
 open Core_kernel
 module TI = Tok_info
-module E = Error
 
 exception InternalError of string
 

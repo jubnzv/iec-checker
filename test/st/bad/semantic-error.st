@@ -1,0 +1,4 @@
+TYPE
+  ANALOG_DATA_OK: INT (0 .. 16);
+  ANALOG_DATA_BAD: INT ("foo" .. "bar");
+END_TYPE

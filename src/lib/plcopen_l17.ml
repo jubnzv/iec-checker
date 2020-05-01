@@ -3,7 +3,6 @@ module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
 module Warn = IECCheckerCore.Warn
 module AU = IECCheckerCore.Ast_util
-module E = IECCheckerCore.Error
 
 let check_stmt = function
   | S.StmIf (ti, _, _, _, else_exprs) -> (
@@ -20,4 +19,4 @@ let do_check elems =
   List.map stmts ~f:(fun s -> check_stmt s)
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
-      match w with Some w -> w | None -> raise (E.InternalError ""))
+      match w with Some w -> w | None -> assert false)

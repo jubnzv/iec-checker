@@ -2,7 +2,6 @@ open Core_kernel
 module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
 module AU = IECCheckerCore.Ast_util
-module E = IECCheckerCore.Error
 module Warn = IECCheckerCore.Warn
 
 (** Keywords / reserved word list of IEC 61131-3 Ed.3 starting with a letter *)
@@ -187,4 +186,4 @@ let do_check elems =
       check_name var)
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
-      match w with Some w -> w | None -> raise (E.InternalError ""))
+      match w with Some w -> w | None -> assert false)

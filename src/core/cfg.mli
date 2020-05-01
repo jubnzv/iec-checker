@@ -32,8 +32,8 @@ val mk : S.iec_library_element -> t
 val list_basic_blocks : t -> bb list
 (** Get list of basic blocks from a given CFG instance. *)
 
-val bb_by_id_exn : t -> int -> bb
-(** Get basic block entry from a given id. Raise an exception if not found. *)
+val bb_by_id : t -> int -> bb option
+(** Get basic block entry from a given id. *)
 
 val to_string : t -> string
 

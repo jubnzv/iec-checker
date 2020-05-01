@@ -1,7 +1,6 @@
 open Core_kernel
 module S = IECCheckerCore.Syntax
 module Env = IECCheckerCore.Env
-module E = IECCheckerCore.Error
 module Warn = IECCheckerCore.Warn
 
 let str_len = function
@@ -9,7 +8,7 @@ let str_len = function
   | S.WSTRING l -> l
   | S.CHAR l    -> l
   | S.WCHAR l   -> l
-  | _ -> raise (E.InternalError "Got unexpected type")
+  | _ -> assert false
 
 (** Compare length of declared string with initializer string size. *)
 let check_str_init_size ty_init init_expr =
@@ -26,7 +25,7 @@ let check_str_init_size ty_init init_expr =
         begin
           match c with
           | S.CString(_, str) -> check_length str
-          | _ -> raise (E.InternalError "Got unexpected type")
+          | _ -> assert false
         end
       | _ -> None
     end

@@ -20,7 +20,11 @@ let find_unreachable_bbs (cfg: Cfg.t) : Warn.t list =
         List.fold_left
           bb.succs
           ~init:(visited)
-          ~f:(fun set succ_id -> visit cfg set (Cfg.bb_by_id_exn cfg succ_id))
+          ~f:(fun set succ_id -> begin
+                match (Cfg.bb_by_id cfg succ_id) with
+                | Some v -> visit cfg set v
+                | None -> set
+              end)
       end
     | Cfg.BBExit -> visited
   in

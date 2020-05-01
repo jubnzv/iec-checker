@@ -240,11 +240,8 @@ let list_basic_blocks cfg =
     ~init:[]
     ~f:(fun acc i -> match i with (_, bb) -> acc @ [bb])
 
-let bb_by_id_exn cfg (id : int) =
-  match (BBMap.find cfg.bb_map id) with
-  | Some v -> v
-  (* | None -> raise (E.InternalError (Printf.sprintf "Block %d doesn't exists" id)) *)
-  | None -> raise Caml.Not_found
+let bb_by_id cfg (id : int) =
+  BBMap.find cfg.bb_map id
 
 let to_string (cfg : t) : string =
   BBMap.to_alist cfg.bb_map
