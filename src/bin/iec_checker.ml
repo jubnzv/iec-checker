@@ -28,17 +28,33 @@ let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) 
   In_channel.close inx;
   (elements, warns)
 
+let parse_stdin : (S.iec_library_element list * Warn.t list) =
+  match In_channel.input_line stdin with
+  | None -> ([], [W.mk_internal ~id:"Cancel" ""])
+  | Some code -> (
+      let lexbuf = Lexing.from_string code in
+      lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = "stdin" };
+      let (elements, warns) = parse_with_error lexbuf in
+      (elements, warns))
+
 let run_checker filename fmt create_dumps quiet =
-  if not (Sys.file_exists filename) then
+  let (read_stdin : bool) = (String.equal "-" filename) || (String.is_empty filename) in
+  if (not (Sys.file_exists filename) && not read_stdin) then
     let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" filename) in
     WO.print_report [err] fmt;
     exit 127
   else
-    let (elements, parser_warns) = parse_file filename in
+    let (elements, parser_warns) =
+      if read_stdin then
+        parse_stdin
+      else
+        parse_file filename
+    in
     let envs = Ast_util.create_envs elements in
     let pou_cfgs = Cfg.create_cfgs elements in
     if create_dumps then
-      Dump.create_dump elements envs pou_cfgs filename;
+      Dump.create_dump elements envs pou_cfgs
+      (if read_stdin then "stdin" else filename);
     let decl_warnings = Declaration_analysis.run elements envs in
     let flow_warnings = Control_flow_analysis.run pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs quiet in
