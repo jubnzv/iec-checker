@@ -86,6 +86,20 @@ class FunctionBlock:
 @dataclass
 class Program:
     name: str
+    is_retain: bool
+    variables: List[VarDecl]
+    statements: List[Statement]
+
+    @classmethod
+    def from_dict(cls, values):
+        args = {}
+        args['name'] = values.get('name', '')
+        args['is_retain'] = values.get('is_retain', False)
+        args['variables'] = [Variable.from_dict(
+            i) for i in values.get('variables', [])]
+        args['statements'] = [Statement.from_dict(
+            i) for i in values.get('statements', [])]
+        return Program(**args)
 
 
 @dataclass
@@ -160,9 +174,8 @@ class Scheme:
         # args['function_blocks'] = [FunctionBlock.from_dict(
         #     i) for i in values.get('function_blocks', [])]
         args['function_blocks'] = []
-        # args['programs'] = [Program.from_dict(
-        #     i) for i in values.get('program', [])]
-        args['programs'] = []
+        args['programs'] = [Program.from_dict(
+            i) for i in values.get('programs', [])]
         # args['configurations'] = [Configuration.from_dict(
         #     i) for i in values.get('configurations', [])]
         args['configurations'] = []

@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
-from python.core import run_checker  # noqa
+from python.core import run_checker, check_program  # noqa
 from python.dump import DumpManager  # noqa
 
 
@@ -50,3 +50,25 @@ def test_direct_variables():
     assert rc == 0
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
+
+
+def test_statements_order():
+    """Test that POU statements are arranged in the correct order."""
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        PROGRAM f
+        VAR a : INT; i : INT; END_VAR
+        a := 1;
+        i := 22;
+        a := 16#42;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.programs) == 1
+        # TODO: need recursive traverse in om
+        # p = scheme.programs[0]
+        # assert len(p.statemets) == 3
