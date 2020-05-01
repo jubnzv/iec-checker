@@ -63,6 +63,6 @@ Report for test/st/plcopen-l17.st:
 Report for test/st/plcopen-n3.st:
 [PLCOPEN-N3] 6:7 IEC data types and standard library objects must be avoided
 Report for test/st/zero-division.st:
-[ZeroDivision] 7:12 Constant 19 is divided to zero!
-[ZeroDivision] 9:14 Variable VAR2 is divided to zero!
+[ZeroDivision] 7:12 Constant 19 is divided by zero!
+[ZeroDivision] 9:14 Variable VAR2 is divided by zero!
 ```
