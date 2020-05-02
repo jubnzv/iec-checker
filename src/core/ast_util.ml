@@ -123,7 +123,7 @@ let get_exprs elems =
   in
   List.fold_left all_stmts
     ~init:[]
-    ~f:(fun acc stmt -> List.append acc (get_stmt_exprs stmt))
+    ~f:(fun acc stmt -> (get_stmt_exprs stmt) @ acc)
 
 (** Bound declaration of global variables in global env. *)
 let fill_global_env env = function
