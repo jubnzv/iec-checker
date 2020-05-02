@@ -20,8 +20,7 @@ and bb =
     ty: bb_ty;
     mutable preds : int list; (** Ids of predecessor nodes *)
     mutable succs : int list; (** Ids of successor nodes *)
-    stmt : S.statement; [@opaque]
-    pou : S.iec_library_element; [@opaque] (** The POU that this BB belongs to *)
+    stmt : S.statement [@opaque];
   }
 
 let bb_to_yojson bb =
@@ -36,7 +35,6 @@ let bb_to_yojson bb =
     "preds", `List(yojson_ints bb.preds);
     "succs", `List(yojson_ints bb.succs);
     "stmt_id", `Int(S.stmt_get_id bb.stmt);
-    "pou_id", `Int(S.get_pou_id bb.pou);
   ]
 
 (** Map for basic blocks in CFG accessible by unique identifier *)
@@ -45,11 +43,22 @@ module BBMap = struct
 
   let empty = Map.empty (module Int)
 
-  (* let lookup m id = Map.find m id *)
-
   let add m bb = Map.set m ~key:bb.id ~data:bb
 
+  (** Remove last element from the bbs list *)
+  let pop_exn (m : t) : (t) =
+    let bbs = Map.to_alist m in
+    let (last_id, _) = List.last_exn bbs in
+    Map.remove m last_id
+
   let to_alist m = Map.to_alist m
+
+  let first (m : t) : (bb option) =
+    let all = Map.to_alist m in
+    let values_opt = List.nth all 0 in
+    match values_opt with
+    | Some (_, bb) -> Some(bb)
+    | None -> None
 
   let find m k = Map.find m k
 
@@ -66,7 +75,8 @@ end
 
 type t = {
   mutable bb_map : BBMap.t; (** Map of basic blocks *)
-  mutable init_bb_id : int; (** Id of the initial basic block *)
+  entry_bb_id : int; (** Id of the initial basic block *)
+  pou_id : int; (** Id of the POU that this graph belongs to *)
 }
 
 (** Generate unique id *)
@@ -75,164 +85,217 @@ let mk_id =
   fun () -> incr n; !n
 
 (** Create basic block instance from a statement *)
-let mk_bb pou ty stmt =
+let mk_bb ty stmt =
   let id = mk_id () in
   let preds = [] in
   let succs = [] in
-  let pou = pou in
-  { id; ty; preds; succs; stmt; pou }
-
-(** Bound two nodes of CFG with an edge. *)
-let bound_blocks prec suc =
-  prec.succs <- (List.append prec.succs [suc.id]);
-  suc.preds <- (List.append suc.preds [prec.id]);
-  ()
-
-(** Insert basic block in a given CFG *)
-let cfg_add_bb bb_map bb =
-  let m = BBMap.add bb_map bb in m
+  { id; ty; preds; succs; stmt }
 
 let empty_cfg () =
   let bb_map = BBMap.empty in
-  let init_bb_id = 0 in
-  { bb_map; init_bb_id }
+  let entry_bb_id = -1 in
+  let pou_id = -1 in
+  { bb_map; entry_bb_id; pou_id }
 
-(** Recursively create a list of basic blocks for a given statement and the
-    nested statements. *)
-let rec create_bbs iec_element stmt bb_parent =
-  (** Create list of BBs from the nested statements found in expression *)
-  let expr_to_bbs expr bb_parent =
-    let res =
-      List.fold_left (AU.expr_to_stmts expr)
-        ~f:(fun bbs s -> bbs @ (create_bbs iec_element s bb_parent))
-        ~init:[]
-    in res
+(** [mk_bbs iec_element stmts] Create a list of bounded basic blocks for [stmts]
+    and their nested statements. *)
+let mk_bbs stmts =
+  let sublist l low high =
+    List.filteri l ~f:(fun i _ -> i >= low && i < high)
   in
-  (** Create list of BBs from a list of statements *)
-  let stmts_to_bbs stmts bb_parent =
-    List.fold_left stmts ~f:(fun bbs s -> bbs @ (create_bbs iec_element s bb_parent)) ~init:[]
-  in
-  (** Create parent block for a given statement *)
-  let mk_parent stmt iec_element bb_parent ty =
-    let bb = mk_bb iec_element ty stmt in
-    bound_blocks bb_parent bb;
-    bb
-  in
-  match stmt with
-  | S.StmAssign (_, _, e) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent :: (expr_to_bbs e bb_stm_parent)
-    end
-  | S.StmElsif (_, e, stmts) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent :: (expr_to_bbs e bb_stm_parent) @ (stmts_to_bbs stmts bb_stm_parent)
-    end
-  | S.StmIf (_, e, stmts_body, stmts_elsif, stmts_else) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (expr_to_bbs e bb_stm_parent) @
-      (stmts_to_bbs stmts_body bb_stm_parent) @
-      (stmts_to_bbs stmts_elsif bb_stm_parent) @
-      (stmts_to_bbs stmts_else bb_stm_parent)
-    end
-  | S.StmCase (_, e, cs_list, stmts_else) ->
-    begin
-      let get_case_bbs bb_stm_parent =
-        List.fold_left cs_list
-          ~f:(fun bbs cs ->
-              begin
-                bbs @
-                (* case expressions *)
-                (List.fold_left cs.S.case
-                   ~f:(fun bbs ec -> bbs @ (expr_to_bbs ec bb_stm_parent))
-                   ~init:[]) @
-                (* case statements *)
-                (stmts_to_bbs cs.S.body bb_stm_parent)
-              end)
-          ~init:[]
+  let rec mk_bbs_aux stmts acc (bb_pred : bb option) =
+    (** Bound two basic blocks *)
+    let bound_bbs pred succ =
+      pred.succs <- (List.append pred.succs [succ.id]);
+      succ.preds <- (List.append succ.preds [pred.id]);
+      (pred, succ)
+    in
+    (** Create basic blocks for the statements nested into [stmt].
+        First created BB will be bound with [bb_pred].
+        Result will contain list with [bb_pred] extended with created BBs. *)
+    let rec mk_nested_bbs (stmt : S.statement) (bb_pred : bb) : (bb list) =
+      (** Create a list of basic blocks for the consecutive list of statements
+          nested in [stmt]. [bb_pred] is a basic block that corresponds to
+          [stmt]. It will be the first item of the result list; its succs and
+          preds edges will contains corresponding ids, block type stills the
+          same. *)
+      let fold_nested_stmts stmts bb_pred =
+        if (List.is_empty stmts) then
+          [bb_pred]
+        else
+          (* Closure that keeps default bb_pred ty *)
+          (* let saved_ty () = *)
+          (*     bb_pred.ty    *)
+          (* in                *)
+          let (bbs, _) =
+            List.fold_left
+              stmts
+              ~init:([] (* bbs *), None (* bb_pred *))
+              ~f:(fun (acc, fold_bb_pred_opt) s -> begin
+                    match fold_bb_pred_opt with
+                    | None -> begin
+                        (* First fold iteration. Bound with the initial bb_pred. *)
+                        let bbs = mk_nested_bbs s bb_pred in
+                        (* First item will be updated bb_pred anyway *)
+                        let upd_bb_pred = List.nth_exn bbs 0 in
+                        let upd_bb_pred = { upd_bb_pred with ty = bb_pred.ty } in
+                        acc @ [upd_bb_pred] @ (sublist bbs 1 (List.length bbs)), Some(upd_bb_pred)
+                      end
+                    | Some fold_bb_pred -> begin
+                        (* We're inside List.fold_left iteration. Each next BB should
+                           be bounded with the BB from the previous iteration. *)
+                        let bbs = mk_nested_bbs s fold_bb_pred in
+                        let upd_bb_pred = List.nth_exn bbs 0 in
+                        let upd_bb_pred = { upd_bb_pred with ty = fold_bb_pred.ty } in
+                        acc @ [upd_bb_pred] @ (sublist bbs 1 (List.length bbs)), Some(upd_bb_pred)
+                      end
+                  end)
+          in
+          bbs
       in
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (expr_to_bbs e bb_stm_parent) @
-      (get_case_bbs bb_stm_parent) @
-      (stmts_to_bbs stmts_else bb_stm_parent)
-    end
-  | S.StmFor (_, _, e_start, e_end, e_step, stmts_body) ->
-    begin
-      let get_step_bbs bb_stm_parent = match e_step with
-        | Some e -> (expr_to_bbs e bb_stm_parent)
-        | None -> []
+      let fold_nested_expr e bb_pred =
+        fold_nested_stmts (AU.expr_to_stmts e) bb_pred
       in
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (expr_to_bbs e_start bb_stm_parent) @
-      (expr_to_bbs e_end bb_stm_parent) @
-      (get_step_bbs bb_stm_parent) @
-      (stmts_to_bbs stmts_body bb_stm_parent)
-    end
-  | S.StmWhile (_, e, stmts_body) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (expr_to_bbs e bb_stm_parent) @
-      (stmts_to_bbs stmts_body bb_stm_parent)
-    end
-  | S.StmRepeat (_, stmts, e) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (stmts_to_bbs stmts bb_stm_parent) @
-      (expr_to_bbs e bb_stm_parent)
-    end
-  | S.StmExit _
-  | S.StmReturn _ ->
-    begin
-      [(mk_parent stmt iec_element bb_parent BBExit)]
-    end
-  | S.StmContinue _ ->
-    begin
-      (* TODO: Add jump edge *)
-      [(mk_parent stmt iec_element bb_parent BBJump)]
-    end
-  | S.StmFuncParamAssign (_, e, _) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (expr_to_bbs e bb_stm_parent)
-    end
-  | S.StmFuncCall (_, _, stmts_body) ->
-    begin
-      let bb_stm_parent = mk_parent stmt iec_element bb_parent BB in
-      bb_stm_parent ::
-      (stmts_to_bbs stmts_body bb_stm_parent)
-    end
+      match stmt with
+      | S.StmAssign (_, _, e) -> begin
+          fold_nested_expr e bb_pred
+        end
+      | S.StmElsif (_, e, stmts) ->
+        begin
+          let cond_bbs = fold_nested_expr e bb_pred in
+          let last_cond_bb = List.last_exn cond_bbs in
+          let body_bbs = fold_nested_stmts stmts last_cond_bb in
+          (* Last condition BB is already included in [body_bbs] *)
+          let cond_bbs = (sublist cond_bbs 0 ((List.length cond_bbs) - 1)) in
+          cond_bbs @ body_bbs
+        end
+      | S.StmIf (_, e, stmts_body, stmts_elsif, stmts_else) ->
+        begin
+          let cond_bbs = fold_nested_expr e bb_pred in
+          let last_cond_bb = List.last_exn cond_bbs in
+          let body_bbs = fold_nested_stmts stmts_body last_cond_bb in
+          (* Last condition BB will be updated after every traverse over nested statements *)
+          let cond_bbs = (sublist cond_bbs 0 ((List.length cond_bbs) - 1)) in
+          let last_cond_bb = List.nth_exn body_bbs 0 in
+          (* First BB of [body_bbs] will be replaced with new bounds from [elsif_bbs] *)
+          let body_bbs = (sublist body_bbs 1 (List.length body_bbs)) in
+          let elsif_bbs = fold_nested_stmts stmts_elsif last_cond_bb in
+          let last_cond_bb = List.nth_exn elsif_bbs 0 in
+          (* First BB of [elsif_bbs] will be replaced with new bounds from [else_bbs] *)
+          let elsif_bbs = (sublist elsif_bbs 1 (List.length elsif_bbs)) in
+          let else_bbs = fold_nested_stmts stmts_elsif last_cond_bb in
+          (* Finally, we cut [else_bbs] last element. It place is after [cond_bbs].*)
+          let last_cond_bb = List.nth_exn else_bbs 0 in
+          let else_bbs = fold_nested_stmts stmts_else last_cond_bb in
+          cond_bbs @ [last_cond_bb] @ body_bbs @ elsif_bbs @ else_bbs
+        end
+      | _ -> [] (* TODO: Need test previous statements first. *)
+      (* | S.StmCase (_, e, cs_list, stmts_else) ->                               *)
+      (*   begin                                                                  *)
+      (*     let get_case_bbs bb_stm_parent =                                     *)
+      (*       List.fold_left cs_list                                             *)
+      (*         ~f:(fun bbs cs ->                                                *)
+      (*             begin                                                        *)
+      (*               bbs @                                                      *)
+      (*               (* case expressions                                     *) *)
+      (*               (List.fold_left cs.S.case                                  *)
+      (*                  ~f:(fun bbs ec -> bbs @ (expr_to_bbs ec bb_stm_parent)) *)
+      (*                  ~init:[]) @                                             *)
+      (*               (* case statements                                      *) *)
+      (*               (stmts_to_bbs cs.S.body bb_stm_parent)                     *)
+      (*             end)                                                         *)
+      (*         ~init:[]                                                         *)
+      (*     in                                                                   *)
+      (*   end                                                                    *)
+      (* | S.StmFor (_, _, _, _, _, stmts_body) ->                                *)
+      (*   begin                                                                  *)
+      (*     (* TODO: Generate assign expression *)                               *)
+      (*     let bb_stm_parent = mk_parent stmt bb_parent BB in                   *)
+      (*     bb_stm_parent ::                                                     *)
+      (*     (stmts_to_bbs stmts_body bb_stm_parent)                              *)
+      (*   end                                                                    *)
+      (* | S.StmWhile (_, e, stmts_body) ->                                       *)
+      (*   begin                                                                  *)
+      (*   end                                                                    *)
+      (* | S.StmRepeat (_, stmts, e) ->                                           *)
+      (*   begin                                                                  *)
+      (*   end                                                                    *)
+      (* | S.StmFuncParamAssign (_, e, _) ->                                      *)
+      (*   begin                                                                  *)
+      (*   end                                                                    *)
+      (* | S.StmFuncCall (_, _, stmts_body) ->                                    *)
+      (*   begin                                                                  *)
+      (*   end                                                                    *)
+      (* | S.StmExit _ | S.StmReturn _ -> _                                       *)
+      (* | S.StmContinue _ -> (* TODO: Add jump edge     *)                       *)
+    in
+    match stmts with
+    | [] -> begin
+        match bb_pred with
+        | None -> begin
+            (* Empty *)
+            []
+          end
+        | Some bbp -> begin
+            (* Insert last BB *)
+            acc @ [bbp]
+          end
+      end
+    | [s] -> begin
+        let bb = mk_bb BBExit s in
+        match bb_pred with
+        | None -> begin
+            (* Single BB *)
+            let nested_bbs = mk_nested_bbs s bb in
+            let last_nested_bb = List.last_exn nested_bbs in
+            mk_bbs_aux [] (acc @ nested_bbs) (Some(last_nested_bb))
+          end
+        | Some bbp -> begin
+            (* Last BB *)
+            let (bbp, bb) = bound_bbs bbp bb in
+            let nested_bbs = mk_nested_bbs s bb in
+            let last_nested_bb = List.last_exn nested_bbs in
+            mk_bbs_aux [] (acc @ [bbp] @ nested_bbs) (Some(last_nested_bb))
+          end
+      end
+    | s :: tail -> begin
+        match bb_pred with
+        | None -> begin
+            (* First BB *)
+            let bb = mk_bb BBEntry s in
+            let nested_bbs = mk_nested_bbs s bb in
+            (* Printf.printf "len(nested_bbs)=%d\n" (List.length nested_bbs); *)
+            let last_nested_bb = List.last_exn nested_bbs in
+            mk_bbs_aux tail nested_bbs (Some(last_nested_bb))
+          end
+        | Some bbp -> begin
+            (* Regular BB *)
+            let bb = mk_bb BB s in
+            let (bbp, bb) = bound_bbs bbp bb in
+            let nested_bbs = mk_nested_bbs s bb in
+            let last_nested_bb = List.last_exn nested_bbs in
+            mk_bbs_aux tail (acc @ [bbp] @ nested_bbs) (Some(last_nested_bb))
+          end
+      end
+  in
+  List.rev (mk_bbs_aux stmts [] None)
 
 let mk iec_element =
   let cfg = empty_cfg () in
+  let cfg = { cfg with pou_id = (S.get_pou_id iec_element) } in
   let stmts = AU.get_top_stmts iec_element in
-  List.iteri ~f:(fun i stmt ->
-      begin
-        (* Detect block type *)
-        let ty =
-          if phys_equal i 0 then BBEntry
-          else if phys_equal i (List.length stmts) then BBExit
-          else BB
-        in
-        (* Create BB for a top-level statement *)
-        let bb_top = mk_bb iec_element ty stmt in
-        (* Create BBs for a nested statements *)
-        let bbs = bb_top :: (create_bbs iec_element stmt bb_top) in
-        (* Update basic blocks map *)
-        List.iter bbs ~f:(fun bb -> cfg.bb_map <- cfg_add_bb cfg.bb_map bb);
-        (* Set initial id *)
-        if phys_equal i 0 then
-          cfg.init_bb_id <- bb_top.id;
-        ()
-      end) stmts;
+  List.iter
+    (mk_bbs stmts)
+    ~f:(fun bb -> cfg.bb_map <- BBMap.add cfg.bb_map bb);
+  let entry_bb = BBMap.first cfg.bb_map in
+  let entry_bb_id = match entry_bb with
+    | Some bb -> bb.id
+    | None -> -1
+  in
+  let cfg = { cfg with entry_bb_id = entry_bb_id } in
   cfg
+
+let get_pou_id c = c.pou_id
 
 let list_basic_blocks cfg =
   BBMap.to_alist cfg.bb_map
@@ -269,7 +332,8 @@ let to_string (cfg : t) : string =
 let to_yojson (c : t) : Yojson.Safe.t =
   let m = c.bb_map in
   `Assoc [
-    "initial_bb_id", `Int (c.init_bb_id);
+    "pou_id", `Int(c.pou_id);
+    "entry_bb_id", `Int(c.entry_bb_id);
     "basic_blocks", BBMap.to_yojson m;
   ]
 

@@ -5,7 +5,7 @@ FUNCTION Factorial : INT
     END_VAR
 
     IF X > 1 THEN
-        Factoriale := Factorial(X - 1) * X;
+        Factorial := Factorial(X - 1) * X;
     ELSE
         Factorial := X;
     END_IF;

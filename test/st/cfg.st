@@ -6,5 +6,14 @@ FUNCTION test_cfg : INT
 
   i := 0;
   i := i + 16#42;
+  i := 33;
+
+  IF a > 1 THEN
+      i := 1;
+  ELSE
+      i := 42;
+  END_IF;
+  i := 0;
+
 END_FUNCTION
 

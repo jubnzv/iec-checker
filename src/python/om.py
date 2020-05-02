@@ -142,13 +142,13 @@ class BasicBlock:
 @dataclass
 class Cfg:
     """Intraprocedural control flow graph."""
-    initial_bb_id: int
+    entry_bb_id: int
     basic_blocks: List[BasicBlock]
 
     @classmethod
     def from_dict(cls, values):
         args = {}
-        args['initial_bb_id'] = values.get('initial_bb_id', -1)
+        args['entry_bb_id'] = values.get('entry_bb_id', -1)
         args['basic_blocks'] = [BasicBlock.from_dict(
             bb) for bb in values.get('basic_blocks')]
         return Cfg(**args)

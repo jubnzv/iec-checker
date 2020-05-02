@@ -45,16 +45,20 @@ let run_checker filename fmt create_dumps quiet =
     exit 127
   else
     let (elements, parser_warns) =
-      if read_stdin then
+      if read_stdin then begin
+        Printf.printf "> ";
+        flush stdout;
         parse_stdin
-      else
+      end else begin
+        if quiet then Printf.printf "Parsing %s ...\n" filename;
         parse_file filename
+      end
     in
     let envs = Ast_util.create_envs elements in
     let pou_cfgs = Cfg.create_cfgs elements in
     if create_dumps then
       Dump.create_dump elements envs pou_cfgs
-      (if read_stdin then "stdin" else filename);
+        (if read_stdin then "stdin" else filename);
     let decl_warnings = Declaration_analysis.run elements envs in
     let flow_warnings = Control_flow_analysis.run pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs quiet in
