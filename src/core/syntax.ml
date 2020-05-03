@@ -128,7 +128,7 @@ module DirVar = struct
     ti: TI.t;
     loc: location option;
     sz: size option;
-    is_partly_located: bool; (** Variable is defined using '*' symbol *)
+    is_partly_located: bool; (** ExprVariable is defined using '*' symbol *)
     path: int list;
   } [@@deriving to_yojson]
 
@@ -345,16 +345,15 @@ and constant =
 [@@deriving to_yojson, show]
 
 and statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-                 [@name "Assign"]
+  | StmExpr of TI.t *
+               expr
+               [@name "Expression"]
   | StmElsif of TI.t *
-                expr * (** condition *)
+                statement * (** condition *)
                 statement list (** body *)
                 [@name "Elsif"]
   | StmIf of TI.t *
-             expr * (** condition *)
+             statement * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
@@ -395,11 +394,11 @@ and statement =
                    [@name "FuncCall"]
 [@@deriving to_yojson, show { with_path = false }]
 and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-  | FuncCall of statement
+  | ExprVariable of TI.t * variable               [@name "Variable"]
+  | ExprConstant of TI.t * constant               [@name "Constant"]
+  | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
+  | ExprUn       of TI.t * operator * expr        [@name "Un"]
+  | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
 [@@deriving to_yojson, show]
 and case_selection = {case: expr list; body: statement list}
 [@@deriving to_yojson, show]
@@ -407,7 +406,7 @@ and case_selection = {case: expr list; body: statement list}
 
 (* {{{ Functions to work with statements *)
 let stmt_get_ti = function
-  | StmAssign (ti,_,_) -> ti
+  | StmExpr (ti,_) -> ti
   | StmElsif (ti,_,_) -> ti
   | StmIf (ti,_,_,_,_) -> ti
   | StmCase (ti,_,_,_) -> ti
@@ -422,6 +421,19 @@ let stmt_get_ti = function
 
 let stmt_get_id stmt =
   let ti = stmt_get_ti stmt in
+  ti.id
+(* }}} *)
+
+(* {{{ Functions to work with expressions *)
+let expr_get_ti = function
+  | ExprVariable (ti,_) -> ti
+  | ExprConstant (ti,_) -> ti
+  | ExprBin (ti,_,_,_) -> ti
+  | ExprUn (ti,_,_) -> ti
+  | ExprFuncCall (ti,_) -> ti
+
+let expr_get_id e =
+  let ti = expr_get_ti e in
   ti.id
 (* }}} *)
 
@@ -473,11 +485,11 @@ let c_add c1 c2 =
   | _ -> raise @@ InternalError "Incompatible types"
 
 let c_from_expr = function
-  | Constant(v) -> Some v
+  | ExprConstant(_,v) -> Some v
   | _ -> None
 
 let c_from_expr_exn = function
-  | Constant(v) -> v
+  | ExprConstant(_,v) -> v
   | _ -> raise @@ InternalError "Incompatible types"
 (* }}} *)
 

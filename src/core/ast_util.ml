@@ -17,24 +17,27 @@ let get_var_decl elems =
 
 let expr_to_stmts expr : S.statement list =
   let rec aux = function
-    | S.Variable _ -> []
-    | S.Constant _ -> []
-    | S.BinExpr (e1, _, e2) -> aux e1 @ aux e2
-    | S.UnExpr (_, e) -> aux e
-    | S.FuncCall s -> [ s ]
+    | S.ExprVariable _ -> []
+    | S.ExprConstant _ -> []
+    | S.ExprBin (_, e1, _, e2) -> aux e1 @ aux e2
+    | S.ExprUn (_, _, e) -> aux e
+    | S.ExprFuncCall (_, s) -> [s]
   in
   aux expr
 
 let rec stmts_to_list stmt =
   match stmt with
-  | S.StmAssign (_, _, e) -> stmt :: expr_to_stmts e
-  | S.StmElsif (_, e, ns) ->
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
-  | S.StmIf (_, e, ns1, ns2, ns3) ->
-    [ stmt ] @ expr_to_stmts e
+  | S.StmExpr (_, e) -> [stmt] @ expr_to_stmts e
+  | S.StmElsif (_, cond_stmts, body_stmts) ->
+    [ stmt ] @ stmts_to_list cond_stmts
     @ List.fold_left
-      (ns1 @ ns2 @ ns3)
+      body_stmts
+      ~init:[]
+      ~f:(fun acc s -> acc @ stmts_to_list s)
+  | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) ->
+    [ stmt ]
+    @ List.fold_left
+      ([cond_s] @ body_ss @ elsif_ss @ else_ss)
       ~f:(fun ss s -> ss @ stmts_to_list s)
       ~init:[]
   | S.StmCase (_, e, cs, ns) ->
@@ -98,10 +101,13 @@ let get_exprs elems =
       List.fold_left stmts ~init:[] ~f:(fun acc es -> acc @ (get_stmt_exprs es))
     in
     match stmt with
-    | S.StmAssign (_, _, e) -> [e]
-    | S.StmElsif (_, e, ss) -> [e] @ (get_nested ss)
-    | S.StmIf (_, e, ss1, ss2, ss3) -> (
-        [e] @ (get_nested ss1) @ (get_nested ss2) @ (get_nested ss3)
+    | S.StmExpr (_, e) -> [e]
+    | S.StmElsif (_, cond_s, ss) -> (get_nested [cond_s]) @ (get_nested ss)
+    | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) -> (
+        (get_nested [cond_s]) @
+        (get_nested body_ss) @
+        (get_nested elsif_ss) @
+        (get_nested else_ss)
       )
     | S.StmCase (_, e, cs, ss) -> (
         let case_exprs =

@@ -8,11 +8,11 @@ module Warn = IECCheckerCore.Warn
 
 let rec collect_warnings (e: S.expr) : Warn.t list =
   match e with
-  | S.BinExpr (e1, op, e2) -> (
+  | S.ExprBin (_, e1, op, e2) -> (
       match (e1, op, e2) with
-      | S.BinExpr _, _, _ -> collect_warnings e1
-      | _, _, S.BinExpr _ -> collect_warnings e2
-      | S.Variable lhs, S.DIV, S.Constant rhs ->
+      | S.ExprBin _, _, _ -> collect_warnings e1
+      | _, _, S.ExprBin _ -> collect_warnings e2
+      | S.ExprVariable(_, lhs), S.DIV, S.ExprConstant(_, rhs) ->
         if S.c_is_zero rhs then
           let name = S.vget_name lhs in
           let ti = S.vget_ti lhs in
@@ -21,7 +21,7 @@ let rec collect_warnings (e: S.expr) : Warn.t list =
           [w]
         else
           []
-      | S.Constant lhs, S.DIV, S.Constant rhs ->
+      | S.ExprConstant(_,lhs), S.DIV, S.ExprConstant(_,rhs) ->
         if S.c_is_zero rhs then
           let v_str = S.c_get_str_value lhs in
           let ti = S.c_get_ti lhs in
