@@ -28,7 +28,7 @@ let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) 
   In_channel.close inx;
   (elements, warns)
 
-let parse_stdin : (S.iec_library_element list * Warn.t list) =
+let parse_stdin () : (S.iec_library_element list * Warn.t list) =
   match In_channel.input_line stdin with
   | None -> ([], [W.mk_internal ~id:"Cancel" ""])
   | Some code -> (
@@ -48,7 +48,7 @@ let run_checker filename fmt create_dumps quiet =
       if read_stdin then begin
         Printf.printf "> ";
         flush stdout;
-        parse_stdin
+        parse_stdin ()
       end else begin
         if quiet then Printf.printf "Parsing %s ...\n" filename;
         parse_file filename
