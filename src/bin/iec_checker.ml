@@ -50,7 +50,7 @@ let run_checker filename fmt create_dumps quiet =
         flush stdout;
         parse_stdin ()
       end else begin
-        if quiet then Printf.printf "Parsing %s ...\n" filename;
+        if not quiet then Printf.printf "Parsing %s ...\n" filename;
         parse_file filename
       end
     in
