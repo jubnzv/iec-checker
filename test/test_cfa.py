@@ -1,13 +1,15 @@
 """Tests for control flow analysis inspections provided by OCaml core."""
 import sys
 import os
+import pytest
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
 from python.core import run_checker  # noqa
-from python.dump import DumpManager # noqa
+from python.dump import DumpManager  # noqa
 
 
+@pytest.mark.skip(reason="TDB")
 def test_cfa_dead_code():
     f = './test/st/dead-code.st'
     warns, rc = run_checker(f)

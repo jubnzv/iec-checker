@@ -1,6 +1,7 @@
 """Tests for structure of generated control flow graph."""
 import sys
 import os
+import pytest
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
@@ -33,6 +34,7 @@ def test_cfg_single_bb_has_exit_type():
         assert bbs[0].succs == []
 
 
+@pytest.mark.skip(reason="TDB")
 def test_cfg_single_if_statement_bb_has_exit_type():
     fdump = f'stdin.dump.json'
     checker_warnings, rc = check_program(
@@ -65,7 +67,7 @@ def test_cfg_single_if_statement_bb_has_exit_type():
         assert bbs[1].succs == [2]
         # a := 1
         assert bbs[2].id == 2
-        assert bbs[2].type == "BB"
+        assert bbs[2].type == "BBExit"
         assert bbs[2].preds == [1]
         assert bbs[2].succs == []
 
