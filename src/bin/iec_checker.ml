@@ -37,7 +37,7 @@ let parse_stdin () : (S.iec_library_element list * Warn.t list) =
       let (elements, warns) = parse_with_error lexbuf in
       (elements, warns))
 
-let run_checker filename fmt create_dumps quiet =
+let run_checker filename fmt create_dumps quiet interactive =
   let (read_stdin : bool) = (String.equal "-" filename) || (String.is_empty filename) in
   if (not (Sys.file_exists filename) && not read_stdin) then
     let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" filename) in
@@ -46,7 +46,7 @@ let run_checker filename fmt create_dumps quiet =
   else
     let (elements, parser_warns) =
       if read_stdin then begin
-        Printf.printf "> ";
+        if interactive then Printf.printf "> ";
         flush stdout;
         parse_stdin ()
       end else begin
@@ -81,6 +81,8 @@ let command =
       and
         quiet = flag "-quiet" (optional bool) ~doc:"Print only error messages."
       and
+        interactive = flag "-interactive" (optional bool) ~doc:"Show prompt."
+      and
         files = anon (sequence ("filename" %: Core.Filename.arg_type))
       in
       fun () ->
@@ -107,11 +109,15 @@ let command =
           | Some v -> v
           | None -> false
         in
+        let interactive = match interactive with
+          | Some v -> v
+          | None -> false
+        in
         match files with
         | [] -> (
             Printf.eprintf "No input files\n";
             exit 1)
-        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps quiet)
+        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps quiet interactive)
     )
 
 let () =
