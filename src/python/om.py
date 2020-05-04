@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import List, Dict, Set
 
 
 @dataclass
@@ -122,8 +122,8 @@ class BasicBlock:
     """Basic block of intraprocedural control flow graph."""
     id: int
     type: str
-    preds: List[int]
-    succs: List[int]
+    preds: Set[int]
+    succs: Set[int]
     stmt_id: int
 
     @classmethod
@@ -133,8 +133,8 @@ class BasicBlock:
         args['type'] = values.get('type', [])
         if len(args['type']) > 0:
             args['type'] = args['type'][0]
-        args['preds'] = list(set(values.get('preds', [])))
-        args['succs'] = list(set(values.get('succs', [])))
+        args['preds'] = set(values.get('preds', []))
+        args['succs'] = set(values.get('succs', []))
         args['stmt_id'] = values.get('stmt_id', -1)
         return BasicBlock(**args)
 
