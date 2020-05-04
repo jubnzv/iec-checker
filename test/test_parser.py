@@ -49,7 +49,7 @@ def test_direct_variables():
     checker_warnings, rc = run_checker(f)
     assert rc == 0
     with DumpManager(fdump) as dm:
-        scheme = dm.scheme
+        _ = dm.scheme  # TODO
 
 
 def test_statements_order():
@@ -57,7 +57,7 @@ def test_statements_order():
     fdump = f'stdin.dump.json'
     checker_warnings, rc = check_program(
         """
-        PROGRAM f
+        PROGRAM p
         VAR a : INT; i : INT; END_VAR
         a := 1;
         i := 22;

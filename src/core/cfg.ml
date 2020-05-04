@@ -91,7 +91,6 @@ let mk_bb ty stmt =
   let id = mk_id () in
   let preds = [] in
   let succs = [] in
-  Printf.printf "mk_bb id=%d stmt.id=%d\n" id (S.stmt_get_id stmt);
   { id; ty; preds; succs; stmt }
 
 let empty_cfg () =
@@ -106,34 +105,32 @@ let mk_bbs stmts : (bb list) =
   let sublist l low high =
     List.filteri l ~f:(fun i _ -> i >= low && i < high)
   in
-  let rec mk_bbs_aux stmts bbs_acc (bb_pred : bb option) : (bb list) =
-    (** Link two basic blocks *)
-    let link_bbs pred succ =
-      pred.succs <- (List.append pred.succs [succ.id]);
-      succ.preds <- (List.append succ.preds [pred.id]);
-      (pred, succ)
-    in
-    (** Extend [succ] links of [bbs] with [next_bb.id].
-        Extend [prev] links of [next_bb] with [bbs] [id]s. *)
-    let set_links_to_next (next_bb : bb) (bbs : bb list) : (bb list * bb) =
-      List.fold_left
-        bbs
-        ~init:([], next_bb)
-        ~f:(fun (acc, next_bb) bb -> (
-              acc @ [{bb with succs = (bb.succs @ [next_bb.id])}],
-              {next_bb with preds = (next_bb.preds @ [bb.id])}))
-    in
-    (** Wrapper over [set_links_to_next]. *)
-    let set_links_to_next_by_ids next_bb bbs (ids : int list) =
+  let rec mk_bbs_aux stmts bbs_acc (bb_preds : bb list) (bb_preds_ids : int list) : (bb list) =
+    (** Link previous [bbs] blocks with the [next_bb] block.
+        Links represented as mutable [succs] and [preds] fields, so we return nothing.
+
+        TODO: Unique constraint check.
+        Need to figure out how to use sets instead lists for keeping links.
+    *)
+    let link_with_next (next_bb : bb) (bbs : bb list) (ids : int list) : (unit) =
+      let aux (next_bb : bb) (bbs : bb list) : (unit) =
+        List.iter
+          bbs
+          ~f:(fun bb -> begin
+                next_bb.preds <- (next_bb.preds @ [bb.id]);
+                bb.succs <- (bb.succs @ [next_bb.id]);
+              end)
+      in
       List.filter
         bbs
         ~f:(fun bb -> List.exists ids ~f:(fun id -> phys_equal id bb.id))
-      |> set_links_to_next next_bb
+      |> aux next_bb
     in
     (** Create basic blocks for the statements nested into [stmt].
-        First created BB will be bound with [bb_pred].
-        Result will contain list with [bb_pred] extended with created BBs. *)
-    let rec mk_nested_bbs (stmt : S.statement) (bb_pred : bb) : (bb list * int list) =
+        First created BB will be bound with blocks from [bb_preds] that have
+        id from [bb_preds_ids].
+        Result will contain list with [bb_preds] extended with created BBs. *)
+    let rec mk_nested_bbs (stmt : S.statement) (bb_preds : bb list) (bb_preds_ids : int list) : (bb list * int list) =
       (** Create a list of basic blocks for the consecutive list of statements
           nested in [stmt]. [bb_pred] is a basic block that corresponds to
           [stmt]. It will be the first item of the result list; its [succs] and
@@ -141,140 +138,85 @@ let mk_bbs stmts : (bb list) =
           same.
 
           @return List of nested basic blocks and IDs of created basic blocks
-                  that should be bound with the next statement. *)
-      let fold_nested_stmts stmts bb_pred =
-        if (List.is_empty stmts) then
-          [bb_pred]
-        else
-          (* Closure that keeps default bb_pred ty *)
-          (* let saved_ty () = *)
-          (*     bb_pred.ty    *)
-          (* in                *)
-          let (bbs, _) =
-            List.fold_left
-              stmts
-              ~init:([] (* bbs *), None (* bb_pred *))
-              ~f:(fun (acc, fold_bb_pred_opt) s -> begin
-                    match fold_bb_pred_opt with
-                    | None -> begin
-                        (* First fold iteration. Bound with the initial bb_pred. *)
-                        let (bbs, _) = mk_nested_bbs s bb_pred in
-                        (* Restore type of the first BB. *)
-                        let upd_bb_pred = List.nth_exn bbs 0 in
-                        let upd_bb_pred = { upd_bb_pred with ty = bb_pred.ty } in
-                        (* TODO: What if it was a "complex" statement with a few exit
-                           points? *)
-                        acc @ [upd_bb_pred] @ (sublist bbs 1 (List.length bbs)), Some(upd_bb_pred)
-                      end
-                    | Some fold_bb_pred -> begin
-                        (* We're inside List.fold_left iteration. Each next BB should
-                           be bounded with the BB from the previous iteration. *)
-                        let (bbs, _) = mk_nested_bbs s fold_bb_pred in
-                        (* Restore type of the first BB. *)
-                        let upd_bb_pred = List.nth_exn bbs 0 in
-                        let upd_bb_pred = { upd_bb_pred with ty = fold_bb_pred.ty } in
-                        (* TODO: What if it was a "complex" statement with a few exit
-                           points? *)
-                        acc @ [upd_bb_pred] @ (sublist bbs 1 (List.length bbs)), Some(upd_bb_pred)
-                      end
-                  end)
-          in
-          bbs
-      in
-      (* Fetch nested statement from the complex expressions like function calls. *)
-      let fold_nested_expr e bb_pred =
-        fold_nested_stmts (AU.expr_to_stmts e) bb_pred
+                  that should be linked with the next statement. *)
+      let fold_nested_stmts stmts bb_preds (bb_preds_ids : int list) : (bb list * int list) =
+        List.fold_left
+          stmts
+          ~init:([] (* created bbs *), bb_preds_ids (* ids of the last bbs *))
+          ~f:(fun (acc, last_ids) s -> begin
+                let new_bb = mk_bb BB s in
+
+                match acc with
+                (* Link with [bb_preds] at the first fold iteration.*)
+                | [] -> link_with_next new_bb bb_preds last_ids;
+                  (* Link with basic blocks from previous fold iteration.*)
+                | _ -> link_with_next new_bb acc last_ids;
+                  ;
+
+                  let (nbbs, nbbs_last_ids) = mk_nested_bbs s [new_bb] [new_bb.id] in
+                  (acc @ nbbs, nbbs_last_ids)
+              end)
       in
       match stmt with
-      | S.StmExpr (_, expr) ->
+      | S.StmExpr (_, _) ->
         begin
-          let nested_bbs = fold_nested_expr expr bb_pred in
-          let expr_stmt_bb = List.last_exn nested_bbs in
-          Printf.printf "EXPR: len(expr_stmt_bbs)=%d\n" (List.length nested_bbs);
-          Printf.printf "EXPR: expr_stmt_bb.stmt.id=%d\n" (S.stmt_get_id expr_stmt_bb.stmt);
-          ([expr_stmt_bb] @ (sublist nested_bbs 0 ((List.length nested_bbs) - 1)),
-             [expr_stmt_bb.id])
+          (* FIXME: This doesn't handle nested statements in function params
+             assignment. I suppose we need to replace these expressions with
+             statements in parser/AST. *)
+          (bb_preds, bb_preds_ids)
         end
       | S.StmElsif (_, cond_stmt, body_stmts) ->
         begin
-          (* BB of ELSIF statement ([stmt]). We will modify it to connect it with
-             the control statements of ELSIF. *)
-          let elsif_stmt_bb = bb_pred in
-          Printf.printf "ELSIF: len(elsif_stmt.succs)=%d\n" (List.length elsif_stmt_bb.succs);
-
           (* Create basic blocks for [cond_stmt]. *)
-          let cond_head_bb = mk_bb BB cond_stmt in
-          let (elsif_stmt_bb, cond_head_bb) = link_bbs elsif_stmt_bb cond_head_bb in
-          (* TODO: Nested statements? They are no really possible because we have S.StmExpr here. *)
-          let (cond_bbs, _) = mk_nested_bbs cond_stmt cond_head_bb in
-          (* Fisrt condition BB will be added as first BB of the body BBs after reconnecting. *)
-          let cond_head_bb = List.nth_exn cond_bbs 0 in
-          let cond_bbs = (sublist cond_bbs 1 (List.length cond_bbs)) in
+          let (cond_bbs, cond_bbs_last_ids) = fold_nested_stmts [cond_stmt] bb_preds bb_preds_ids in
+          (* Connect BB for the ELSIF statement with condition BB. *)
+          let first_cond_bb = List.nth_exn cond_bbs 0 in
+          link_with_next first_cond_bb bb_preds bb_preds_ids;
 
           (* Create basic blocks for [body_stmts]. *)
-          let body_bbs = fold_nested_stmts body_stmts cond_head_bb in
-          let body_last_bb = List.last_exn body_bbs in (* to bound with expr next after if *)
+          let (body_bbs, body_bbs_last_ids) = fold_nested_stmts body_stmts cond_bbs cond_bbs_last_ids in
 
-          ([cond_head_bb] @ cond_bbs @ body_bbs,
-           [body_last_bb.id])
+          (bb_preds @ cond_bbs @ body_bbs, body_bbs_last_ids)
         end
       | S.StmIf (_, cond_stmt, body_stmts, elsif_stmts, else_stmts) ->
         begin
-          (* BB of IF statement ([stmt]). We will modify it to connect it with
-             the control statements of IF. *)
-          let if_stmt_bb = bb_pred in
-          Printf.printf "IF: len(if_stmt.succs)=%d\n" (List.length if_stmt_bb.succs);
-
           (* Create basic blocks for [cond_stmt]. *)
-          let cond_head_bb = mk_bb BB cond_stmt in
-          let (if_stmt_bb, cond_head_bb) = link_bbs if_stmt_bb cond_head_bb in
-          (* This is not possible to have multiple exit entries from here. This is always S.StmExpr. *)
-          let (cond_bbs, _) = mk_nested_bbs cond_stmt cond_head_bb in
-          (* Fisrt condition BB will be added as first BB of body BBs after reconnecting. *)
-          let cond_head_bb = List.nth_exn cond_bbs 0 in
-          let cond_bbs = (sublist cond_bbs 1 (List.length cond_bbs)) in
-          Printf.printf "IF:cond: len(cond_bbs)=%d\n" (List.length cond_bbs);
-          Printf.printf "IF:cond: cond_head_bb.stmt.id=%d\n" (S.stmt_get_id cond_head_bb.stmt);
+          let (cond_bbs, cond_bbs_last_ids) = fold_nested_stmts [cond_stmt] bb_preds bb_preds_ids in
+          (* Connect BB for the IF statement with condition BB. *)
+          let first_cond_bb = List.nth_exn cond_bbs 0 in
+          link_with_next first_cond_bb bb_preds bb_preds_ids;
 
           (* Create basic blocks for [body_stmts]. *)
-          let body_bbs = fold_nested_stmts body_stmts cond_head_bb in
-          let body_last_bb = List.last_exn body_bbs in (* to bound with expr next after if *)
-          let cond_head_bb = List.nth_exn body_bbs 0 in (* to connect with elsifs *)
-          Printf.printf "IF:body: len(body_bbs)=%d\n" (List.length body_bbs);
+          let (body_bbs, body_bbs_last_ids) = fold_nested_stmts body_stmts cond_bbs cond_bbs_last_ids in
 
           (* Create basic blocks for [elsif_stmts]. *)
-          let ((elsif_bbs: bb list list), (elsif_last_bb_ids: int list), cond_head_bb) =
-            (* We iterate over elsif statements and update connections to [cond_head_bb]. *)
+          let (elsif_bbs, elsif_last_ids) =
             List.fold_left
               elsif_stmts
-              ~init:([], [], cond_head_bb)
-              ~f:(fun (bbs, last_bbs, cond_head_bb) v -> begin
-                    (* TODO *)
-                    let (elsif_bbs, _) = mk_nested_bbs v cond_head_bb in
-                    let elsif_last_bb = List.last_exn elsif_bbs in
-                    let cond_head_bb = List.nth_exn elsif_bbs 0 in
-                    (bbs @ [elsif_bbs],
-                     last_bbs @ [elsif_last_bb.id],
-                     cond_head_bb)
+              ~init:([], [])
+              ~f:(fun (acc, acc_ids) stmt -> begin
+                    let (bbs, bbs_last_ids) = fold_nested_stmts [stmt] cond_bbs cond_bbs_last_ids in
+                    (acc @ bbs, acc_ids @ bbs_last_ids)
                   end)
           in
-          Printf.printf "IF:elsif: len(elsif_bbs)=%d\n" (List.length elsif_bbs);
 
-          (* Create basic blocks for [stmts_else]. *)
-          let else_bbs = fold_nested_stmts else_stmts cond_head_bb in
-          let else_last_bb = List.last_exn else_bbs in (* to bound with expr next after if *)
-          let cond_head_bb = List.nth_exn else_bbs 0 in (* we have filled [cond_head_bb.succs] *)
-          Printf.printf "IF:else: len(elsif_bbs)=%d\n" (List.length else_bbs);
+          (* Create basic blocks for [else_stmt]. *)
+          let (else_bbs, else_last_ids) = fold_nested_stmts else_stmts cond_bbs cond_bbs_last_ids in
 
-          ([if_stmt_bb] @
-           [cond_head_bb] @ cond_bbs @
-           body_bbs @
-           List.fold_left elsif_bbs ~init:[] ~f:(fun acc bbs -> acc @ bbs) @
-           else_bbs,
-           (* ids of BBs to bound with the next statement after the IF *)
-           (elsif_last_bb_ids @ [body_last_bb.id] @ [else_last_bb.id]))
+          (* IDs of BBs that will be linked with the next statement after IF. *)
+          let last_bbs_ids =
+            (* Direct jump from the IF condition if there are no else statements. *)
+            let cond_bbs_last_ids =
+              match else_stmts with
+              | [] -> cond_bbs_last_ids
+              | _ -> []
+            in
+            cond_bbs_last_ids @ body_bbs_last_ids @ elsif_last_ids @ else_last_ids
+          in
+
+          (bb_preds @ cond_bbs @ body_bbs @ elsif_bbs @ else_bbs, last_bbs_ids)
         end
-      | _ -> ([bb_pred], [bb_pred.id]) (* TODO: Need test previous statements first. *)
+      | _ -> (bb_preds, bb_preds_ids) (* TODO: Need test previous statements first. *)
       (* | S.StmCase (_, e, cs_list, stmts_else) ->                               *)
       (*   begin                                                                  *)
       (*     let get_case_bbs bb_stm_parent =                                     *)
@@ -316,58 +258,49 @@ let mk_bbs stmts : (bb list) =
     in
     match stmts with
     | [] -> begin
-        match bb_pred with
-        | None -> begin
+        match bb_preds with
+        | [] -> begin
             (* Empty *)
             []
           end
-        | Some bbp -> begin
-            (* Insert the last BB *)
-            bbs_acc @ [bbp]
+        | _ -> begin
+            (* Insert the last BBs *)
+            bbs_acc @ bb_preds
           end
       end
     | [s] -> begin
         let bb = mk_bb BBExit s in
-        match bb_pred with
-        | None -> begin
+        match bb_preds with
+        | [] -> begin
             (* Single BB *)
-            (* TODO *)
-            let (nested_bbs, _) = mk_nested_bbs s bb in
-            let last_nested_bb = List.last_exn nested_bbs in
-            mk_bbs_aux [] (bbs_acc @ nested_bbs) (Some(last_nested_bb))
+            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
+            mk_bbs_aux [] [] n_bbs n_bbs_last_ids
           end
-        | Some bbp -> begin
-            (* Last BB *)
-            let (bbp, bb) = link_bbs bbp bb in
-            (* TODO *)
-            let (nested_bbs, _) = mk_nested_bbs s bb in
-            let last_nested_bb = List.last_exn nested_bbs in
-            mk_bbs_aux [] (bbs_acc @ [bbp] @ nested_bbs) (Some(last_nested_bb))
+        | _ -> begin
+            (* Create BBs for the last statement. *)
+            link_with_next bb bb_preds bb_preds_ids;
+            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
+            mk_bbs_aux [] (bbs_acc @ bb_preds) n_bbs n_bbs_last_ids
           end
       end
-    | s :: tail -> begin
-        match bb_pred with
-        | None -> begin
+    | s :: stail -> begin
+        match bb_preds with
+        | [] -> begin
             (* First BB *)
             let bb = mk_bb BBEntry s in
-            (* TODO *)
-            let (nested_bbs, _) = mk_nested_bbs s bb in
-            (* Printf.printf "len(nested_bbs)=%d\n" (List.length nested_bbs); *)
-            let last_nested_bb = List.last_exn nested_bbs in
-            mk_bbs_aux tail nested_bbs (Some(last_nested_bb))
+            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
+            mk_bbs_aux stail n_bbs n_bbs n_bbs_last_ids
           end
-        | Some bbp -> begin
+        | _ -> begin
             (* Regular BB *)
             let bb = mk_bb BB s in
-            let (bbp, bb) = link_bbs bbp bb in
-            (* TODO *)
-            let (nested_bbs, _) = mk_nested_bbs s bb in
-            let last_nested_bb = List.last_exn nested_bbs in
-            mk_bbs_aux tail (bbs_acc @ [bbp] @ nested_bbs) (Some(last_nested_bb))
+            link_with_next bb bb_preds bb_preds_ids;
+            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
+            mk_bbs_aux stail (bbs_acc @ bb_preds) n_bbs n_bbs_last_ids
           end
       end
   in
-  List.rev (mk_bbs_aux stmts [] None)
+  List.rev (mk_bbs_aux stmts [] [] [])
 
 let mk iec_element =
   let cfg = empty_cfg () in

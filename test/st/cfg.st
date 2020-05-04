@@ -7,10 +7,8 @@ FUNCTION test_cfg : INT
   i := 0;
   IF a > 1 THEN
       i := 1;
-  ELSE
-      i := 42;
+      a := 2;
   END_IF;
   i := 0;
 
 END_FUNCTION
-
