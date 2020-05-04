@@ -35,6 +35,8 @@ def test_parser_errors():
 
 def test_no_parser_errors():
     for fname in os.listdir('./test/st/good/'):
+        if not fname.endswith('.st'):
+            continue
         f = os.path.join('./test/st/good/', fname)
         fdump = f'{f}.dump.json'
         checker_warnings, rc = run_checker(f)
