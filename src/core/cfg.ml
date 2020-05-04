@@ -157,6 +157,19 @@ let mk_bbs stmts : (bb list) =
                   (acc @ nbbs, nbbs_last_ids)
               end)
       in
+      (** Same as [fold_nested_stmts] but all created nodes would be linked with
+          [bb_preds] and returned last_ids accumulates over fold iterations. *)
+      let fold_nested_stmts_inconsist stmts bb_preds (bb_preds_ids : int list) : (bb list * int list) =
+        List.fold_left
+          stmts
+          ~init:([] (* created bbs *), bb_preds_ids (* ids of the last bbs *))
+          ~f:(fun (acc, acc_ids) s -> begin
+                let new_bb = mk_bb BB s in
+                link_with_next new_bb bb_preds acc_ids;
+                let (nbbs, nbbs_last_ids) = mk_nested_bbs s [new_bb] [new_bb.id] in
+                (acc @ nbbs, acc_ids @ nbbs_last_ids)
+              end)
+      in
       match stmt with
       | S.StmExpr (_, _) ->
         begin
@@ -216,24 +229,54 @@ let mk_bbs stmts : (bb list) =
 
           (bb_preds @ cond_bbs @ body_bbs @ elsif_bbs @ else_bbs, last_bbs_ids)
         end
-      | _ -> (bb_preds, bb_preds_ids) (* TODO: Need test previous statements first. *)
-      (* | S.StmCase (_, e, cs_list, stmts_else) ->                               *)
-      (*   begin                                                                  *)
-      (*     let get_case_bbs bb_stm_parent =                                     *)
-      (*       List.fold_left cs_list                                             *)
-      (*         ~f:(fun bbs cs ->                                                *)
-      (*             begin                                                        *)
-      (*               bbs @                                                      *)
-      (*               (* case expressions                                     *) *)
-      (*               (List.fold_left cs.S.case                                  *)
-      (*                  ~f:(fun bbs ec -> bbs @ (expr_to_bbs ec bb_stm_parent)) *)
-      (*                  ~init:[]) @                                             *)
-      (*               (* case statements                                      *) *)
-      (*               (stmts_to_bbs cs.S.body bb_stm_parent)                     *)
-      (*             end)                                                         *)
-      (*         ~init:[]                                                         *)
-      (*     in                                                                   *)
-      (*   end                                                                    *)
+      | S.StmCase (_, cond_stmt, case_sels, else_stmts) ->
+        begin
+          (* Create basic blocks for [cond_stmt]. *)
+          let (cond_bbs, cond_bbs_last_ids) = fold_nested_stmts [cond_stmt] bb_preds bb_preds_ids in
+          (* Connect BB for the CASE statement with condition BB. *)
+          let first_cond_bb = List.nth_exn cond_bbs 0 in
+          link_with_next first_cond_bb bb_preds bb_preds_ids;
+
+          (* Create basic blocks for [case_sels] statements. *)
+          let (cs_bbs, cs_bbs_last_ids) = List.fold_left
+              case_sels
+              ~init:([], [])
+              ~f:(fun (acc, acc_ids) case_sel -> begin
+                    (* There are cases when we have multiple case selections.
+                       For example:
+                           CASE 3,4 : a := 19;
+                       This means that we want to link each of case selection
+                       statements with appropriate body statement:
+                           3 <-> a := 19;
+                           4 <-> a := 19; *)
+                    let (case_bbs, case_bbs_last_ids) =
+                      (* Each case selection will be linked with [cond_bbs]. *)
+                      fold_nested_stmts_inconsist case_sel.case cond_bbs cond_bbs_last_ids
+                    in
+                    let (body_bbs, body_bbs_last_ids) =
+                      fold_nested_stmts case_sel.body case_bbs case_bbs_last_ids
+                    in
+                    ((acc @ case_bbs @ body_bbs),
+                     (acc_ids @ body_bbs_last_ids))
+                  end)
+          in
+
+          (* Create basic blocks for [else_stmt]. *)
+          let (else_bbs, else_last_ids) = fold_nested_stmts else_stmts cond_bbs cond_bbs_last_ids in
+
+          (* IDs of BBs that will be linked with the next statement after CASE. *)
+          let last_bbs_ids =
+            (* Direct jump from the CASE condition if there are no else (default) statements. *)
+            let cond_bbs_last_ids =
+              match else_stmts with
+              | [] -> cond_bbs_last_ids
+              | _ -> []
+            in
+            cond_bbs_last_ids @ cs_bbs_last_ids @ else_last_ids
+          in
+
+          (bb_preds @ cond_bbs @ cs_bbs @ else_bbs, last_bbs_ids)
+        end
       (* | S.StmFor (_, _, _, _, _, stmts_body) ->                                *)
       (*   begin                                                                  *)
       (*     (* TODO: Generate assign expression *)                               *)
@@ -255,6 +298,7 @@ let mk_bbs stmts : (bb list) =
       (*   end                                                                    *)
       (* | S.StmExit _ | S.StmReturn _ -> _                                       *)
       (* | S.StmContinue _ -> (* TODO: Add jump edge     *)                       *)
+      | _ -> (bb_preds, bb_preds_ids) (* TODO: Need test previous statements first. *)
     in
     match stmts with
     | [] -> begin

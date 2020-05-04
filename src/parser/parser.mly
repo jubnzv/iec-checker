@@ -2012,15 +2012,21 @@ let if_stmt_elsif_list :=
     elsifs @ [elsif]
   }
 
-case_stmt:
-  | ti = T_CASE e = expression T_OF css = list(case_selection) T_ELSE sl = stmt_list T_END_CASE
-  { S.StmCase(ti, e, css, sl) }
-  | ti = T_CASE e = expression T_OF css = list(case_selection) T_END_CASE
-  { S.StmCase(ti, e, css, []) }
+let case_stmt :=
+  | ti = T_CASE; e = expression; T_OF; css = list(case_selection); T_ELSE; sl = stmt_list; T_END_CASE;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmCase(ti, S.StmExpr(eti, e), css, sl)
+  }
+  | ti = T_CASE; e = expression; T_OF; css = list(case_selection); T_END_CASE;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmCase(ti, S.StmExpr(eti, e), css, [])
+  }
 
-case_selection:
-  | cl = case_list T_COLON sl = stmt_list
-  { {S.case = cl; S.body = sl} }
+let case_selection :=
+  | cl = case_list; T_COLON; sl = stmt_list;
+  { { S.case = cl; S.body = sl } }
 
 let case_list :=
   | ~ = separated_list(T_COMMA, case_list_elem); <>
@@ -2029,9 +2035,13 @@ let case_list_elem :=
   | specs = subrange;
   {
     let (ti, lb, ub) = specs in
-    S.ExprConstant(ti, S.CRange(ti, lb, ub))
+    S.StmExpr(ti, S.ExprConstant(ti, S.CRange(ti, lb, ub)))
   }
-  | ~ = constant_expr; <>
+  | e = constant_expr;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmExpr(eti, e)
+  }
 
 let iteration_stmt :=
   | ~ = for_stmt; <>

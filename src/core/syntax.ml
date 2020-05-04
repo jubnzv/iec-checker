@@ -359,7 +359,7 @@ and statement =
              statement list (** else *)
              [@name "If"]
   | StmCase of TI.t *
-               expr * (** condition *)
+               statement * (** condition *)
                case_selection list *
                statement list (* else *)
                [@name "Case"]
@@ -400,7 +400,7 @@ and expr =
   | ExprUn       of TI.t * operator * expr        [@name "Un"]
   | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
 [@@deriving to_yojson, show]
-and case_selection = {case: expr list; body: statement list}
+and case_selection = {case: statement list; body: statement list}
 [@@deriving to_yojson, show]
 (* }}} *)
 

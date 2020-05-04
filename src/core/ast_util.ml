@@ -26,6 +26,12 @@ let expr_to_stmts expr : S.statement list =
   aux expr
 
 let rec stmts_to_list stmt =
+  let get_nested stmts =
+    List.fold_left
+      stmts
+      ~init:[]
+      ~f:(fun acc s -> acc @ (stmts_to_list s))
+  in
   match stmt with
   | S.StmExpr (_, e) -> [stmt] @ expr_to_stmts e
   | S.StmElsif (_, cond_stmts, body_stmts) ->
@@ -40,14 +46,14 @@ let rec stmts_to_list stmt =
       ([cond_s] @ body_ss @ elsif_ss @ else_ss)
       ~f:(fun ss s -> ss @ stmts_to_list s)
       ~init:[]
-  | S.StmCase (_, e, cs, ns) ->
-    let cs_stmts =
-      List.fold_left cs ~f:(fun css cs -> css @ cs.body) ~init:[]
+  | S.StmCase (_, cond_s, case_sels, else_ss) ->
+    let case_stmts =
+      List.fold_left
+        case_sels
+        ~init:[]
+        ~f:(fun acc cs -> acc @ (get_nested cs.case) @ (get_nested cs.body))
     in
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left (ns @ cs_stmts)
-      ~f:(fun ss s -> ss @ stmts_to_list s)
-      ~init:[]
+    [cond_s] @ case_stmts @ (get_nested else_ss)
   | S.StmFor (_, _, e1, e2, e3_opt, ns) ->
     let e3_stmts =
       match e3_opt with Some e -> expr_to_stmts e | None -> []
@@ -109,14 +115,18 @@ let get_exprs elems =
         (get_nested elsif_ss) @
         (get_nested else_ss)
       )
-    | S.StmCase (_, e, cs, ss) -> (
-        let case_exprs =
-          List.fold_left cs
+    | S.StmCase (_, cond_s, case_sels, else_ss) ->
+      begin
+        let case_stmts =
+          List.fold_left
+            case_sels
             ~init:[]
-            ~f:(fun acc case_sel -> acc @ (case_sel.case @ (get_nested case_sel.body)))
+            ~f:(fun acc case_sel -> acc @ (get_nested case_sel.case) @ (get_nested case_sel.body))
         in
-        [e] @ case_exprs @ (get_nested ss)
-      )
+        (get_nested [cond_s]) @
+        case_stmts @
+        (get_nested else_ss)
+      end
     | S.StmFor (_, _, e1, e2, e3_opt, ss) -> (
         let e3 = match e3_opt with Some e -> [e] | None -> [] in
         [e1] @ [e2] @ e3 @ (get_nested ss)
