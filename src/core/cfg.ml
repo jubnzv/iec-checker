@@ -19,7 +19,7 @@ type bb_ty =
 and bb =
   {
     id : int;
-    ty: bb_ty;
+    mutable ty: bb_ty;
     mutable preds : int list; (** Ids of predecessor nodes *)
     mutable succs : int list; (** Ids of successor nodes *)
     stmt : S.statement [@opaque];
@@ -45,7 +45,7 @@ module BBMap = struct
 
   let empty = Map.empty (module Int)
 
-  let add m bb = Map.set m ~key:bb.id ~data:bb
+  let set m bb = Map.set m ~key:bb.id ~data:bb
 
   (** Remove last element from the bbs list *)
   let pop_exn (m : t) : (t) =
@@ -64,6 +64,10 @@ module BBMap = struct
 
   let find m k = Map.find m k
 
+  let find_exn m k = Map.find_exn m k
+
+  let iter (m: t) f = Map.iter m ~f:f
+
   let to_yojson (m : t) : Yojson.Safe.t =
     let items =
       Map.fold_right m
@@ -76,7 +80,7 @@ module BBMap = struct
 end
 
 type t = {
-  mutable bb_map : BBMap.t; (** Map of basic blocks *)
+  mutable bbs_map : BBMap.t; (** Map of basic blocks *)
   entry_bb_id : int; (** Id of the initial basic block *)
   pou_id : int; (** Id of the POU that this graph belongs to *)
 }
@@ -94,82 +98,96 @@ let mk_bb ty stmt =
   { id; ty; preds; succs; stmt }
 
 let empty_cfg () =
-  let bb_map = BBMap.empty in
+  let bbs_map = BBMap.empty in
   let entry_bb_id = -1 in
   let pou_id = -1 in
-  { bb_map; entry_bb_id; pou_id }
+  { bbs_map; entry_bb_id; pou_id }
 
-(** [mk_bbs iec_element stmts] Create a list of bounded basic blocks for [stmts]
-    and their nested statements. *)
-let mk_bbs stmts : (bb list) =
-  let sublist l low high =
-    List.filteri l ~f:(fun i _ -> i >= low && i < high)
-  in
-  let rec mk_bbs_aux stmts bbs_acc (bb_preds : bb list) (bb_preds_ids : int list) : (bb list) =
-    (** Link previous [bbs] blocks with the [next_bb] block.
-        Links represented as mutable [succs] and [preds] fields, so we return nothing.
+(** [fill_bbs_map cfg stmts] Fill [cfg.map] with a linked basic blocks for
+    [stmts] and their nested statements. *)
+let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
+  (** Recursively traverse over [stmts] to create basic blocks for each
+       statement, including the nested ones.
+      [bbs_pred_ids] is a list of identifiers of basic blocks from the previous
+      iteration. They will be linked with the block created in the current
+      iteration. *)
+  let rec fill_bbs_map_aux stmts (bbs_pred_ids : int list) : (unit) =
+    (** Link blocks from the [bbs_map] with id from [ids] with a [next_bb] block.
+        Links are represented as mutable [succs] and [preds] fields, so we
+        return nothing.
 
         TODO: Unique constraint check.
         Need to figure out how to use sets instead lists for keeping links.
     *)
-    let link_with_next (next_bb : bb) (bbs : bb list) (ids : int list) : (unit) =
-      let do_link bb =
-        if List.exists ids ~f:(fun id -> phys_equal id bb.id) then
-          begin
-            next_bb.preds <- (next_bb.preds @ [bb.id]);
-            bb.succs <- (bb.succs @ [next_bb.id]);
-          end
-      in
-      let rec aux = function
-        | [] -> ()
-        | [bb] -> do_link bb;
-        | bb :: tail -> do_link bb; aux tail;
-      in
-      aux bbs
+    let link_preds (next_bb : bb) (pred_ids : int list) : (unit) =
+      (* TODO: This is horrible. I should use LRU cache (memoization) here and
+         stop iteration when all ids was found. *)
+      BBMap.iter
+        cfg.bbs_map
+        (fun (bb) -> begin
+             if List.exists pred_ids ~f:(fun id -> phys_equal id bb.id) then
+               begin
+                 next_bb.preds <- (next_bb.preds @ [bb.id]);
+                 bb.succs <- (bb.succs @ [next_bb.id]);
+               end
+           end)
+    in
+    let link_preds_by_id (id : int) (pred_ids : int list) : (unit) =
+      let bb = BBMap.find_exn cfg.bbs_map id in
+      link_preds bb pred_ids
     in
     (** Create basic blocks for the statement [stmt] and its nested statements.
-        First created BB will be bound with blocks from [bb_preds] that have
-        id from [bb_preds_ids].
-        Result will contain list with [bb_preds] extended with created BBs. *)
-    let rec mk_nested_bbs (stmt : S.statement) (bb_preds : bb list) (bb_preds_ids : int list) : (bb list * int list) =
+        First created BB will be linked with blocks from [bbs_pred_ids].
+        @return List of IDs of the last basic blocks. *)
+    let rec mk_nested_bbs (stmt : S.statement) (bbs_pred_ids : int list) : (int list) =
       (** Create a list of basic blocks for the consecutive list of statements
-          nested in [stmt]. [bb_pred] is a basic block that corresponds to
-          [stmt]. It will be the first item of the result list; its [succs] and
-          [preds] edges will contains corresponding ids, block type stills the
-          same.
+          nested in [stmts]. [bbs_pred_ids] is a list of identifiers for basic
+          blocks that will be linked with a BB created for the first statement.
 
-          @return List of nested basic blocks and IDs of created basic blocks
-                  that should be linked with the next statement. *)
-      let fold_nested_stmts stmts bb_preds (bb_preds_ids : int list) : (bb list * int list) =
-        List.fold_left
-          stmts
-          ~init:([] (* created bbs *), bb_preds_ids (* ids of the last bbs *))
-          ~f:(fun (acc, last_ids) s -> begin
-                let new_bb = mk_bb BB s in
+          Next created BBs will be linked with BB created as a previous iteration.
 
-                match acc with
-                (* Link with [bb_preds] at the first fold iteration.*)
-                | [] -> link_with_next new_bb bb_preds last_ids;
-                  (* Link with basic blocks from previous fold iteration.*)
-                | _ -> link_with_next new_bb acc last_ids;
-                  ;
-
-                  let (nbbs, nbbs_last_ids) = mk_nested_bbs s [new_bb] [new_bb.id] in
-                  (acc @ nbbs, nbbs_last_ids)
-              end)
+          @return ID of the first created nested block and list of IDs for last
+          created basic blocks. *)
+      let mk_bbs_nested_stmts_consist stmts (bbs_preds_ids : int list) : (int * int list) =
+        let (first_id, last_ids) = List.fold_left
+            stmts
+            ~init:(None, bbs_preds_ids)
+            ~f:(fun (first_id, last_ids) s -> begin
+                  let bb = mk_bb BB s in
+                  link_preds bb last_ids;
+                  cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
+                  let first_id = match first_id with None -> bb.id | Some id -> id in
+                  (Some(first_id), mk_nested_bbs s [bb.id])
+                end)
+        in
+        let first_id = match first_id with
+          | None (* no statements *) -> -1
+          | Some(id) -> id
+        in
+        (first_id, last_ids)
       in
-      (** Same as [fold_nested_stmts] but all created nodes would be linked with
-          [bb_preds] and returned last_ids accumulates over fold iterations. *)
-      let fold_nested_stmts_inconsist stmts bb_preds (bb_preds_ids : int list) : (bb list * int list) =
-        List.fold_left
-          stmts
-          ~init:([] (* created bbs *), bb_preds_ids (* ids of the last bbs *))
-          ~f:(fun (acc, acc_ids) s -> begin
-                let new_bb = mk_bb BB s in
-                link_with_next new_bb bb_preds acc_ids;
-                let (nbbs, nbbs_last_ids) = mk_nested_bbs s [new_bb] [new_bb.id] in
-                (acc @ nbbs, acc_ids @ nbbs_last_ids)
-              end)
+      (** Same as [mk_bbs_nested_stmts_consist] but all created nodes would be
+          linked with [bbs_pred_ids] and returned list of last IDs accumulates
+          over [stmts] iterations. *)
+      let mk_bbs_nested_stmts_inconsist stmts (bbs_pred_ids : int list) : (int * int list) =
+        let (first_id, last_ids) = List.fold_left
+            stmts
+            ~init:(None, bbs_pred_ids)
+            ~f:(fun (first_id, acc_last_ids) s -> begin
+                  let bb = mk_bb BB s in
+                  link_preds bb bbs_pred_ids;
+                  cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
+                  match first_id with
+                  (* first iteration; don't include preds *)
+                  | None -> (Some(bb.id), (mk_nested_bbs s [bb.id]))
+                  | Some _ -> (first_id, (acc_last_ids @ (mk_nested_bbs s [bb.id])))
+                end)
+        in
+        let first_id = match first_id with
+          | None (* no statements *) -> -1
+          | Some(id) -> id
+        in
+        (first_id, last_ids)
       in
       match stmt with
       | S.StmExpr (_, _) ->
@@ -177,72 +195,62 @@ let mk_bbs stmts : (bb list) =
           (* FIXME: This doesn't handle nested statements in function params
              assignment. I suppose we need to replace these expressions with
              statements in parser/AST. *)
-          (bb_preds, bb_preds_ids)
+          (bbs_pred_ids)
         end
       | S.StmElsif (_, cond_stmt, body_stmts) ->
         begin
           (* Create basic blocks for [cond_stmt]. *)
-          let (cond_bbs, cond_bbs_last_ids) = fold_nested_stmts [cond_stmt] bb_preds bb_preds_ids in
-          (* Connect BB for the ELSIF statement with condition BB. *)
-          let first_cond_bb = List.nth_exn cond_bbs 0 in
-          link_with_next first_cond_bb bb_preds bb_preds_ids;
-
+          let (first_cond_id, cond_last_ids) = mk_bbs_nested_stmts_consist [cond_stmt] bbs_pred_ids in
+          (* Connect BB for the ELSIF statement with a condition BB. *)
+          link_preds_by_id first_cond_id bbs_pred_ids;
           (* Create basic blocks for [body_stmts]. *)
-          let (body_bbs, body_bbs_last_ids) = fold_nested_stmts body_stmts cond_bbs cond_bbs_last_ids in
-
-          (bb_preds @ cond_bbs @ body_bbs, body_bbs_last_ids)
+          let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts cond_last_ids in
+          (body_last_ids)
         end
       | S.StmIf (_, cond_stmt, body_stmts, elsif_stmts, else_stmts) ->
         begin
           (* Create basic blocks for [cond_stmt]. *)
-          let (cond_bbs, cond_bbs_last_ids) = fold_nested_stmts [cond_stmt] bb_preds bb_preds_ids in
+          let (first_cond_id, cond_last_ids) = mk_bbs_nested_stmts_consist [cond_stmt] bbs_pred_ids in
           (* Connect BB for the IF statement with condition BB. *)
-          let first_cond_bb = List.nth_exn cond_bbs 0 in
-          link_with_next first_cond_bb bb_preds bb_preds_ids;
+          link_preds_by_id first_cond_id bbs_pred_ids;
 
           (* Create basic blocks for [body_stmts]. *)
-          let (body_bbs, body_bbs_last_ids) = fold_nested_stmts body_stmts cond_bbs cond_bbs_last_ids in
+          let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts cond_last_ids in
 
           (* Create basic blocks for [elsif_stmts]. *)
-          let (elsif_bbs, elsif_last_ids) =
+          let elsif_last_ids =
             List.fold_left
               elsif_stmts
-              ~init:([], [])
-              ~f:(fun (acc, acc_ids) stmt -> begin
-                    let (bbs, bbs_last_ids) = fold_nested_stmts [stmt] cond_bbs cond_bbs_last_ids in
-                    (acc @ bbs, acc_ids @ bbs_last_ids)
+              ~init:([])
+              ~f:(fun (acc) stmt -> begin
+                    let (_, last_ids) = mk_bbs_nested_stmts_consist [stmt] cond_last_ids in
+                    (acc @ last_ids)
                   end)
           in
 
           (* Create basic blocks for [else_stmt]. *)
-          let (else_bbs, else_last_ids) = fold_nested_stmts else_stmts cond_bbs cond_bbs_last_ids in
+          let (_, else_last_ids) = mk_bbs_nested_stmts_consist else_stmts cond_last_ids in
 
-          (* IDs of BBs that will be linked with the next statement after IF. *)
-          let last_bbs_ids =
-            (* Direct jump from the IF condition if there are no else statements. *)
-            let cond_bbs_last_ids =
-              match else_stmts with
-              | [] -> cond_bbs_last_ids
-              | _ -> []
-            in
-            cond_bbs_last_ids @ body_bbs_last_ids @ elsif_last_ids @ else_last_ids
+          (* Set direct jump from the IF condition if there are no else statements. *)
+          let cond_last_ids =
+            match else_stmts with
+            | [] -> cond_last_ids
+            | _ -> []
           in
-
-          (bb_preds @ cond_bbs @ body_bbs @ elsif_bbs @ else_bbs, last_bbs_ids)
+          (cond_last_ids @ body_last_ids @ elsif_last_ids @ else_last_ids)
         end
       | S.StmCase (_, cond_stmt, case_sels, else_stmts) ->
         begin
           (* Create basic blocks for [cond_stmt]. *)
-          let (cond_bbs, cond_bbs_last_ids) = fold_nested_stmts [cond_stmt] bb_preds bb_preds_ids in
+          let (first_cond_id, cond_last_ids) = mk_bbs_nested_stmts_consist [cond_stmt] bbs_pred_ids in
           (* Connect BB for the CASE statement with condition BB. *)
-          let first_cond_bb = List.nth_exn cond_bbs 0 in
-          link_with_next first_cond_bb bb_preds bb_preds_ids;
+          link_preds_by_id first_cond_id bbs_pred_ids;
 
           (* Create basic blocks for [case_sels] statements. *)
-          let (cs_bbs, cs_bbs_last_ids) = List.fold_left
+          let cs_last_ids = List.fold_left
               case_sels
-              ~init:([], [])
-              ~f:(fun (acc, acc_ids) case_sel -> begin
+              ~init:([])
+              ~f:(fun (acc_ids) case_sel -> begin
                     (* There are cases when we have multiple case selections.
                        For example:
                            CASE 3,4 : a := 19;
@@ -250,55 +258,45 @@ let mk_bbs stmts : (bb list) =
                        statements with appropriate body statement:
                            3 <-> a := 19;
                            4 <-> a := 19; *)
-                    let (case_bbs, case_bbs_last_ids) =
+                    let (_, case_last_ids) =
                       (* Each case selection will be linked with [cond_bbs]. *)
-                      fold_nested_stmts_inconsist case_sel.case cond_bbs cond_bbs_last_ids
+                      mk_bbs_nested_stmts_inconsist case_sel.case cond_last_ids
                     in
-                    let (body_bbs, body_bbs_last_ids) =
-                      fold_nested_stmts case_sel.body case_bbs case_bbs_last_ids
+                    let (_, body_last_ids) =
+                      mk_bbs_nested_stmts_consist case_sel.body case_last_ids
                     in
-                    ((acc @ case_bbs @ body_bbs),
-                     (acc_ids @ body_bbs_last_ids))
+                    (acc_ids @ body_last_ids)
                   end)
           in
 
           (* Create basic blocks for [else_stmt]. *)
-          let (else_bbs, else_last_ids) = fold_nested_stmts else_stmts cond_bbs cond_bbs_last_ids in
+          let (_, else_last_ids) = mk_bbs_nested_stmts_consist else_stmts cond_last_ids in
 
-          (* IDs of BBs that will be linked with the next statement after CASE. *)
-          let last_bbs_ids =
-            (* Direct jump from the CASE condition if there are no else (default) statements. *)
-            let cond_bbs_last_ids =
-              match else_stmts with
-              | [] -> cond_bbs_last_ids
-              | _ -> []
-            in
-            cond_bbs_last_ids @ cs_bbs_last_ids @ else_last_ids
+          (* Set direct jump from the CASE condition if there are no else (default) statements. *)
+          let cond_last_ids =
+            match else_stmts with
+            | [] -> cond_last_ids
+            | _ -> []
           in
-
-          (bb_preds @ cond_bbs @ cs_bbs @ else_bbs, last_bbs_ids)
+          (cond_last_ids @ cs_last_ids @ else_last_ids)
         end
       | S.StmFor (_, ctrl, body_stmts) ->
         begin
-          (* BB of FOR statement. *)
-          let for_bb = List.nth_exn bb_preds 0 in
+          (* Id of the basic block created for FOR statement by [fill_bbs_map_aux]. *)
+          let for_bb_id = List.nth_exn bbs_pred_ids 0 in
 
-          (* Create basic blocks for the control variable assignment statement.
-             I reuse [fold_nested_stmts], but anyway we'll get statement
-             for the single ExprConst here. *)
-          let (ctrl_bbs, ctrl_bbs_last_ids) = fold_nested_stmts [ctrl.assign] bb_preds bb_preds_ids in
-          assert (phys_equal 1 (List.length ctrl_bbs));
-          assert (phys_equal 1 (List.length ctrl_bbs_last_ids));
-          let first_ctrl_bb = List.nth_exn ctrl_bbs 0 in
+          (* Create basic blocks for the control variable assignment statement. *)
+          let (_, ctrl_last_ids) = mk_bbs_nested_stmts_consist [ctrl.assign] bbs_pred_ids in
+          assert (phys_equal 1 (List.length ctrl_last_ids)); (* always single assignment stmt *)
 
           (* Create basic blocks for [body_stmts]. *)
           (* TODO: What about EXIT statements? *)
-          let (body_bbs, body_bbs_last_ids) = fold_nested_stmts body_stmts ctrl_bbs ctrl_bbs_last_ids in
+          let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts ctrl_last_ids in
 
-          (* Link last body statement with a FOR control statement. *)
-          (* link_with_next for_bb body_bbs body_bbs_last_ids; *)
+          (* Link the last body statements with a FOR control statement. *)
+          (* link_preds_by_id for_bb_id body_last_ids; *)
 
-          (bb_preds @ ctrl_bbs @ body_bbs, bb_preds_ids)
+          (bbs_pred_ids)
         end
       (* | S.StmWhile (_, e, stmts_body) ->                                       *)
       (*   begin                                                                  *)
@@ -314,62 +312,51 @@ let mk_bbs stmts : (bb list) =
       (*   end                                                                    *)
       (* | S.StmExit _ | S.StmReturn _ -> _                                       *)
       (* | S.StmContinue _ -> (* TODO: Add jump edge     *)                       *)
-      | _ -> (bb_preds, bb_preds_ids) (* TODO: Need test previous statements first. *)
+      | _ -> (bbs_pred_ids) (* TODO: Need test previous statements first. *)
     in
     match stmts with
     | [] -> begin
-        match bb_preds with
-        | [] -> begin
-            (* Empty *)
-            []
-          end
+        match bbs_pred_ids with
+        | [] (* empty map *) -> ()
         | _ -> begin
-            (* Insert the last BBs *)
-            bbs_acc @ bb_preds
+            (* Set block type type of the last BBs. *)
+            BBMap.iter
+              cfg.bbs_map
+              (fun bb -> begin
+                   if List.exists bbs_pred_ids ~f:(fun id -> phys_equal id bb.id) then
+                     bb.ty <- BBExit;
+                 end)
           end
       end
     | [s] -> begin
-        let bb = mk_bb BBExit s in
-        match bb_preds with
-        | [] -> begin
-            (* Single BB *)
-            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
-            mk_bbs_aux [] [] n_bbs n_bbs_last_ids
-          end
-        | _ -> begin
-            (* Create BBs for the last statement. *)
-            link_with_next bb bb_preds bb_preds_ids;
-            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
-            mk_bbs_aux [] (bbs_acc @ bb_preds) n_bbs n_bbs_last_ids
-          end
+        let bb = match bbs_pred_ids with
+          (* Only one BB in the map. *)
+          | [] -> mk_bb BBEntry s
+          (* Create nested BBs for the last statement. *)
+          | _ -> let bb = mk_bb BB s in link_preds bb bbs_pred_ids; bb
+        in
+        cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
+        let n_bbs_last_ids = mk_nested_bbs s [bb.id] in
+        fill_bbs_map_aux [] n_bbs_last_ids
       end
     | s :: stail -> begin
-        match bb_preds with
-        | [] -> begin
-            (* First BB *)
-            let bb = mk_bb BBEntry s in
-            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
-            mk_bbs_aux stail n_bbs n_bbs n_bbs_last_ids
-          end
-        | _ -> begin
-            (* Regular BB *)
-            let bb = mk_bb BB s in
-            link_with_next bb bb_preds bb_preds_ids;
-            let (n_bbs, n_bbs_last_ids) = mk_nested_bbs s [bb] [bb.id] in
-            mk_bbs_aux stail (bbs_acc @ bb_preds) n_bbs n_bbs_last_ids
-          end
+        let bb = match bbs_pred_ids with
+          | [] (* first BB *)   -> mk_bb BBEntry s
+          | _  (* regular BB *) -> let bb = mk_bb BB s in link_preds bb bbs_pred_ids; bb
+        in
+        cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
+        let n_bbs_last_ids = mk_nested_bbs s [bb.id] in
+        fill_bbs_map_aux stail n_bbs_last_ids
       end
   in
-  List.rev (mk_bbs_aux stmts [] [] [])
+  fill_bbs_map_aux stmts []
 
 let mk iec_element =
   let cfg = empty_cfg () in
   let cfg = { cfg with pou_id = (S.get_pou_id iec_element) } in
   let stmts = AU.get_top_stmts iec_element in
-  List.iter
-    (mk_bbs stmts)
-    ~f:(fun bb -> cfg.bb_map <- BBMap.add cfg.bb_map bb);
-  let entry_bb = BBMap.first cfg.bb_map in
+  fill_bbs_map cfg stmts;
+  let entry_bb = BBMap.first cfg.bbs_map in
   let entry_bb_id = match entry_bb with
     | Some bb -> bb.id
     | None -> -1
@@ -380,16 +367,16 @@ let mk iec_element =
 let get_pou_id c = c.pou_id
 
 let list_basic_blocks cfg =
-  BBMap.to_alist cfg.bb_map
+  BBMap.to_alist cfg.bbs_map
   |> List.fold_left
     ~init:[]
     ~f:(fun acc i -> match i with (_, bb) -> acc @ [bb])
 
 let bb_by_id cfg (id : int) =
-  BBMap.find cfg.bb_map id
+  BBMap.find cfg.bbs_map id
 
 let to_string (cfg : t) : string =
-  BBMap.to_alist cfg.bb_map
+  BBMap.to_alist cfg.bbs_map
   |> List.fold_left
     ~init:[]
     ~f:(fun acc i -> match i with (id, bb) ->
@@ -412,7 +399,7 @@ let to_string (cfg : t) : string =
   |> String.concat ~sep:"\n"
 
 let to_yojson (c : t) : Yojson.Safe.t =
-  let m = c.bb_map in
+  let m = c.bbs_map in
   `Assoc [
     "pou_id", `Int(c.pou_id);
     "entry_bb_id", `Int(c.entry_bb_id);

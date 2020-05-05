@@ -34,7 +34,6 @@ def test_cfg_single_bb_has_exit_type():
         assert bbs[0].succs == set()
 
 
-@pytest.mark.skip(reason="TDB")
 def test_cfg_single_if_statement_bb_has_exit_type():
     fdump = f'stdin.dump.json'
     checker_warnings, rc = check_program(
@@ -57,13 +56,13 @@ def test_cfg_single_if_statement_bb_has_exit_type():
         assert len(bbs) == 3
         # if .. then
         assert bbs[0].id == 0
-        assert bbs[0].type == "BBExit"
+        assert bbs[0].type == "BBEntry"
         assert bbs[0].preds == set()
         assert bbs[0].succs == {1}
         # a < 16
         assert bbs[1].id == 1
-        assert bbs[1].type == "BB"
-        assert bbs[1].preds == {1}
+        assert bbs[1].type == "BBExit"
+        assert bbs[1].preds == {0}
         assert bbs[1].succs == {2}
         # a := 1
         assert bbs[2].id == 2
@@ -296,3 +295,52 @@ def test_cfg_case_statement():
         assert bbs[11].type == "BBExit"
         assert bbs[11].preds == {8, 3, 5, 10}
         assert bbs[11].succs == set()
+
+
+def test_cfg_for_statement():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        PROGRAM test_for
+        VAR a : INT; i : INT; END_VAR
+        FOR i := 0 TO 10 BY 2 DO
+          a := a + i;
+          a := a + 1;
+        END_FOR;
+        i := 0;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.programs) == 1
+        assert len(scheme.cfgs) == 1
+        cfg = scheme.cfgs[0]
+        bbs = cfg.basic_blocks
+        assert len(bbs) == 5
+        # for
+        assert bbs[0].id == 0
+        assert bbs[0].type == "BBEntry"
+        assert bbs[0].preds == set()
+        assert bbs[0].succs == {1, 4}
+        # i := 0
+        assert bbs[1].id == 1
+        assert bbs[1].type == "BB"
+        assert bbs[1].preds == {0}
+        assert bbs[1].succs == {2}
+        # a := a + i
+        assert bbs[2].id == 2
+        assert bbs[2].type == "BB"
+        assert bbs[2].preds == {1}
+        assert bbs[2].succs == {3}
+        # a := a + 1
+        assert bbs[3].id == 3
+        assert bbs[3].type == "BB"
+        assert bbs[3].preds == {2}
+        assert bbs[3].succs == {0}
+        # i := 0
+        assert bbs[4].id == 4
+        assert bbs[4].type == "BBExit"
+        assert bbs[4].preds == {0}
+        assert bbs[4].succs == set()

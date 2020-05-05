@@ -19,7 +19,7 @@ type bb_ty =
 type bb =
   {
     id : int;
-    ty: bb_ty;
+    mutable ty: bb_ty;
     mutable preds : int list; (** Ids of predecessor nodes *)
     mutable succs : int list; (** Ids of successor nodes *)
     stmt : S.statement;
