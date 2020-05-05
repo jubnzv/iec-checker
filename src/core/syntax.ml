@@ -364,10 +364,7 @@ and statement =
                statement list (* else *)
                [@name "Case"]
   | StmFor of (TI.t *
-               SymVar.t * (** control variable *)
-               expr * (** range start *)
-               expr * (** range end *)
-               expr option * (** range step *)
+               for_control *
                statement list (** body statements *) [@opaque])
               [@name "For"]
   | StmWhile of TI.t *
@@ -402,6 +399,11 @@ and expr =
 [@@deriving to_yojson, show]
 and case_selection = {case: statement list; body: statement list}
 [@@deriving to_yojson, show]
+and for_control = {
+  assign : statement; (** control variable assignment *)
+  range_end : expr; (** range end value *)
+  range_step : expr; (** step *)
+} [@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Functions to work with statements *)
@@ -410,13 +412,13 @@ let stmt_get_ti = function
   | StmElsif (ti,_,_) -> ti
   | StmIf (ti,_,_,_,_) -> ti
   | StmCase (ti,_,_,_) -> ti
-  | StmFor (ti,_,_,_,_,_) -> ti
+  | StmFor (ti,_,_) -> ti
   | StmWhile (ti,_,_) -> ti
   | StmRepeat (ti,_,_) -> ti
   | StmExit (ti) -> ti
   | StmContinue (ti) -> ti
   | StmReturn (ti) -> ti
-  | StmFuncParamAssign _ -> TI.create_dummy  (* TODO *)
+  | StmFuncParamAssign _ -> TI.create_dummy () (* TODO *)
   | StmFuncCall (ti,_,_) -> ti
 
 let stmt_get_id stmt =

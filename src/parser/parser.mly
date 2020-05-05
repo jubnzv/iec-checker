@@ -2050,25 +2050,39 @@ let iteration_stmt :=
   | ~ = T_EXIT; <S.StmExit>
   | ~ = T_CONTINUE; <S.StmContinue>
 
-for_stmt:
-  | ti = T_FOR cv = control_variable T_ASSIGN fl = for_list T_DO sl = stmt_list T_END_FOR
+let for_stmt :=
+  | ti = T_FOR; cv = control_variable; T_ASSIGN; fl = for_list; T_DO; sl = stmt_list; T_END_FOR;
   {
-    let (e1,e2,e3) = fl in
-    S.StmFor(ti, cv, e1, e2, e3, sl)
+    let (e_start, e_end, e_step) = fl in
+    let ctrl_assign_stmt =
+      let vti = S.SymVar.get_ti cv in
+      let assign_expr = S.ExprBin(vti, S.ExprVariable(vti, S.SymVar(cv)), S.ASSIGN, e_start) in
+      S.StmExpr(ti, assign_expr)
+    in
+    let ctrl = {
+      S.assign = ctrl_assign_stmt;
+      S.range_end = e_end;
+      S.range_step = e_step }
+    in
+    S.StmFor(ti, ctrl, sl)
   }
 
-control_variable:
-  | id = T_IDENTIFIER
+let control_variable :=
+  | id = T_IDENTIFIER;
   {
     let (n, ti) = id in
     S.SymVar.create n ti
   }
 
-for_list:
-  | e1 = expression T_TO e2 = expression T_BY e3 = expression
-  { (e1, e2, Some(e3)) }
-  | e1 = expression T_TO e2 = expression
-  { (e1, e2, None) }
+let for_list :=
+  | e1 = expression; T_TO; e2 = expression; T_BY; e3 = expression;
+  { (e1, e2, e3) }
+  | e1 = expression; T_TO; e2 = expression;
+  {
+    (* According 7.3.3.4.2 default STEP value is 1. *)
+    let dti = TI.create_dummy () in
+    (e1, e2, S.ExprConstant(dti, S.CInteger(dti, 1)))
+  }
 
 while_stmt:
   | ti = T_WHILE e = expression T_DO sl = stmt_list T_END_WHILE

@@ -113,20 +113,21 @@ let mk_bbs stmts : (bb list) =
         Need to figure out how to use sets instead lists for keeping links.
     *)
     let link_with_next (next_bb : bb) (bbs : bb list) (ids : int list) : (unit) =
-      let aux (next_bb : bb) (bbs : bb list) : (unit) =
-        List.iter
-          bbs
-          ~f:(fun bb -> begin
-                next_bb.preds <- (next_bb.preds @ [bb.id]);
-                bb.succs <- (bb.succs @ [next_bb.id]);
-              end)
+      let do_link bb =
+        if List.exists ids ~f:(fun id -> phys_equal id bb.id) then
+          begin
+            next_bb.preds <- (next_bb.preds @ [bb.id]);
+            bb.succs <- (bb.succs @ [next_bb.id]);
+          end
       in
-      List.filter
-        bbs
-        ~f:(fun bb -> List.exists ids ~f:(fun id -> phys_equal id bb.id))
-      |> aux next_bb
+      let rec aux = function
+        | [] -> ()
+        | [bb] -> do_link bb;
+        | bb :: tail -> do_link bb; aux tail;
+      in
+      aux bbs
     in
-    (** Create basic blocks for the statements nested into [stmt].
+    (** Create basic blocks for the statement [stmt] and its nested statements.
         First created BB will be bound with blocks from [bb_preds] that have
         id from [bb_preds_ids].
         Result will contain list with [bb_preds] extended with created BBs. *)
@@ -277,13 +278,28 @@ let mk_bbs stmts : (bb list) =
 
           (bb_preds @ cond_bbs @ cs_bbs @ else_bbs, last_bbs_ids)
         end
-      (* | S.StmFor (_, _, _, _, _, stmts_body) ->                                *)
-      (*   begin                                                                  *)
-      (*     (* TODO: Generate assign expression *)                               *)
-      (*     let bb_stm_parent = mk_parent stmt bb_parent BB in                   *)
-      (*     bb_stm_parent ::                                                     *)
-      (*     (stmts_to_bbs stmts_body bb_stm_parent)                              *)
-      (*   end                                                                    *)
+      | S.StmFor (_, ctrl, body_stmts) ->
+        begin
+          (* BB of FOR statement. *)
+          let for_bb = List.nth_exn bb_preds 0 in
+
+          (* Create basic blocks for the control variable assignment statement.
+             I reuse [fold_nested_stmts], but anyway we'll get statement
+             for the single ExprConst here. *)
+          let (ctrl_bbs, ctrl_bbs_last_ids) = fold_nested_stmts [ctrl.assign] bb_preds bb_preds_ids in
+          assert (phys_equal 1 (List.length ctrl_bbs));
+          assert (phys_equal 1 (List.length ctrl_bbs_last_ids));
+          let first_ctrl_bb = List.nth_exn ctrl_bbs 0 in
+
+          (* Create basic blocks for [body_stmts]. *)
+          (* TODO: What about EXIT statements? *)
+          let (body_bbs, body_bbs_last_ids) = fold_nested_stmts body_stmts ctrl_bbs ctrl_bbs_last_ids in
+
+          (* Link last body statement with a FOR control statement. *)
+          (* link_with_next for_bb body_bbs body_bbs_last_ids; *)
+
+          (bb_preds @ ctrl_bbs @ body_bbs, bb_preds_ids)
+        end
       (* | S.StmWhile (_, e, stmts_body) ->                                       *)
       (*   begin                                                                  *)
       (*   end                                                                    *)

@@ -54,12 +54,8 @@ let rec stmts_to_list stmt =
         ~f:(fun acc cs -> acc @ (get_nested cs.case) @ (get_nested cs.body))
     in
     [cond_s] @ case_stmts @ (get_nested else_ss)
-  | S.StmFor (_, _, e1, e2, e3_opt, ns) ->
-    let e3_stmts =
-      match e3_opt with Some e -> expr_to_stmts e | None -> []
-    in
-    [ stmt ] @ expr_to_stmts e1 @ expr_to_stmts e2 @ e3_stmts
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.StmFor (_, ctrl, body_stmts) ->
+    [ ctrl.assign ] @ body_stmts
   | S.StmWhile (_, e, ns) ->
     [ stmt ] @ expr_to_stmts e
     @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
@@ -127,9 +123,10 @@ let get_exprs elems =
         case_stmts @
         (get_nested else_ss)
       end
-    | S.StmFor (_, _, e1, e2, e3_opt, ss) -> (
-        let e3 = match e3_opt with Some e -> [e] | None -> [] in
-        [e1] @ [e2] @ e3 @ (get_nested ss)
+    | S.StmFor (_, ctrl, body_stmts) -> (
+        (get_nested [ctrl.assign]) @
+        [ctrl.range_end; ctrl.range_step] @
+        (get_nested body_stmts)
       )
     | S.StmWhile (_, e, ss) -> [e] @ (get_nested ss)
     | S.StmRepeat (_, ss, e) -> (get_nested ss) @ [e]

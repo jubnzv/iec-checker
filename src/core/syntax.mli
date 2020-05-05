@@ -272,10 +272,7 @@ and statement =
                statement list (* else *)
                [@name "Case"]
   | StmFor of (TI.t *
-               SymVar.t * (** control variable *)
-               expr * (** range start *)
-               expr * (** range end *)
-               expr option * (** range step *)
+               for_control *
                statement list (** body statements *) [@opaque])
               [@name "For"]
   | StmWhile of TI.t *
@@ -311,6 +308,11 @@ and expr =
 [@@deriving to_yojson, show]
 
 and case_selection = {case: statement list; body: statement list}
+and for_control = {
+  assign : statement; (** control variable assignment *)
+  range_end : expr; (** range end value *)
+  range_step : expr; (** step *)
+}
 [@@deriving to_yojson, show]
 (* }}} *)
 
