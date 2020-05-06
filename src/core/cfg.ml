@@ -199,13 +199,6 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
       (*   | S.StmExit _ -> []                                                                 *)
       (*   | S.StmContinue _ -> []                                                             *)
       (* in                                                                                    *)
-      (** Handle occurrence of the RETURN statement. *)
-      (* let handle_return_stmt (stmt : S.statement) (cur_bb : bb) = *)
-      (*     match stmt with                                         *)
-      (*     (* Mark this block as BBExit. Our CFG ends here. *)     *)
-      (*     | S.StmReturn _ -> Some({ cur_bb with ty = BBExit })    *)
-      (*     | _ -> None                                             *)
-      (* in                                                          *)
       match stmt with
       | S.StmExpr (_, expr) ->
         begin
@@ -383,7 +376,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
 
           (bbs_pred_ids)
         end
-      (* See [handle_return_stmt]. *)
+      (* Handled on block creation with [mk_bb]. *)
       | S.StmReturn _ -> []
       (* See [handle_jump_bbs]. *)
       | S.StmExit _ | S.StmContinue _ -> []

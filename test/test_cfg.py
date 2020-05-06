@@ -517,7 +517,7 @@ def test_cfg_single_return_statement():
     fdump = f'stdin.dump.json'
     checker_warnings, rc = check_program(
         """
-        FUNCTION test_return : INT
+        FUNCTION test_single_return : INT
         VAR A : INT; END_VAR
         RETURN;
         END_FUNCTION
@@ -536,3 +536,58 @@ def test_cfg_single_return_statement():
         assert bbs[0].type == "BBExit"
         assert bbs[0].preds == set()
         assert bbs[0].succs == set()
+
+
+def test_cfg_return_statement_inside_branch():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        FUNCTION test_return_nested : INT
+        VAR i : INT; a : INT; END_VAR
+        IF i = 0 THEN
+          a := a + 1;
+          RETURN;
+          a := a + 2;
+        END_IF;
+        a := a + 3;
+        END_FUNCTION
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.functions) == 1
+        assert len(scheme.cfgs) == 1
+        cfg = scheme.cfgs[0]
+        bbs = cfg.basic_blocks
+        assert len(bbs) == 6
+        # IF
+        assert bbs[0].id == 0
+        assert bbs[0].type == "BBEntry"
+        assert bbs[0].preds == set()
+        assert bbs[0].succs == {1}
+        # i = 0
+        assert bbs[1].id == 1
+        assert bbs[1].type == "BB"
+        assert bbs[1].preds == {0}
+        assert bbs[1].succs == {2, 5}
+        # a := a + 1
+        assert bbs[2].id == 2
+        assert bbs[2].type == "BB"
+        assert bbs[2].preds == {1}
+        assert bbs[2].succs == {3}
+        # RETURN
+        assert bbs[3].id == 3
+        assert bbs[3].type == "BBExit"
+        assert bbs[3].preds == {2}
+        assert bbs[3].succs == set()
+        # a := a + 2
+        assert bbs[4].id == 4
+        assert bbs[4].type == "BB"
+        assert bbs[4].preds == set()
+        assert bbs[4].succs == {5}
+        # a := a + 3
+        assert bbs[5].id == 5
+        assert bbs[5].type == "BBExit"
+        assert bbs[5].preds == {1, 4}
+        assert bbs[5].succs == set()
