@@ -81,6 +81,7 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
+  | SENDTO
 [@@deriving to_yojson, show]
 (* }}} *)
 
@@ -381,13 +382,9 @@ and statement =
                    [@name "Continue"]
   | StmReturn of TI.t
                  [@name "Return"]
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-                          [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
-                   statement list (** params assignment *)
+                   func_param_assign list
                    [@name "FuncCall"]
 [@@deriving to_yojson, show { with_path = false }]
 and expr =
@@ -404,6 +401,11 @@ and for_control = {
   range_end : expr; (** range end value *)
   range_step : expr; (** step *)
 } [@@deriving to_yojson, show]
+and func_param_assign = {
+  name : string option; (** function param name *)
+  stmt : statement; (** assignment or sendto statement *)
+  inverted : bool; (** has inversion in output assignment *)
+} [@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Functions to work with statements *)
@@ -418,7 +420,6 @@ let stmt_get_ti = function
   | StmExit (ti) -> ti
   | StmContinue (ti) -> ti
   | StmReturn (ti) -> ti
-  | StmFuncParamAssign _ -> TI.create_dummy () (* TODO *)
   | StmFuncCall (ti,_,_) -> ti
 
 let stmt_get_id stmt =

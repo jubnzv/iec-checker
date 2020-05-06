@@ -190,11 +190,21 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         (first_id, last_ids)
       in
       match stmt with
-      | S.StmExpr (_, _) ->
+      | S.StmExpr (_, expr) ->
         begin
-          (* FIXME: This doesn't handle nested statements in function params
-             assignment. I suppose we need to replace these expressions with
-             statements in parser/AST. *)
+          (* Create BBs for the assignments of functions parameters. *)
+          let rec mk_bbs_for_func_calls = function
+            | S.ExprFuncCall (_, stmt) -> let _ = mk_bbs_nested_stmts_consist [stmt] bbs_pred_ids in ()
+            | S.ExprVariable _ -> ()
+            | S.ExprConstant _ -> ()
+            | S.ExprBin (_,e1,_,e2) -> begin
+                let _ = mk_bbs_for_func_calls e1 in
+                let _ = mk_bbs_for_func_calls e2 in
+                ()
+            end
+            | S.ExprUn (_,_,e) -> let _ = mk_bbs_for_func_calls e in ()
+          in
+          let _ = mk_bbs_for_func_calls expr in
           (bbs_pred_ids)
         end
       | S.StmElsif (_, cond_stmt, body_stmts) ->
@@ -337,12 +347,25 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
 
           (cond_last_ids)
         end
-      (* | S.StmFuncParamAssign (_, e, _) ->                                      *)
-      (*   begin                                                                  *)
-      (*   end                                                                    *)
-      (* | S.StmFuncCall (_, _, stmts_body) ->                                    *)
-      (*   begin                                                                  *)
-      (*   end                                                                    *)
+      | S.StmFuncCall (_, _, func_params) ->
+        begin
+          (* Id of the basic block created for function call statement by [fill_bbs_map_aux]. *)
+          let funccall_bb_id = List.nth_exn bbs_pred_ids 0 in
+          assert (phys_equal 1 (List.length bbs_pred_ids));
+
+          let func_params_stmts = List.fold_left
+              func_params
+              ~init:[]
+              ~f:(fun acc fb -> acc @ [fb.stmt])
+          in
+
+          (* Create basic blocks for function parameters statements *)
+          let (_, func_param_assign_last_ids) = mk_bbs_nested_stmts_consist func_params_stmts bbs_pred_ids in
+          (* Link assigment BB for the last parameter with a function call BB. *)
+          link_preds_by_id funccall_bb_id func_param_assign_last_ids;
+
+          (bbs_pred_ids)
+        end
       (* | S.StmExit _ | S.StmReturn _ -> _                                       *)
       (* | S.StmContinue _ -> (* TODO: Add jump edge     *)                       *)
       | _ -> (bbs_pred_ids) (* TODO: Need test previous statements first. *)

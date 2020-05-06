@@ -56,6 +56,7 @@ type operator =
   | EQ (** = *)
   | NEQ (** <> *)
   | ASSIGN
+  | SENDTO (** => *)
 [@@deriving to_yojson, show]
 (* }}} *)
 
@@ -289,13 +290,9 @@ and statement =
                    [@name "Continue"]
   | StmReturn of TI.t
                  [@name "Return"]
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-                          [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
-                   statement list (** params assignment *)
+                   func_param_assign list
                    [@name "FuncCall"]
 [@@deriving to_yojson, show]
 
@@ -306,7 +303,6 @@ and expr =
   | ExprUn       of TI.t * operator * expr        [@name "Un"]
   | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
 [@@deriving to_yojson, show]
-
 and case_selection = {case: statement list; body: statement list}
 and for_control = {
   assign : statement; (** control variable assignment *)
@@ -314,6 +310,11 @@ and for_control = {
   range_step : expr; (** step *)
 }
 [@@deriving to_yojson, show]
+and func_param_assign = {
+  name : string option; (** function param name *)
+  stmt : statement; (** assignment or sendto statement *)
+  inverted : bool; (** has inversion in output assignment *)
+} [@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Functions to work with statements *)

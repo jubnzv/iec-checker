@@ -68,10 +68,14 @@ let rec stmts_to_list stmt =
   | S.StmExit _ -> [ stmt ]
   | S.StmContinue _ -> [ stmt ]
   | S.StmReturn _ -> [ stmt ]
-  | S.StmFuncParamAssign (_, e, _) -> [ stmt ] @ expr_to_stmts e
-  | S.StmFuncCall (_, _, ns) ->
-    stmt
-    :: (ns @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[])
+  | S.StmFuncCall (_, _, func_params) -> begin
+      let func_params_stmts = List.fold_left
+          func_params
+          ~init:[]
+          ~f:(fun acc fp -> acc @ [fp.stmt])
+      in
+      [stmt] @ func_params_stmts
+    end
 
 let get_pou_stmts = function
   | S.IECFunction (_, f) ->
@@ -133,9 +137,15 @@ let get_exprs elems =
       )
     | S.StmWhile (_, cond_stmt, ss) -> (get_nested [cond_stmt]) @ (get_nested ss)
     | S.StmRepeat (_, body_stmts, cond_stmt) -> (get_nested body_stmts) @ (get_nested [cond_stmt])
+    | S.StmFuncCall (_, _, func_params) -> begin
+        let func_params_stmts = List.fold_left
+            func_params
+            ~init:[]
+            ~f:(fun acc fp -> acc @ [fp.stmt])
+        in
+        (get_nested func_params_stmts)
+      end
     | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
-    | S.StmFuncParamAssign (_, e, _) -> [e]
-    | S.StmFuncCall (_, _, ss) -> (get_nested ss)
   in
   List.fold_left all_stmts
     ~init:[]

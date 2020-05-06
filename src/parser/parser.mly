@@ -962,15 +962,15 @@ let variable :=
   | v = symbolic_variable;
   { S.SymVar(v) }
 
-symbolic_variable:
-  | out = variable_name
+let symbolic_variable :=
+  | out = variable_name;
   { let (name, ti) = out in S.SymVar.create name ti }
   (* | multi_elem_var *)
 
 (* var_access: *)
 
-variable_name:
-  | id = T_IDENTIFIER
+let variable_name :=
+  | id = T_IDENTIFIER;
   {
     let (name, ti) = id in
     (name, ti)
@@ -1945,15 +1945,21 @@ let subprog_ctrl_stmt :=
   | ~ = T_RETURN; <S.StmReturn>
 
 let param_assign :=
-  | vn = variable_name; T_ASSIGN; e = expression;
+  | vn = variable_name; T_ASSIGN; expr = expression;
   {
-    let (n, _) = vn in
-    S.StmFuncParamAssign(Some n, e, false)
+    (* Source *)
+    let (name, ti) = vn in
+    let src_var = S.SymVar.create name ti in
+    let src_var = S.SymVar(src_var) in
+    let expr_var_src = S.ExprVariable(ti, src_var) in
+
+    let assign_expr = S.ExprBin(ti, expr_var_src, S.ASSIGN, expr) in
+    { S.name = Some(name); S.stmt = S.StmExpr(ti, assign_expr); S.inverted = false }
   }
-  | e = expression;
+  | expr = expression;
   {
-    let ti = S.expr_get_ti e in
-    S.StmFuncParamAssign(None, e, false)
+    let eti = S.expr_get_ti expr in
+    { S.name = None; S.stmt = S.StmExpr(eti, expr); S.inverted = false }
   }
   (* | ref_assign
   {  } *)
@@ -1961,15 +1967,33 @@ let param_assign :=
      to a function output variable. *)
   | T_NOT; vn = variable_name; T_SENDTO; v = variable;
   {
-    let (n, ti) = vn in
-    let vexpr = S.ExprVariable(ti, v) in
-    S.StmFuncParamAssign(Some n, vexpr, true)
+    (* Source *)
+    let (name, ti) = vn in
+    let src_var = S.SymVar.create name ti in
+    let src_var = S.SymVar(src_var) in
+    let expr_var_src = S.ExprVariable(ti, v) in
+
+    (* Destination *)
+    let ti_dest = S.vget_ti v in
+    let expr_var_dest = S.ExprVariable(ti_dest, v) in
+
+    let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
+    { S.name = Some(name); S.stmt = S.StmExpr(ti, sendto_expr); S.inverted = true }
   }
   | vn = variable_name; T_SENDTO; v = variable;
   {
-    let (n, ti) = vn in
-    let vexpr = S.ExprVariable(ti, v) in
-    S.StmFuncParamAssign(Some n, vexpr, false)
+    (* Source *)
+    let (name, ti) = vn in
+    let src_var = S.SymVar.create name ti in
+    let src_var = S.SymVar(src_var) in
+    let expr_var_src = S.ExprVariable(ti, v) in
+
+    (* Destination *)
+    let ti_dest = S.vget_ti v in
+    let expr_var_dest = S.ExprVariable(ti_dest, v) in
+
+    let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
+    { S.name = Some(name); S.stmt = S.StmExpr(ti, sendto_expr); S.inverted = false }
   }
 
 let selection_stmt :=
