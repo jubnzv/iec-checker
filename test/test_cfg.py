@@ -478,3 +478,61 @@ def test_cfg_func_call_statement():
         assert bbs[3].type == "BBExit"
         assert bbs[3].preds == {0}
         assert bbs[3].succs == set()
+
+
+def test_cfg_return_statement():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        FUNCTION test_return : INT
+        VAR A : INT; END_VAR
+        A := 0;
+        RETURN;
+        A := 1;
+        A := 42;
+        END_FUNCTION
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.functions) == 1
+        assert len(scheme.cfgs) == 1
+        cfg = scheme.cfgs[0]
+        bbs = cfg.basic_blocks
+        assert len(bbs) == 2
+        # a := 0
+        assert bbs[0].id == 0
+        assert bbs[0].type == "BBEntry"
+        assert bbs[0].preds == set()
+        assert bbs[0].succs == {1}
+        # RETURN
+        assert bbs[1].id == 1
+        assert bbs[1].type == "BBExit"
+        assert bbs[1].preds == {0}
+        assert bbs[1].succs == set()
+
+
+def test_cfg_single_return_statement():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        FUNCTION test_return : INT
+        VAR A : INT; END_VAR
+        RETURN;
+        END_FUNCTION
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.functions) == 1
+        assert len(scheme.cfgs) == 1
+        cfg = scheme.cfgs[0]
+        bbs = cfg.basic_blocks
+        assert len(bbs) == 1
+        # RETURN
+        assert bbs[0].id == 0
+        assert bbs[0].type == "BBExit"
+        assert bbs[0].preds == set()
+        assert bbs[0].succs == set()

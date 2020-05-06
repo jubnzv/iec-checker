@@ -94,6 +94,10 @@ let mk_bb ty stmt =
   let id = mk_id () in
   let preds = [] in
   let succs = [] in
+  let ty = match stmt with
+    | S.StmReturn _ -> BBExit
+    | _ -> ty
+  in
   { id; ty; preds; succs; stmt }
 
 let empty_cfg () =
@@ -189,6 +193,19 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         in
         (first_id, last_ids)
       in
+      (** Create basic blocks for jump statements.
+          [bb_start_id] is a identifier of the start block of the control loop. *)
+      (* let mk_jump_bbs (bb_start_id : int) (bbs_pred_ids : int list) : (int list) = function *)
+      (*   | S.StmExit _ -> []                                                                 *)
+      (*   | S.StmContinue _ -> []                                                             *)
+      (* in                                                                                    *)
+      (** Handle occurrence of the RETURN statement. *)
+      (* let handle_return_stmt (stmt : S.statement) (cur_bb : bb) = *)
+      (*     match stmt with                                         *)
+      (*     (* Mark this block as BBExit. Our CFG ends here. *)     *)
+      (*     | S.StmReturn _ -> Some({ cur_bb with ty = BBExit })    *)
+      (*     | _ -> None                                             *)
+      (* in                                                          *)
       match stmt with
       | S.StmExpr (_, expr) ->
         begin
@@ -201,7 +218,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
                 let _ = mk_bbs_for_func_calls e1 in
                 let _ = mk_bbs_for_func_calls e2 in
                 ()
-            end
+              end
             | S.ExprUn (_,_,e) -> let _ = mk_bbs_for_func_calls e in ()
           in
           let _ = mk_bbs_for_func_calls expr in
@@ -366,9 +383,10 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
 
           (bbs_pred_ids)
         end
-      (* | S.StmExit _ | S.StmReturn _ -> _                                       *)
-      (* | S.StmContinue _ -> (* TODO: Add jump edge     *)                       *)
-      | _ -> (bbs_pred_ids) (* TODO: Need test previous statements first. *)
+      (* See [handle_return_stmt]. *)
+      | S.StmReturn _ -> []
+      (* See [handle_jump_bbs]. *)
+      | S.StmExit _ | S.StmContinue _ -> []
     in
     match stmts with
     | [] -> begin
@@ -386,7 +404,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
       end
     | [s] -> begin
         let bb = match bbs_pred_ids with
-          (* Only one BB in the map. *)
+          (* Only one BB in the CFG. *)
           | [] -> mk_bb BBEntry s
           (* Create nested BBs for the last statement. *)
           | _ -> let bb = mk_bb BB s in link_preds bb bbs_pred_ids; bb
@@ -401,8 +419,12 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           | _  (* regular BB *) -> let bb = mk_bb BB s in link_preds bb bbs_pred_ids; bb
         in
         cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
-        let n_bbs_last_ids = mk_nested_bbs s [bb.id] in
-        fill_bbs_map_aux stail n_bbs_last_ids
+        match bb.ty with
+        | BBExit -> fill_bbs_map_aux [] []
+        | _ -> begin
+            let n_bbs_last_ids = mk_nested_bbs s [bb.id] in
+            fill_bbs_map_aux stail n_bbs_last_ids
+          end
       end
   in
   fill_bbs_map_aux stmts []
