@@ -373,7 +373,7 @@ and statement =
                 [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
-                 expr (** condition *)
+                 statement (** condition *)
                  [@name "Repeat"]
   | StmExit of TI.t
                [@name "Exit"]

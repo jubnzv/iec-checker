@@ -313,14 +313,30 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           (* TODO: What about EXIT statements? *)
           let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts cond_last_ids in
 
-          (* Link the last body statements with a FOR control statement. *)
+          (* Link the last body statements with a WHILE control statement. *)
           link_preds_by_id while_bb_id body_last_ids;
 
           ([while_bb_id])
         end
-      (* | S.StmRepeat (_, stmts, e) ->                                           *)
-      (*   begin                                                                  *)
-      (*   end                                                                    *)
+      | S.StmRepeat (_, body_stmts, cond_stmt) ->
+        begin
+          (* Id of the basic block created for REPEAT statement by [fill_bbs_map_aux]. *)
+          let repeat_bb_id = List.nth_exn bbs_pred_ids 0 in
+          assert (phys_equal 1 (List.length bbs_pred_ids));
+
+          (* Create basic blocks for [body_stmts]. *)
+          (* TODO: What about EXIT statements? *)
+          let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts [repeat_bb_id] in
+
+          (* Create basic block for [cond_stmt]. *)
+          let (_, cond_last_ids) = mk_bbs_nested_stmts_consist [cond_stmt] body_last_ids in
+          assert (phys_equal 1 (List.length cond_last_ids)); (* always single expression stmt *)
+
+          (* Link the condition statement with a REPEAT control statement. *)
+          link_preds_by_id repeat_bb_id cond_last_ids;
+
+          (cond_last_ids)
+        end
       (* | S.StmFuncParamAssign (_, e, _) ->                                      *)
       (*   begin                                                                  *)
       (*   end                                                                    *)

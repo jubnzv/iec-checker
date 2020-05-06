@@ -2091,9 +2091,12 @@ let while_stmt :=
     S.StmWhile(ti, S.StmExpr(eti, e), sl)
   }
 
-repeat_stmt:
-  | ti = T_REPEAT sl = stmt_list T_UNTIL e = expression T_END_REPEAT
-  { S.StmRepeat(ti, sl, e) }
+let repeat_stmt :=
+  | ti = T_REPEAT; sl = stmt_list; T_UNTIL; e = expression; T_END_REPEAT;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmRepeat(ti, sl, S.StmExpr(eti, e))
+  }
 (* }}} *)
 
 (* {{{ Table 73-76 -- Graphical languages *)

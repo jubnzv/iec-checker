@@ -393,3 +393,47 @@ def test_cfg_while_statement():
         assert bbs[4].type == "BBExit"
         assert bbs[4].preds == {0}
         assert bbs[4].succs == set()
+
+
+def test_cfg_repeat_statement():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        PROGRAM test_repeat
+        VAR j : INT := 0; END_VAR
+        REPEAT
+          j := j + 2;
+          UNTIL j < 100
+        END_REPEAT;
+        j := 0;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.programs) == 1
+        assert len(scheme.cfgs) == 1
+        cfg = scheme.cfgs[0]
+        bbs = cfg.basic_blocks
+        assert len(bbs) == 4
+        # repeat
+        assert bbs[0].id == 0
+        assert bbs[0].type == "BBEntry"
+        assert bbs[0].preds == {2}
+        assert bbs[0].succs == {1}
+        # j := j + 2
+        assert bbs[1].id == 1
+        assert bbs[1].type == "BB"
+        assert bbs[1].preds == {0}
+        assert bbs[1].succs == {2}
+        # j < 100
+        assert bbs[2].id == 2
+        assert bbs[2].type == "BB"
+        assert bbs[2].preds == {1}
+        assert bbs[2].succs == {0, 3}
+        # j := 0
+        assert bbs[3].id == 3
+        assert bbs[3].type == "BBExit"
+        assert bbs[3].preds == {2}
+        assert bbs[3].succs == set()
