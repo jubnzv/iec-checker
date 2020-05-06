@@ -284,6 +284,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         begin
           (* Id of the basic block created for FOR statement by [fill_bbs_map_aux]. *)
           let for_bb_id = List.nth_exn bbs_pred_ids 0 in
+          assert (phys_equal 1 (List.length bbs_pred_ids));
 
           (* Create basic blocks for the control variable assignment statement. *)
           let (_, ctrl_last_ids) = mk_bbs_nested_stmts_consist [ctrl.assign] bbs_pred_ids in
@@ -298,9 +299,25 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
 
           ([for_bb_id])
         end
-      (* | S.StmWhile (_, e, stmts_body) ->                                       *)
-      (*   begin                                                                  *)
-      (*   end                                                                    *)
+      | S.StmWhile (_, cond_stmt, body_stmts) ->
+        begin
+          (* Id of the basic block created for WHILE statement by [fill_bbs_map_aux]. *)
+          let while_bb_id = List.nth_exn bbs_pred_ids 0 in
+          assert (phys_equal 1 (List.length bbs_pred_ids));
+
+          (* Create basic block for [cond_stmt]. *)
+          let (_, cond_last_ids) = mk_bbs_nested_stmts_consist [cond_stmt] bbs_pred_ids in
+          assert (phys_equal 1 (List.length cond_last_ids)); (* always single expression stmt *)
+
+          (* Create basic blocks for [body_stmts]. *)
+          (* TODO: What about EXIT statements? *)
+          let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts cond_last_ids in
+
+          (* Link the last body statements with a FOR control statement. *)
+          link_preds_by_id while_bb_id body_last_ids;
+
+          ([while_bb_id])
+        end
       (* | S.StmRepeat (_, stmts, e) ->                                           *)
       (*   begin                                                                  *)
       (*   end                                                                    *)

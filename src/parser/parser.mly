@@ -2084,9 +2084,12 @@ let for_list :=
     (e1, e2, S.ExprConstant(dti, S.CInteger(dti, 1)))
   }
 
-while_stmt:
-  | ti = T_WHILE e = expression T_DO sl = stmt_list T_END_WHILE
-  { S.StmWhile(ti, e, sl) }
+let while_stmt :=
+  | ti = T_WHILE; e = expression; T_DO; sl = stmt_list; T_END_WHILE;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmWhile(ti, S.StmExpr(eti, e), sl)
+  }
 
 repeat_stmt:
   | ti = T_REPEAT sl = stmt_list T_UNTIL e = expression T_END_REPEAT

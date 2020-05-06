@@ -56,9 +56,9 @@ let rec stmts_to_list stmt =
     [cond_s] @ case_stmts @ (get_nested else_ss)
   | S.StmFor (_, ctrl, body_stmts) ->
     [ ctrl.assign ] @ body_stmts
-  | S.StmWhile (_, e, ns) ->
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.StmWhile (_, cond_stmt, ns) ->
+    [stmt] @ [cond_stmt] @
+    List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
   | S.StmRepeat (_, ns, e) ->
     [ stmt ] @ expr_to_stmts e
     @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
@@ -128,7 +128,7 @@ let get_exprs elems =
         [ctrl.range_end; ctrl.range_step] @
         (get_nested body_stmts)
       )
-    | S.StmWhile (_, e, ss) -> [e] @ (get_nested ss)
+    | S.StmWhile (_, cond_stmt, ss) -> (get_nested [cond_stmt]) @ (get_nested ss)
     | S.StmRepeat (_, ss, e) -> (get_nested ss) @ [e]
     | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
     | S.StmFuncParamAssign (_, e, _) -> [e]

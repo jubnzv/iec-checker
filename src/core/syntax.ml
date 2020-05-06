@@ -368,7 +368,7 @@ and statement =
                statement list (** body statements *) [@opaque])
               [@name "For"]
   | StmWhile of TI.t *
-                expr * (** condition *)
+                statement * (** condition *)
                 statement list (** body *)
                 [@name "While"]
   | StmRepeat of TI.t *
