@@ -4,10 +4,9 @@ module S = Syntax
 module E = Error
 module AU = Ast_util
 module TI = Tok_info
+module C = Common
 
 [@@@warning "-32"]
-[@@@warning "-26"]
-[@@@warning "-27"]
 
 type bb_ty =
   | BB (** Regular basic block *)
@@ -106,6 +105,7 @@ let empty_cfg () =
 (** [fill_bbs_map cfg stmts] Fill [cfg.map] with a linked basic blocks for
     [stmts] and their nested statements. *)
 let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
+  let (@) = C.append_tr in (* Use tail-recursive append because we have large data here *)
   (** Recursively traverse over [stmts] to create basic blocks for each
        statement, including the nested ones.
       [bbs_pred_ids] is a list of identifiers of basic blocks from the previous
@@ -294,9 +294,9 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts ctrl_last_ids in
 
           (* Link the last body statements with a FOR control statement. *)
-          (* link_preds_by_id for_bb_id body_last_ids; *)
+          link_preds_by_id for_bb_id body_last_ids;
 
-          (bbs_pred_ids)
+          ([for_bb_id])
         end
       (* | S.StmWhile (_, e, stmts_body) ->                                       *)
       (*   begin                                                                  *)

@@ -322,7 +322,7 @@ def test_cfg_for_statement():
         # for
         assert bbs[0].id == 0
         assert bbs[0].type == "BBEntry"
-        assert bbs[0].preds == set()
+        assert bbs[0].preds == {3}
         assert bbs[0].succs == {1, 4}
         # i := 0
         assert bbs[1].id == 1

@@ -13,6 +13,7 @@ let mk_warn ?(title="CFA")(bb : Cfg.bb) : Warn.t =
   Warn.mk ti.linenr ti.col title ("Code block will never be reached")
 
 (** Find unreachable basic blocks (dead code) *)
+(* TODO: Should be rewritten due endless recursion when traversing loops. *)
 let find_unreachable_bbs (cfg: Cfg.t) : Warn.t list =
   let rec visit (cfg: Cfg.t) visited (bb : Cfg.bb) =
     let visited = Set.add visited bb.id in
@@ -56,7 +57,8 @@ let find_unreachable_bbs (cfg: Cfg.t) : Warn.t list =
 
 let run (cfgs : Cfg.t list) : Warn.t list =
   (* List.iter cfgs ~f:(fun c -> Printf.printf "%s\n" (Cfg.to_string c)); *)
-  List.fold_left
-    cfgs
-    ~init:[]
-    ~f:(fun acc cfg -> acc @ (find_unreachable_bbs cfg))
+  (* List.fold_left                                         *)
+  (*   cfgs                                                 *)
+  (*   ~init:[]                                             *)
+  (*   ~f:(fun acc cfg -> acc @ (find_unreachable_bbs cfg)) *)
+ []
