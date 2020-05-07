@@ -2,13 +2,13 @@
 
 ![](https://github.com/jubnzv/iec-checker/workflows/Unit%20tests/badge.svg)
 
-This project aims to implement an open source tool for static code analysis of IEC61131-3 programs.
+This project aims to implement an open source tool for static code analysis of IEC 61131-3 programs.
 
 The following features are currently implemented:
-+ IEC61131-3 3 ed. parser for [Structured Text](https://en.wikipedia.org/wiki/Structured_text) written using modern [menhir](http://gallium.inria.fr/~fpottier/menhir/) syntax. Almost all IEC syntax constructions are supported, excluding some user-defined types and OO features.
++ IEC 61131-3 3 ed. parser for [Structured Text](https://en.wikipedia.org/wiki/Structured_text) written using modern [menhir](http://gallium.inria.fr/~fpottier/menhir/) syntax. Almost all syntactic constructions are supported, excluding some user-defined types and OO features.
 + Some checks for [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines);
-+ Simple declaration analysis;
-+ Control flow analysis (WIP);
++ Declaration analysis for derived types;
++ Intraprocedural control flow analysis: searching for unreachable code blocks inside the [POUs](https://en.wikipedia.org/wiki/IEC_61131-3#Program_organization_unit_(POU));
 + Ability to dump AST of the IEC program into a JSON file (`-dump true` argument);
 
 ## Installation
