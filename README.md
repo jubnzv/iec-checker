@@ -48,20 +48,20 @@ python3 checker.py test/st/*.st
 
 This will gives you the following output:
 ```
-Report for test/st/cfg.st:
-No errors found!
 Report for test/st/dead-code.st:
-[CFA] 8:8 is unreachable!
+[UnreachableCode] 9:10 Code block will never be reached
 Report for test/st/declaration-analysis.st:
 [DeclarationAnalysis] Initial subrange value -4096 does not fit specified range (-4095 .. 4095)
 [DeclarationAnalysis] Initial subrange value 4099 does not fit specified range (-4095 .. 4095)
 [DeclarationAnalysis] Length of initialization string literal exceeds string length (6 > 5)
 Report for test/st/plcopen-cp13.st:
-[PLCOPEN-CP13] 8:31 POUs shall not call themselves directly or indirectly
+[PLCOPEN-CP13] 8:30 POUs shall not call themselves directly or indirectly
 Report for test/st/plcopen-l17.st:
 [PLCOPEN-L17] 10:4 Each IF instruction should have an ELSE clause
 Report for test/st/plcopen-n3.st:
 [PLCOPEN-N3] 6:7 IEC data types and standard library objects must be avoided
+Report for test/st/unused-variable.st:
+[UnreachableCode] 10:10 Code block will never be reached
 Report for test/st/zero-division.st:
 [ZeroDivision] 7:12 Constant 19 is divided by zero!
 [ZeroDivision] 9:14 Variable VAR2 is divided by zero!
