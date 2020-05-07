@@ -26,6 +26,7 @@ def check_program(program: str) -> Tuple[List[Warning], int]:
     p = subprocess.Popen(["output/bin/iec_checker",
                           "-output-format", "json",
                           "-quiet", "true",
+                          "-interactive", "false",
                           "-dump", "true", "-"],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,

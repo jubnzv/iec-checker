@@ -81,6 +81,7 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
+  | SENDTO
 [@@deriving to_yojson, show]
 (* }}} *)
 
@@ -128,7 +129,7 @@ module DirVar = struct
     ti: TI.t;
     loc: location option;
     sz: size option;
-    is_partly_located: bool; (** Variable is defined using '*' symbol *)
+    is_partly_located: bool; (** ExprVariable is defined using '*' symbol *)
     path: int list;
   } [@@deriving to_yojson]
 
@@ -345,39 +346,35 @@ and constant =
 [@@deriving to_yojson, show]
 
 and statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-                 [@name "Assign"]
+  | StmExpr of TI.t *
+               expr
+               [@name "Expression"]
   | StmElsif of TI.t *
-                expr * (** condition *)
+                statement * (** condition *)
                 statement list (** body *)
                 [@name "Elsif"]
   | StmIf of TI.t *
-             expr * (** condition *)
+             statement * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
              [@name "If"]
   | StmCase of TI.t *
-               expr * (** condition *)
+               statement * (** condition *)
                case_selection list *
                statement list (* else *)
                [@name "Case"]
   | StmFor of (TI.t *
-               SymVar.t * (** control variable *)
-               expr * (** range start *)
-               expr * (** range end *)
-               expr option * (** range step *)
+               for_control *
                statement list (** body statements *) [@opaque])
               [@name "For"]
   | StmWhile of TI.t *
-                expr * (** condition *)
+                statement * (** condition *)
                 statement list (** body *)
                 [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
-                 expr (** condition *)
+                 statement (** condition *)
                  [@name "Repeat"]
   | StmExit of TI.t
                [@name "Exit"]
@@ -385,43 +382,61 @@ and statement =
                    [@name "Continue"]
   | StmReturn of TI.t
                  [@name "Return"]
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-                          [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
-                   statement list (** params assignment *)
+                   func_param_assign list
                    [@name "FuncCall"]
 [@@deriving to_yojson, show { with_path = false }]
 and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-  | FuncCall of statement
+  | ExprVariable of TI.t * variable               [@name "Variable"]
+  | ExprConstant of TI.t * constant               [@name "Constant"]
+  | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
+  | ExprUn       of TI.t * operator * expr        [@name "Un"]
+  | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
 [@@deriving to_yojson, show]
-and case_selection = {case: expr list; body: statement list}
+and case_selection = {case: statement list; body: statement list}
 [@@deriving to_yojson, show]
+and for_control = {
+  assign : statement; (** control variable assignment *)
+  range_end : expr; (** range end value *)
+  range_step : expr; (** step *)
+} [@@deriving to_yojson, show]
+and func_param_assign = {
+  name : string option; (** function param name *)
+  stmt : statement; (** assignment or sendto statement *)
+  inverted : bool; (** has inversion in output assignment *)
+} [@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Functions to work with statements *)
 let stmt_get_ti = function
-  | StmAssign (ti,_,_) -> ti
+  | StmExpr (ti,_) -> ti
   | StmElsif (ti,_,_) -> ti
   | StmIf (ti,_,_,_,_) -> ti
   | StmCase (ti,_,_,_) -> ti
-  | StmFor (ti,_,_,_,_,_) -> ti
+  | StmFor (ti,_,_) -> ti
   | StmWhile (ti,_,_) -> ti
   | StmRepeat (ti,_,_) -> ti
   | StmExit (ti) -> ti
   | StmContinue (ti) -> ti
   | StmReturn (ti) -> ti
-  | StmFuncParamAssign _ -> TI.create_dummy  (* TODO *)
   | StmFuncCall (ti,_,_) -> ti
 
 let stmt_get_id stmt =
   let ti = stmt_get_ti stmt in
+  ti.id
+(* }}} *)
+
+(* {{{ Functions to work with expressions *)
+let expr_get_ti = function
+  | ExprVariable (ti,_) -> ti
+  | ExprConstant (ti,_) -> ti
+  | ExprBin (ti,_,_,_) -> ti
+  | ExprUn (ti,_,_) -> ti
+  | ExprFuncCall (ti,_) -> ti
+
+let expr_get_id e =
+  let ti = expr_get_ti e in
   ti.id
 (* }}} *)
 
@@ -473,11 +488,11 @@ let c_add c1 c2 =
   | _ -> raise @@ InternalError "Incompatible types"
 
 let c_from_expr = function
-  | Constant(v) -> Some v
+  | ExprConstant(_,v) -> Some v
   | _ -> None
 
 let c_from_expr_exn = function
-  | Constant(v) -> v
+  | ExprConstant(_,v) -> v
   | _ -> raise @@ InternalError "Incompatible types"
 (* }}} *)
 

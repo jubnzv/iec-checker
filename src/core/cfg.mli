@@ -19,15 +19,17 @@ type bb_ty =
 type bb =
   {
     id : int;
-    ty: bb_ty;
+    mutable ty: bb_ty;
     mutable preds : int list; (** Ids of predecessor nodes *)
     mutable succs : int list; (** Ids of successor nodes *)
     stmt : S.statement;
-    pou : S.iec_library_element; (** The POU that this BB belongs to *)
   }
 
 val mk : S.iec_library_element -> t
 (** Create a new CFG instance for a given iec_library_element *)
+
+val get_pou_id : t -> int
+(** Get the id of the POU that this CFG belongs to *)
 
 val list_basic_blocks : t -> bb list
 (** Get list of basic blocks from a given CFG instance. *)

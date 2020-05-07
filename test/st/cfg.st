@@ -5,6 +5,10 @@ FUNCTION test_cfg : INT
   END_VAR
 
   i := 0;
-  i := i + 16#42;
-END_FUNCTION
+  IF a > 1 THEN
+      i := 1;
+      a := 2;
+  END_IF;
+  i := 0;
 
+END_FUNCTION

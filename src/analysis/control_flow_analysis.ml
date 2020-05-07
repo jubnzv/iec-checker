@@ -8,15 +8,17 @@ open IECCheckerCore
 module TI = Tok_info
 
 (** Generate warning for a given basic block *)
-let mk_warn (bb : Cfg.bb) : Warn.t =
-  Warn.mk 0 0 "CFA" ((TI.to_string (Cfg.bb_get_ti bb)) ^ " is unreachable!")
+let mk_warn ?(title="CFA")(bb : Cfg.bb) : Warn.t =
+  let ti = Cfg.bb_get_ti bb in
+  Warn.mk ti.linenr ti.col title ("Code block will never be reached")
 
 (** Find unreachable basic blocks (dead code) *)
+(* TODO: Should be rewritten due endless recursion when traversing loops. *)
 let find_unreachable_bbs (cfg: Cfg.t) : Warn.t list =
   let rec visit (cfg: Cfg.t) visited (bb : Cfg.bb) =
+    let visited = Set.add visited bb.id in
     match bb.ty with
     | Cfg.BBEntry | Cfg.BB | Cfg.BBJump -> begin
-        let visited = Set.add visited bb.id in
         List.fold_left
           bb.succs
           ~init:(visited)
@@ -29,26 +31,34 @@ let find_unreachable_bbs (cfg: Cfg.t) : Warn.t list =
     | Cfg.BBExit -> visited
   in
   let all_bbs = Cfg.list_basic_blocks cfg in
-  let visited = List.fold_left
-      all_bbs
-      ~init:(Set.empty(module Int))
-      ~f:(fun set bb -> visit cfg set bb)
-  in
-  List.fold_left
-    all_bbs
-    ~init:[]
-    ~f:(fun warns bb -> begin
-          match (Set.find visited ~f:(fun id -> phys_equal id bb.id)) with
-          | Some _ -> warns
-          | None -> (warns @ [(mk_warn bb)])
-        end)
+  if List.is_empty all_bbs then
+    []
+  else
+    let rec find_first_unreachable visited all_bbs =
+      let gen_warn visited (bb : Cfg.bb) : (Warn.t option) =
+        match (Set.find visited ~f:(fun vis_id -> phys_equal vis_id bb.id)) with
+        | Some _ -> None
+        | None -> Some(mk_warn ~title:"UnreachableCode" bb)
+      in
+      match all_bbs with
+      | [] -> []
+      | bb :: bbs -> begin
+          let wo = gen_warn visited bb in
+          match wo with
+          | Some w -> [w]
+          | None -> find_first_unreachable visited bbs
+        end
+    in
+    let visited = visit cfg (Set.empty(module Int)) (List.nth_exn all_bbs 0) in
+    find_first_unreachable visited all_bbs
 
 (** TODO: Find unused variables in POU. *)
 (* let find_unused_variables pou env = *)
 
 let run (cfgs : Cfg.t list) : Warn.t list =
   (* List.iter cfgs ~f:(fun c -> Printf.printf "%s\n" (Cfg.to_string c)); *)
-  List.fold_left
-    cfgs
-    ~init:[]
-    ~f:(fun acc cfg -> acc @ (find_unreachable_bbs cfg))
+  (* List.fold_left                                         *)
+  (*   cfgs                                                 *)
+  (*   ~init:[]                                             *)
+  (*   ~f:(fun acc cfg -> acc @ (find_unreachable_bbs cfg)) *)
+ []

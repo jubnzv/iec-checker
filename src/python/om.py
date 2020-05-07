@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import List, Dict, Set
 
 
 @dataclass
@@ -122,35 +122,37 @@ class BasicBlock:
     """Basic block of intraprocedural control flow graph."""
     id: int
     type: str
-    preds: List[int]
-    succs: List[int]
+    preds: Set[int]
+    succs: Set[int]
     stmt_id: int
-    pou_id: int
 
     @classmethod
     def from_dict(cls, values):
         args = {}
         args['id'] = values.get('id', -1)
-        args['type'] = values.get('type', "")
-        args['preds'] = values.get('preds', [])
-        args['succs'] = values.get('succs', [])
+        args['type'] = values.get('type', [])
+        if len(args['type']) > 0:
+            args['type'] = args['type'][0]
+        args['preds'] = set(values.get('preds', []))
+        args['succs'] = set(values.get('succs', []))
         args['stmt_id'] = values.get('stmt_id', -1)
-        args['pou_id'] = values.get('pou_id', -1)
         return BasicBlock(**args)
 
 
 @dataclass
 class Cfg:
     """Intraprocedural control flow graph."""
-    initial_bb_id: int
+    entry_bb_id: int
     basic_blocks: List[BasicBlock]
+    pou_id: int
 
     @classmethod
     def from_dict(cls, values):
         args = {}
-        args['initial_bb_id'] = values.get('initial_bb_id', -1)
+        args['entry_bb_id'] = values.get('entry_bb_id', -1)
         args['basic_blocks'] = [BasicBlock.from_dict(
             bb) for bb in values.get('basic_blocks')]
+        args['pou_id'] = values.get('pou_id', -1)
         return Cfg(**args)
 
 

@@ -28,7 +28,7 @@ let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) 
   In_channel.close inx;
   (elements, warns)
 
-let parse_stdin : (S.iec_library_element list * Warn.t list) =
+let parse_stdin () : (S.iec_library_element list * Warn.t list) =
   match In_channel.input_line stdin with
   | None -> ([], [W.mk_internal ~id:"Cancel" ""])
   | Some code -> (
@@ -37,7 +37,7 @@ let parse_stdin : (S.iec_library_element list * Warn.t list) =
       let (elements, warns) = parse_with_error lexbuf in
       (elements, warns))
 
-let run_checker filename fmt create_dumps quiet =
+let run_checker filename fmt create_dumps quiet interactive =
   let (read_stdin : bool) = (String.equal "-" filename) || (String.is_empty filename) in
   if (not (Sys.file_exists filename) && not read_stdin) then
     let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" filename) in
@@ -45,16 +45,20 @@ let run_checker filename fmt create_dumps quiet =
     exit 127
   else
     let (elements, parser_warns) =
-      if read_stdin then
-        parse_stdin
-      else
+      if read_stdin then begin
+        if interactive then Printf.printf "> ";
+        flush stdout;
+        parse_stdin ()
+      end else begin
+        if not quiet then Printf.printf "Parsing %s ...\n" filename;
         parse_file filename
+      end
     in
     let envs = Ast_util.create_envs elements in
     let pou_cfgs = Cfg.create_cfgs elements in
     if create_dumps then
       Dump.create_dump elements envs pou_cfgs
-      (if read_stdin then "stdin" else filename);
+        (if read_stdin then "stdin" else filename);
     let decl_warnings = Declaration_analysis.run elements envs in
     let flow_warnings = Control_flow_analysis.run pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs quiet in
@@ -76,6 +80,8 @@ let command =
         create_dumps = flag "-dump" (optional bool) ~doc:"Generate AST dumps in JSON format"
       and
         quiet = flag "-quiet" (optional bool) ~doc:"Print only error messages."
+      and
+        interactive = flag "-interactive" (optional bool) ~doc:"Show prompt."
       and
         files = anon (sequence ("filename" %: Core.Filename.arg_type))
       in
@@ -103,11 +109,15 @@ let command =
           | Some v -> v
           | None -> false
         in
+        let interactive = match interactive with
+          | Some v -> v
+          | None -> false
+        in
         match files with
         | [] -> (
             Printf.eprintf "No input files\n";
             exit 1)
-        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps quiet)
+        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps quiet interactive)
     )
 
 let () =

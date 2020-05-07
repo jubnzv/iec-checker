@@ -21,7 +21,7 @@ let check_str_init_size ty_init init_expr =
   | Some(e) ->
     begin
       match e with
-      | S.Constant(c) ->
+      | S.ExprConstant(_,c) ->
         begin
           match c with
           | S.CString(_, str) -> check_length str

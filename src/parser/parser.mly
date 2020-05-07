@@ -260,11 +260,27 @@ let library_element_declaration :=
 (* In Annex A any external representation of data are designated as "constant".
  * So literally constant is just a literal value. *)
 let constant :=
-  | ~ = numeric_literal; <S.Constant>
-  | ~ = char_literal; <S.Constant>
-  | ~ = time_literal; <S.Constant>
-  (* | ~ = bit_str_literal <S.Constant> *)
-  | ~ = bool_literal; <S.Constant>
+  | c = numeric_literal;
+  {
+    let ti = S.c_get_ti c in
+    S.ExprConstant(ti, c)
+  }
+  | c = char_literal;
+  {
+    let ti = S.c_get_ti c in
+    S.ExprConstant(ti, c)
+  }
+  | c = time_literal;
+  {
+    let ti = S.c_get_ti c in
+    S.ExprConstant(ti, c)
+  }
+  (* | ~ = bit_str_literal <S.ExprConstant> *)
+  | c = bool_literal;
+  {
+    let ti = S.c_get_ti c in
+    S.ExprConstant(ti, c)
+  }
 
 let numeric_literal :=
   | ~ = int_literal; <>
@@ -349,9 +365,9 @@ real_literal:
 
 (* bit_str_literal: *)
 
-bool_literal:
+let bool_literal :=
   (* BOOL#<value> rules are implemented in lexer *)
-  | vb = T_BOOL_VALUE
+  | vb = T_BOOL_VALUE;
   {
     let (v, ti) = vb in
     S.CBool(ti, v)
@@ -896,7 +912,7 @@ let str_type_decl :=
           | Some(expr) ->
             begin
               match expr with
-              | S.Constant(c) ->
+              | S.ExprConstant(_,c) ->
                 match c with
                   | S.CString _ -> init_expr
                   | _ -> raise (SemanticError "Unexpected constant type")
@@ -946,15 +962,15 @@ let variable :=
   | v = symbolic_variable;
   { S.SymVar(v) }
 
-symbolic_variable:
-  | out = variable_name
+let symbolic_variable :=
+  | out = variable_name;
   { let (name, ti) = out in S.SymVar.create name ti }
   (* | multi_elem_var *)
 
 (* var_access: *)
 
-variable_name:
-  | id = T_IDENTIFIER
+let variable_name :=
+  | id = T_IDENTIFIER;
   {
     let (name, ti) = id in
     (name, ti)
@@ -1761,11 +1777,13 @@ config_inst_init:
 (* }}} *)
 
 (* {{{ Table 71-72 -- ST *)
-expression:
-  | s = xor_expr
-  { s }
-  | e1 = expression T_OR e2 = xor_expr
-  { S.BinExpr(e1, S.OR, e2) }
+let expression :=
+  | ~ = xor_expr; <>
+  | e1 = expression; T_OR; e2 = xor_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, S.OR, e2)
+  }
 
 (* According IEC61131-3 constant expression should be evaluated at compile-time.
 
@@ -1775,69 +1793,90 @@ expression:
 let constant_expr :=
   | ~ = constant; <>
 
-xor_expr:
-  | s = and_expr
-  { s }
-  | e1 = xor_expr T_XOR e2 = and_expr
-  { S.BinExpr(e1, S.XOR, e2) }
+let xor_expr :=
+  | ~ = and_expr; <>
+  | e1 = xor_expr; T_XOR; e2 = and_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, S.XOR, e2)
+  }
 
-and_expr:
-  | s = compare_expr
-  { s }
-  | e1 = and_expr T_AND e2 = compare_expr
-  { S.BinExpr(e1, S.AND, e2) }
+let and_expr :=
+  | ~ = compare_expr; <>
+  | e1 = and_expr; T_AND; e2 = compare_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, S.AND, e2)
+  }
 
-compare_expr:
-  | s = equ_expr
-  { s }
-  | e1 = compare_expr T_EQ e2 = equ_expr
-  { S.BinExpr(e1, S.EQ, e2) }
-  | e1 = compare_expr T_NEQ e2= equ_expr
-  { S.BinExpr(e1, S.NEQ, e2) }
+let compare_expr :=
+  | ~ = equ_expr; <>
+  | e1 = compare_expr; T_EQ; e2 = equ_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, S.EQ, e2)
+  }
+  | e1 = compare_expr; T_NEQ; e2= equ_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, S.NEQ, e2)
+  }
 
-equ_expr:
-  | s = add_expr
-  { s }
-  | e1 = equ_expr op = compare_expr_operator e2 = add_expr
-  { S.BinExpr(e1, op, e2) }
+let equ_expr :=
+  | ~ = add_expr; <>
+  | e1 = equ_expr; op = compare_expr_operator; e2 = add_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, op, e2)
+  }
 
-add_expr:
-  | t = term
-  { t }
-  | t1 = add_expr op = add_operator t2 = term
-  { S.BinExpr(t1, op, t2)}
+let add_expr :=
+  | ~ = term; <>
+  | e1 = add_expr; op = add_operator; e2 = term;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, op, e2)
+  }
 
-term:
-  | e = power_expr
-  { e }
-  | e1 = term op = multiply_operator e2 = power_expr
-  { S.BinExpr(e1, op, e2) }
+let term :=
+  | ~ = power_expr; <>
+  | e1 = term; op = multiply_operator; e2 = power_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, op, e2)
+  }
 
-power_expr:
-  | e = unary_expr
-  { e }
-  | e1 = power_expr T_POW e2 = unary_expr
-  { S.BinExpr(e1, S.POW, e2) }
+let power_expr :=
+  | ~ = unary_expr; <>
+  | e1 = power_expr; T_POW; e2 = unary_expr;
+  {
+    let ti = S.expr_get_ti e1 in
+    S.ExprBin(ti, e1, S.POW, e2)
+  }
 
-unary_expr:
-  | op = unary_operator e = primary_expr
-  { S.UnExpr(op, e) }
-  | e = primary_expr
-  { e }
+let unary_expr :=
+  | op = unary_operator; e = primary_expr;
+  {
+    let ti = S.expr_get_ti e in
+    S.ExprUn(ti, op, e)
+  }
+  | ~ = primary_expr; <>
 
-primary_expr:
-  | c = constant
-  { c }
-  (* | enum_value
-  { } *)
-  | v = variable_access
-  { S.Variable(v) }
-  | fc = func_call
-  { S.FuncCall(fc) }
-  (* | ref_value
-  {  } *)
-  | T_LPAREN e = expression T_RPAREN
-  { e }
+let primary_expr :=
+  | ~ = constant; <>
+  (* | enum_value { } *)
+  | v = variable_access;
+  {
+    let ti = S.vget_ti v in
+    S.ExprVariable(ti, v)
+  }
+  | fc = func_call;
+  {
+    let ti = S.stmt_get_ti fc in
+    S.ExprFuncCall(ti, fc)
+  }
+  (* | ref_value {  } *)
+  | T_LPAREN; ~ = expression; T_RPAREN; <>
 
 let variable_access :=
   | v = variable_expr; option(multibit_part_access);
@@ -1861,13 +1900,13 @@ let multibit_part_access :=
   | T_DOT; v = unsigned_int;
   {  }
 
-func_call:
-  | f = func_access T_LPAREN T_RPAREN
+let func_call :=
+  | f = func_access; T_LPAREN; T_RPAREN;
   {
     let ti = S.Function.get_ti f in
     S.StmFuncCall(ti, f, [])
   }
-  | f = func_access T_LPAREN stmts = separated_list(T_COMMA, param_assign) T_RPAREN
+  | f = func_access; T_LPAREN; stmts = separated_list(T_COMMA, param_assign); T_RPAREN;
   {
     let ti = S.Function.get_ti f in
     S.StmFuncCall(ti, f, stmts)
@@ -1885,11 +1924,12 @@ let stmt :=
   | ~ = selection_stmt; <>
   | ~ = iteration_stmt; <>
 
-assign_stmt:
-  | v = variable T_ASSIGN e = expression
+let assign_stmt :=
+  | v = variable; T_ASSIGN; e = expression;
   {
-    let ti = S.vget_ti v in
-    S.StmAssign(ti, v, e)
+    let vti = S.vget_ti v in
+    let eti = S.expr_get_ti e in
+    S.StmExpr(vti, S.ExprBin(eti, S.ExprVariable(vti, v), S.ASSIGN, e))
   }
 
 (* assignment_attempt: *)
@@ -1904,77 +1944,128 @@ let subprog_ctrl_stmt :=
   {  } *)
   | ~ = T_RETURN; <S.StmReturn>
 
-param_assign:
-  | vn = variable_name T_ASSIGN e = expression
+let param_assign :=
+  | vn = variable_name; T_ASSIGN; expr = expression;
   {
-    let (n, _) = vn in
-    S.StmFuncParamAssign(Some n, e, false)
+    (* Source *)
+    let (name, ti) = vn in
+    let src_var = S.SymVar.create name ti in
+    let src_var = S.SymVar(src_var) in
+    let expr_var_src = S.ExprVariable(ti, src_var) in
+
+    let assign_expr = S.ExprBin(ti, expr_var_src, S.ASSIGN, expr) in
+    { S.name = Some(name); S.stmt = S.StmExpr(ti, assign_expr); S.inverted = false }
   }
-  | e = expression
+  | expr = expression;
   {
-    S.StmFuncParamAssign(None, e, false)
+    let eti = S.expr_get_ti expr in
+    { S.name = None; S.stmt = S.StmExpr(eti, expr); S.inverted = false }
   }
   (* | ref_assign
   {  } *)
   (* Use assignment expression for "=>" tokens that assigns given parameter
      to a function output variable. *)
-  | T_NOT vn = variable_name T_SENDTO v = variable
+  | T_NOT; vn = variable_name; T_SENDTO; v = variable;
   {
-    let (n, _) = vn in
-    let vexpr = S.Variable(v) in
-    S.StmFuncParamAssign(Some n, vexpr, true)
+    (* Source *)
+    let (name, ti) = vn in
+    let src_var = S.SymVar.create name ti in
+    let src_var = S.SymVar(src_var) in
+    let expr_var_src = S.ExprVariable(ti, v) in
+
+    (* Destination *)
+    let ti_dest = S.vget_ti v in
+    let expr_var_dest = S.ExprVariable(ti_dest, v) in
+
+    let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
+    { S.name = Some(name); S.stmt = S.StmExpr(ti, sendto_expr); S.inverted = true }
   }
-  | vn = variable_name T_SENDTO v = variable
+  | vn = variable_name; T_SENDTO; v = variable;
   {
-    let (n, _) = vn in
-    let vexpr = S.Variable(v) in
-    S.StmFuncParamAssign(Some n, vexpr, false)
+    (* Source *)
+    let (name, ti) = vn in
+    let src_var = S.SymVar.create name ti in
+    let src_var = S.SymVar(src_var) in
+    let expr_var_src = S.ExprVariable(ti, v) in
+
+    (* Destination *)
+    let ti_dest = S.vget_ti v in
+    let expr_var_dest = S.ExprVariable(ti_dest, v) in
+
+    let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
+    { S.name = Some(name); S.stmt = S.StmExpr(ti, sendto_expr); S.inverted = false }
   }
 
 let selection_stmt :=
   | ~ = if_stmt; <>
   | ~ = case_stmt; <>
 
-if_stmt:
-  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list T_END_IF
-  { S.StmIf(ti, cond, if_stmts, [], []) }
-  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; T_ELSE else_stmts = stmt_list T_END_IF
-  { S.StmIf(ti, cond, if_stmts, [], else_stmts) }
-  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; elsif_stmts = if_stmt_elsif_list T_END_IF
-  { S.StmIf(ti, cond, if_stmts, elsif_stmts, []) }
-  | ti = T_IF cond = expression T_THEN if_stmts = stmt_list; elsif_stmts = if_stmt_elsif_list; T_ELSE else_stmts = stmt_list T_END_IF
-  { S.StmIf(ti, cond, if_stmts, elsif_stmts, else_stmts) }
+let if_stmt :=
+  | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; T_END_IF;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmIf(ti, S.StmExpr(eti, e), ifs, [], [])
+  }
+  | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; T_ELSE; elses = stmt_list; T_END_IF;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmIf(ti, S.StmExpr(eti, e), ifs, [], elses)
+  }
+  | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; elsifs = if_stmt_elsif_list; T_END_IF;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmIf(ti, S.StmExpr(eti, e), ifs, elsifs, [])
+  }
+  | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; elsifs = if_stmt_elsif_list; T_ELSE; elses = stmt_list; T_END_IF;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmIf(ti, S.StmExpr(eti, e), ifs, elsifs, elses)
+  }
 
 (* Helper rule for if_stmt *)
-if_stmt_elsif_list:
-  | ti = T_ELSIF cond = expression T_THEN stmts = stmt_list
+let if_stmt_elsif_list :=
+  | ti = T_ELSIF; cond_e = expression; T_THEN; stmts = stmt_list;
   {
-    let elsif = S.StmElsif(ti, cond, stmts) in
-    elsif :: []
+    let eti = S.expr_get_ti cond_e in
+    [S.StmElsif(ti, S.StmExpr(eti, cond_e), stmts)]
   }
-  | elsifs = if_stmt_elsif_list; ti = T_ELSIF cond = expression T_THEN stmts = stmt_list
+  | elsifs = if_stmt_elsif_list; ti = T_ELSIF; cond_e = expression; T_THEN; stmts = stmt_list;
   {
-    let elsif = S.StmElsif(ti, cond, stmts) in
-    elsif :: elsifs
+    let eti = S.expr_get_ti cond_e in
+    let elsif = S.StmElsif(ti, S.StmExpr(eti, cond_e), stmts) in
+    elsifs @ [elsif]
   }
 
-case_stmt:
-  | ti = T_CASE e = expression T_OF css = list(case_selection) T_ELSE sl = stmt_list T_END_CASE
-  { S.StmCase(ti, e, css, sl) }
-  | ti = T_CASE e = expression T_OF css = list(case_selection) T_END_CASE
-  { S.StmCase(ti, e, css, []) }
+let case_stmt :=
+  | ti = T_CASE; e = expression; T_OF; css = list(case_selection); T_ELSE; sl = stmt_list; T_END_CASE;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmCase(ti, S.StmExpr(eti, e), css, sl)
+  }
+  | ti = T_CASE; e = expression; T_OF; css = list(case_selection); T_END_CASE;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmCase(ti, S.StmExpr(eti, e), css, [])
+  }
 
-case_selection:
-  | cl = case_list T_COLON sl = stmt_list
-  { {S.case = cl; S.body = sl} }
+let case_selection :=
+  | cl = case_list; T_COLON; sl = stmt_list;
+  { { S.case = cl; S.body = sl } }
 
 let case_list :=
   | ~ = separated_list(T_COMMA, case_list_elem); <>
 
 let case_list_elem :=
   | specs = subrange;
-  { let (ti, lb, ub) = specs in S.Constant(S.CRange(ti, lb, ub)) }
-  | ~ = constant_expr; <>
+  {
+    let (ti, lb, ub) = specs in
+    S.StmExpr(ti, S.ExprConstant(ti, S.CRange(ti, lb, ub)))
+  }
+  | e = constant_expr;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmExpr(eti, e)
+  }
 
 let iteration_stmt :=
   | ~ = for_stmt; <>
@@ -1983,33 +2074,53 @@ let iteration_stmt :=
   | ~ = T_EXIT; <S.StmExit>
   | ~ = T_CONTINUE; <S.StmContinue>
 
-for_stmt:
-  | ti = T_FOR cv = control_variable T_ASSIGN fl = for_list T_DO sl = stmt_list T_END_FOR
+let for_stmt :=
+  | ti = T_FOR; cv = control_variable; T_ASSIGN; fl = for_list; T_DO; sl = stmt_list; T_END_FOR;
   {
-    let (e1,e2,e3) = fl in
-    S.StmFor(ti, cv, e1, e2, e3, sl)
+    let (e_start, e_end, e_step) = fl in
+    let ctrl_assign_stmt =
+      let vti = S.SymVar.get_ti cv in
+      let assign_expr = S.ExprBin(vti, S.ExprVariable(vti, S.SymVar(cv)), S.ASSIGN, e_start) in
+      S.StmExpr(ti, assign_expr)
+    in
+    let ctrl = {
+      S.assign = ctrl_assign_stmt;
+      S.range_end = e_end;
+      S.range_step = e_step }
+    in
+    S.StmFor(ti, ctrl, sl)
   }
 
-control_variable:
-  | id = T_IDENTIFIER
+let control_variable :=
+  | id = T_IDENTIFIER;
   {
     let (n, ti) = id in
     S.SymVar.create n ti
   }
 
-for_list:
-  | e1 = expression T_TO e2 = expression T_BY e3 = expression
-  { (e1, e2, Some(e3)) }
-  | e1 = expression T_TO e2 = expression
-  { (e1, e2, None) }
+let for_list :=
+  | e1 = expression; T_TO; e2 = expression; T_BY; e3 = expression;
+  { (e1, e2, e3) }
+  | e1 = expression; T_TO; e2 = expression;
+  {
+    (* According 7.3.3.4.2 default STEP value is 1. *)
+    let dti = TI.create_dummy () in
+    (e1, e2, S.ExprConstant(dti, S.CInteger(dti, 1)))
+  }
 
-while_stmt:
-  | ti = T_WHILE e = expression T_DO sl = stmt_list T_END_WHILE
-  { S.StmWhile(ti, e, sl) }
+let while_stmt :=
+  | ti = T_WHILE; e = expression; T_DO; sl = stmt_list; T_END_WHILE;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmWhile(ti, S.StmExpr(eti, e), sl)
+  }
 
-repeat_stmt:
-  | ti = T_REPEAT sl = stmt_list T_UNTIL e = expression T_END_REPEAT
-  { S.StmRepeat(ti, sl, e) }
+let repeat_stmt :=
+  | ti = T_REPEAT; sl = stmt_list; T_UNTIL; e = expression; T_END_REPEAT;
+  {
+    let eti = S.expr_get_ti e in
+    S.StmRepeat(ti, sl, S.StmExpr(eti, e))
+  }
 (* }}} *)
 
 (* {{{ Table 73-76 -- Graphical languages *)

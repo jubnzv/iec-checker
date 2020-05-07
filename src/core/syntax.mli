@@ -56,6 +56,7 @@ type operator =
   | EQ (** = *)
   | NEQ (** <> *)
   | ASSIGN
+  | SENDTO (** => *)
 [@@deriving to_yojson, show]
 (* }}} *)
 
@@ -253,39 +254,35 @@ and constant =
 [@@deriving to_yojson, show]
 
 and statement =
-  | StmAssign of TI.t *
-                 variable *
-                 expr
-                 [@name "Assign"]
+  | StmExpr of TI.t *
+               expr
+               [@name "Expression"]
   | StmElsif of TI.t *
-                expr * (** condition *)
+                statement * (** condition *)
                 statement list (** body *)
                 [@name "Elsif"]
   | StmIf of TI.t *
-             expr * (** condition *)
+             statement * (** condition *)
              statement list * (** body *)
              statement list * (** elsif statements *)
              statement list (** else *)
              [@name "If"]
   | StmCase of TI.t *
-               expr * (** condition *)
+               statement * (** condition *)
                case_selection list *
                statement list (* else *)
                [@name "Case"]
   | StmFor of (TI.t *
-               SymVar.t * (** control variable *)
-               expr * (** range start *)
-               expr * (** range end *)
-               expr option * (** range step *)
+               for_control *
                statement list (** body statements *) [@opaque])
               [@name "For"]
   | StmWhile of TI.t *
-                expr * (** condition *)
+                statement * (** condition *)
                 statement list (** body *)
                 [@name "While"]
   | StmRepeat of TI.t *
                  statement list * (** body *)
-                 expr (** condition *)
+                 statement (** condition *)
                  [@name "Repeat"]
   | StmExit of TI.t
                [@name "Exit"]
@@ -293,31 +290,41 @@ and statement =
                    [@name "Continue"]
   | StmReturn of TI.t
                  [@name "Return"]
-  | StmFuncParamAssign of string option * (** function param name *)
-                          expr * (** assignment expression *)
-                          bool (** has inversion in output assignment *)
-                          [@name "FuncParamAssign"]
   | StmFuncCall of TI.t *
                    Function.t *
-                   statement list (** params assignment *)
+                   func_param_assign list
                    [@name "FuncCall"]
 [@@deriving to_yojson, show]
 
 and expr =
-  | Variable of variable
-  | Constant of constant
-  | BinExpr of expr * operator * expr
-  | UnExpr of operator * expr
-  | FuncCall of statement
+  | ExprVariable of TI.t * variable               [@name "Variable"]
+  | ExprConstant of TI.t * constant               [@name "Constant"]
+  | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
+  | ExprUn       of TI.t * operator * expr        [@name "Un"]
+  | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
 [@@deriving to_yojson, show]
-
-and case_selection = {case: expr list; body: statement list}
+and case_selection = {case: statement list; body: statement list}
+and for_control = {
+  assign : statement; (** control variable assignment *)
+  range_end : expr; (** range end value *)
+  range_step : expr; (** step *)
+}
 [@@deriving to_yojson, show]
+and func_param_assign = {
+  name : string option; (** function param name *)
+  stmt : statement; (** assignment or sendto statement *)
+  inverted : bool; (** has inversion in output assignment *)
+} [@@deriving to_yojson, show]
 (* }}} *)
 
 (* {{{ Functions to work with statements *)
 val stmt_get_ti : statement -> TI.t
 val stmt_get_id : statement -> int
+(* }}} *)
+
+(* {{{ Functions to work with expressions *)
+val expr_get_ti : expr -> TI.t
+val expr_get_id : expr -> int
 (* }}} *)
 
 (* {{{ Functions to work with constants *)
@@ -401,7 +408,7 @@ end
 module VarDecl : sig
   type t
 
-  (** Variable could be connected to input/output data flow of POU. *)
+  (** ExprVariable could be connected to input/output data flow of POU. *)
   type direction = Input | Output
   [@@deriving to_yojson]
 
@@ -409,7 +416,7 @@ module VarDecl : sig
   type qualifier = QRetain | QNonRetain | QConstant
   [@@deriving to_yojson]
 
-  (** Variable specification *)
+  (** ExprVariable specification *)
   type spec =
     | Spec of qualifier option
     | SpecDirect of qualifier option
@@ -494,10 +501,10 @@ type iec_library_element =
 [@@deriving to_yojson]
 
 val mk_pou : [< `Function of function_decl
-              | `FunctionBlock of fb_decl
-              | `Program of program_decl
-              | `Configuration of configuration_decl
-              | `Type of derived_ty_decl ] -> iec_library_element
+             | `FunctionBlock of fb_decl
+             | `Program of program_decl
+             | `Configuration of configuration_decl
+             | `Type of derived_ty_decl ] -> iec_library_element
 
 val get_pou_id : iec_library_element -> int
 (** Get unique identifier of the given library element. *)

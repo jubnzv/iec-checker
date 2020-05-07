@@ -17,53 +17,65 @@ let get_var_decl elems =
 
 let expr_to_stmts expr : S.statement list =
   let rec aux = function
-    | S.Variable _ -> []
-    | S.Constant _ -> []
-    | S.BinExpr (e1, _, e2) -> aux e1 @ aux e2
-    | S.UnExpr (_, e) -> aux e
-    | S.FuncCall s -> [ s ]
+    | S.ExprVariable _ -> []
+    | S.ExprConstant _ -> []
+    | S.ExprBin (_, e1, _, e2) -> aux e1 @ aux e2
+    | S.ExprUn (_, _, e) -> aux e
+    | S.ExprFuncCall (_, s) -> [s]
   in
   aux expr
 
 let rec stmts_to_list stmt =
+  let get_nested stmts =
+    List.fold_left
+      stmts
+      ~init:[]
+      ~f:(fun acc s -> acc @ (stmts_to_list s))
+  in
   match stmt with
-  | S.StmAssign (_, _, e) -> stmt :: expr_to_stmts e
-  | S.StmElsif (_, e, ns) ->
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
-  | S.StmIf (_, e, ns1, ns2, ns3) ->
-    [ stmt ] @ expr_to_stmts e
+  | S.StmExpr (_, e) -> [stmt] @ expr_to_stmts e
+  | S.StmElsif (_, cond_stmts, body_stmts) ->
+    [ stmt ] @ stmts_to_list cond_stmts
     @ List.fold_left
-      (ns1 @ ns2 @ ns3)
+      body_stmts
+      ~init:[]
+      ~f:(fun acc s -> acc @ stmts_to_list s)
+  | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) ->
+    [ stmt ]
+    @ List.fold_left
+      ([cond_s] @ body_ss @ elsif_ss @ else_ss)
       ~f:(fun ss s -> ss @ stmts_to_list s)
       ~init:[]
-  | S.StmCase (_, e, cs, ns) ->
-    let cs_stmts =
-      List.fold_left cs ~f:(fun css cs -> css @ cs.body) ~init:[]
+  | S.StmCase (_, cond_s, case_sels, else_ss) ->
+    let case_stmts =
+      List.fold_left
+        case_sels
+        ~init:[]
+        ~f:(fun acc cs -> acc @ (get_nested cs.case) @ (get_nested cs.body))
     in
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left (ns @ cs_stmts)
-      ~f:(fun ss s -> ss @ stmts_to_list s)
+    [cond_s] @ case_stmts @ (get_nested else_ss)
+  | S.StmFor (_, ctrl, body_stmts) ->
+    [ ctrl.assign ] @ body_stmts
+  | S.StmWhile (_, cond_stmt, ns) ->
+    [stmt] @ [cond_stmt] @
+    List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.StmRepeat (_, body_stmts, cond_stmt) ->
+    [stmt] @
+    List.fold_left body_stmts
       ~init:[]
-  | S.StmFor (_, _, e1, e2, e3_opt, ns) ->
-    let e3_stmts =
-      match e3_opt with Some e -> expr_to_stmts e | None -> []
-    in
-    [ stmt ] @ expr_to_stmts e1 @ expr_to_stmts e2 @ e3_stmts
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
-  | S.StmWhile (_, e, ns) ->
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
-  | S.StmRepeat (_, ns, e) ->
-    [ stmt ] @ expr_to_stmts e
-    @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+      ~f:(fun ss s -> ss @ stmts_to_list s) @
+    [cond_stmt]
   | S.StmExit _ -> [ stmt ]
   | S.StmContinue _ -> [ stmt ]
   | S.StmReturn _ -> [ stmt ]
-  | S.StmFuncParamAssign (_, e, _) -> [ stmt ] @ expr_to_stmts e
-  | S.StmFuncCall (_, _, ns) ->
-    stmt
-    :: (ns @ List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[])
+  | S.StmFuncCall (_, _, func_params) -> begin
+      let func_params_stmts = List.fold_left
+          func_params
+          ~init:[]
+          ~f:(fun acc fp -> acc @ [fp.stmt])
+      in
+      [stmt] @ func_params_stmts
+    end
 
 let get_pou_stmts = function
   | S.IECFunction (_, f) ->
@@ -98,28 +110,42 @@ let get_exprs elems =
       List.fold_left stmts ~init:[] ~f:(fun acc es -> acc @ (get_stmt_exprs es))
     in
     match stmt with
-    | S.StmAssign (_, _, e) -> [e]
-    | S.StmElsif (_, e, ss) -> [e] @ (get_nested ss)
-    | S.StmIf (_, e, ss1, ss2, ss3) -> (
-        [e] @ (get_nested ss1) @ (get_nested ss2) @ (get_nested ss3)
+    | S.StmExpr (_, e) -> [e]
+    | S.StmElsif (_, cond_s, ss) -> (get_nested [cond_s]) @ (get_nested ss)
+    | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) -> (
+        (get_nested [cond_s]) @
+        (get_nested body_ss) @
+        (get_nested elsif_ss) @
+        (get_nested else_ss)
       )
-    | S.StmCase (_, e, cs, ss) -> (
-        let case_exprs =
-          List.fold_left cs
+    | S.StmCase (_, cond_s, case_sels, else_ss) ->
+      begin
+        let case_stmts =
+          List.fold_left
+            case_sels
             ~init:[]
-            ~f:(fun acc case_sel -> acc @ (case_sel.case @ (get_nested case_sel.body)))
+            ~f:(fun acc case_sel -> acc @ (get_nested case_sel.case) @ (get_nested case_sel.body))
         in
-        [e] @ case_exprs @ (get_nested ss)
+        (get_nested [cond_s]) @
+        case_stmts @
+        (get_nested else_ss)
+      end
+    | S.StmFor (_, ctrl, body_stmts) -> (
+        (get_nested [ctrl.assign]) @
+        [ctrl.range_end; ctrl.range_step] @
+        (get_nested body_stmts)
       )
-    | S.StmFor (_, _, e1, e2, e3_opt, ss) -> (
-        let e3 = match e3_opt with Some e -> [e] | None -> [] in
-        [e1] @ [e2] @ e3 @ (get_nested ss)
-      )
-    | S.StmWhile (_, e, ss) -> [e] @ (get_nested ss)
-    | S.StmRepeat (_, ss, e) -> (get_nested ss) @ [e]
+    | S.StmWhile (_, cond_stmt, ss) -> (get_nested [cond_stmt]) @ (get_nested ss)
+    | S.StmRepeat (_, body_stmts, cond_stmt) -> (get_nested body_stmts) @ (get_nested [cond_stmt])
+    | S.StmFuncCall (_, _, func_params) -> begin
+        let func_params_stmts = List.fold_left
+            func_params
+            ~init:[]
+            ~f:(fun acc fp -> acc @ [fp.stmt])
+        in
+        (get_nested func_params_stmts)
+      end
     | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
-    | S.StmFuncParamAssign (_, e, _) -> [e]
-    | S.StmFuncCall (_, _, ss) -> (get_nested ss)
   in
   List.fold_left all_stmts
     ~init:[]
@@ -148,3 +174,4 @@ let create_envs elems =
         let local_env = fill_pou_env local_env e in
         envs @ [ local_env ])
     ~init:[ global_env ]
+
