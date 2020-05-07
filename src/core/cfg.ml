@@ -46,12 +46,6 @@ module BBMap = struct
 
   let set m bb = Map.set m ~key:bb.id ~data:bb
 
-  (** Remove last element from the bbs list *)
-  let pop_exn (m : t) : (t) =
-    let bbs = Map.to_alist m in
-    let (last_id, _) = List.last_exn bbs in
-    Map.remove m last_id
-
   let to_alist m = Map.to_alist m
 
   let first (m : t) : (bb option) =
@@ -76,6 +70,13 @@ module BBMap = struct
             [bb_to_yojson bb] @ lst
           ) in
     `List(items)
+end
+
+module IntStack = struct
+  let create () = Stack.create ()
+  let push s v = Stack.push s v
+  let pop s = Stack.pop s
+  let top s : (int option) = Stack.top s
 end
 
 type t = {
@@ -109,7 +110,7 @@ let empty_cfg () =
 (** [fill_bbs_map cfg stmts] Fill [cfg.map] with a linked basic blocks for
     [stmts] and their nested statements. *)
 let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
-  let (@) = C.append_tr in (* Use tail-recursive append because we have large data here *)
+  let (@) = C.append_tr in (* Use tail-recursive append because we work with the large lists here *)
   (** Recursively traverse over [stmts] to create basic blocks for each
        statement, including the nested ones.
       [bbs_pred_ids] is a list of identifiers of basic blocks from the previous
@@ -123,6 +124,13 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         TODO: Unique constraint check.
         Need to figure out how to use sets instead lists for keeping links.
     *)
+    (* Stack that keeps IDs of basic blocks for control statments (FOR, WHILE,
+       REPEAT) to link them with corresponding CONTNUE statements in the loop
+       body. *)
+    let loop_ctrl_stack = IntStack.create () in
+    (* Stack that keeps IDs of EXIT basic blocks found in body of control
+       statements. *)
+    let loop_exit_stack = IntStack.create () in
     let link_preds (next_bb : bb) (pred_ids : int list) : (unit) =
       (* TODO: This is horrible. I should use LRU cache (memoization) here and
          stop iteration when all ids was found. *)
@@ -144,7 +152,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         First created BB will be linked with blocks from [bbs_pred_ids].
         @return List of IDs of the last basic blocks. *)
     let rec mk_nested_bbs (stmt : S.statement) (bbs_pred_ids : int list) : (int list) =
-      (** Create a list of basic blocks for the consecutive list of statements
+      (** Create a list of the basic blocks for the consecutive list of statements
           nested in [stmts]. [bbs_pred_ids] is a list of identifiers for basic
           blocks that will be linked with a BB created for the first statement.
 
@@ -161,7 +169,29 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
                   link_preds bb last_ids;
                   cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
                   let first_id = match first_id with None -> bb.id | Some id -> id in
-                  (Some(first_id), mk_nested_bbs s [bb.id])
+                  let upd_last_ids = mk_nested_bbs s [bb.id] in
+                  let (upd_last_ids) =
+                    match s with
+                    (* EXIT basic blocks always will be linked with the block after
+                       the loop. The next statements in this loop will be
+                       unreachable. *)
+                    | S.StmExit _ -> begin
+                        IntStack.push loop_exit_stack bb.id;
+                        []
+                      end
+                    (* Link CONTNUE basic blocks with loop control BB. *)
+                    | S.StmContinue _ -> begin
+                        match IntStack.top loop_ctrl_stack with
+                        | Some ctrl_bb_id -> begin
+                            link_preds_by_id ctrl_bb_id [bb.id];
+                            (* Don't link subsequent block with CONTINUE. *)
+                            []
+                          end
+                        | None (* semantic error: not in loop *) -> []
+                      end
+                    | _ -> (upd_last_ids)
+                  in
+                  (Some(first_id), upd_last_ids)
                 end)
         in
         let first_id = match first_id with
@@ -193,12 +223,6 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         in
         (first_id, last_ids)
       in
-      (** Create basic blocks for jump statements.
-          [bb_start_id] is a identifier of the start block of the control loop. *)
-      (* let mk_jump_bbs (bb_start_id : int) (bbs_pred_ids : int list) : (int list) = function *)
-      (*   | S.StmExit _ -> []                                                                 *)
-      (*   | S.StmContinue _ -> []                                                             *)
-      (* in                                                                                    *)
       match stmt with
       | S.StmExpr (_, expr) ->
         begin
@@ -306,18 +330,25 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           let for_bb_id = List.nth_exn bbs_pred_ids 0 in
           assert (phys_equal 1 (List.length bbs_pred_ids));
 
+          (* Keep ID of the control BB to handle CONTINUE blocks. *)
+          IntStack.push loop_ctrl_stack for_bb_id;
+
           (* Create basic blocks for the control variable assignment statement. *)
           let (_, ctrl_last_ids) = mk_bbs_nested_stmts_consist [ctrl.assign] bbs_pred_ids in
           assert (phys_equal 1 (List.length ctrl_last_ids)); (* always single assignment stmt *)
 
           (* Create basic blocks for [body_stmts]. *)
-          (* TODO: What about EXIT statements? *)
           let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts ctrl_last_ids in
 
           (* Link the last body statements with a FOR control statement. *)
           link_preds_by_id for_bb_id body_last_ids;
 
-          ([for_bb_id])
+          let _ = IntStack.pop loop_ctrl_stack in
+
+          (* Link found EXIT statements with the next blocks. *)
+          match IntStack.pop loop_exit_stack with
+          | Some id ->  [for_bb_id; id]
+          | None -> [for_bb_id]
         end
       | S.StmWhile (_, cond_stmt, body_stmts) ->
         begin
@@ -325,18 +356,25 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           let while_bb_id = List.nth_exn bbs_pred_ids 0 in
           assert (phys_equal 1 (List.length bbs_pred_ids));
 
+          (* Keep ID of the control BB to handle CONTINUE blocks. *)
+          IntStack.push loop_ctrl_stack while_bb_id;
+
           (* Create basic block for [cond_stmt]. *)
           let (_, cond_last_ids) = mk_bbs_nested_stmts_consist [cond_stmt] bbs_pred_ids in
           assert (phys_equal 1 (List.length cond_last_ids)); (* always single expression stmt *)
 
           (* Create basic blocks for [body_stmts]. *)
-          (* TODO: What about EXIT statements? *)
           let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts cond_last_ids in
 
           (* Link the last body statements with a WHILE control statement. *)
           link_preds_by_id while_bb_id body_last_ids;
 
-          ([while_bb_id])
+          let _ = IntStack.pop loop_ctrl_stack in
+
+          (* Link found EXIT statements with the next blocks. *)
+          match IntStack.pop loop_exit_stack with
+          | Some id ->  [while_bb_id; id]
+          | None -> [while_bb_id]
         end
       | S.StmRepeat (_, body_stmts, cond_stmt) ->
         begin
@@ -344,8 +382,10 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           let repeat_bb_id = List.nth_exn bbs_pred_ids 0 in
           assert (phys_equal 1 (List.length bbs_pred_ids));
 
+          (* Keep ID of the control BB to handle CONTINUE blocks. *)
+          IntStack.push loop_ctrl_stack repeat_bb_id;
+
           (* Create basic blocks for [body_stmts]. *)
-          (* TODO: What about EXIT statements? *)
           let (_, body_last_ids) = mk_bbs_nested_stmts_consist body_stmts [repeat_bb_id] in
 
           (* Create basic block for [cond_stmt]. *)
@@ -355,7 +395,12 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           (* Link the condition statement with a REPEAT control statement. *)
           link_preds_by_id repeat_bb_id cond_last_ids;
 
-          (cond_last_ids)
+          let _ = IntStack.pop loop_ctrl_stack in
+
+          (* Link found EXIT statements with the next blocks. *)
+          match IntStack.pop loop_exit_stack with
+          | Some id ->  cond_last_ids @ [id]
+          | None -> cond_last_ids
         end
       | S.StmFuncCall (_, _, func_params) ->
         begin
@@ -376,10 +421,14 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
 
           (bbs_pred_ids)
         end
-      (* Handled on block creation with [mk_bb]. *)
+      (* Handled with [mk_bb]. *)
       | S.StmReturn _ -> []
-      (* See [handle_jump_bbs]. *)
-      | S.StmExit _ | S.StmContinue _ -> []
+      (* The implementation a bit tricky: we can encounter with these
+         statements only inside the loops which are handled by
+         [mk_bbs_nested_stmts_consist]. So, if we got one of these statements
+         at the top of POU this is a semantic error. We create a regular block
+         in this case. *)
+      | S.StmExit _ | S.StmContinue _ -> (bbs_pred_ids)
     in
     match stmts with
     | [] -> begin
@@ -413,6 +462,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         in
         cfg.bbs_map <- BBMap.set cfg.bbs_map bb;
         match bb.ty with
+        (* TODO: Return from a branch? *)
         | BBExit -> fill_bbs_map_aux [] []
         | _ -> begin
             let n_bbs_last_ids = mk_nested_bbs s [bb.id] in

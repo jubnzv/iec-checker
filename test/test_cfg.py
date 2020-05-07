@@ -591,3 +591,93 @@ def test_cfg_return_statement_inside_branch():
         assert bbs[5].type == "BBExit"
         assert bbs[5].preds == {1, 4}
         assert bbs[5].succs == set()
+
+
+def test_cfg_exit_continue():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        PROGRAM test_exit_continue
+        VAR a : INT; i : INT; END_VAR
+        WHILE i <= 10 DO
+          IF i = 5 THEN
+            i := i + 1;
+            EXIT;
+          ELSIF i = 6 THEN
+            CONTINUE;
+            i := 3;
+          END_IF;
+          i := i + 2;
+        END_WHILE;
+        i := 0;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.programs) == 1
+        assert len(scheme.cfgs) == 1
+        cfg = scheme.cfgs[0]
+        bbs = cfg.basic_blocks
+        assert len(bbs) == 12
+        # while
+        assert bbs[0].id == 0
+        assert bbs[0].type == "BBEntry"
+        assert bbs[0].preds == {8, 10}
+        assert bbs[0].succs == {11, 1}
+        # i <= 10
+        assert bbs[1].id == 1
+        assert bbs[1].type == "BB"
+        assert bbs[1].preds == {0}
+        assert bbs[1].succs == {2}
+        # if
+        assert bbs[2].id == 2
+        assert bbs[2].type == "BB"
+        assert bbs[2].preds == {1}
+        assert bbs[2].succs == {3}
+        # i = 5
+        assert bbs[3].id == 3
+        assert bbs[3].type == "BB"
+        assert bbs[3].preds == {2}
+        assert bbs[3].succs == {4, 6, 10}
+        # i := i + 1
+        assert bbs[4].id == 4
+        assert bbs[4].type == "BB"
+        assert bbs[4].preds == {3}
+        assert bbs[4].succs == {5}
+        # exit
+        assert bbs[5].id == 5
+        assert bbs[5].type == "BB"
+        assert bbs[5].preds == {4}
+        assert bbs[5].succs == {11}
+        # elsif
+        assert bbs[6].id == 6
+        assert bbs[6].type == "BB"
+        assert bbs[6].preds == {3}
+        assert bbs[6].succs == {7}
+        # i = 6
+        assert bbs[7].id == 7
+        assert bbs[7].type == "BB"
+        assert bbs[7].preds == {6}
+        assert bbs[7].succs == {8}
+        # continue
+        assert bbs[8].id == 8
+        assert bbs[8].type == "BB"
+        assert bbs[8].preds == {7}
+        assert bbs[8].succs == {0}
+        # i := 3
+        assert bbs[9].id == 9
+        assert bbs[9].type == "BB"
+        assert bbs[9].preds == set()
+        assert bbs[9].succs == {10}
+        # i := i + 2
+        assert bbs[10].id == 10
+        assert bbs[10].type == "BB"
+        assert bbs[10].preds == {9, 3}
+        assert bbs[10].succs == {0}
+        # i := 0
+        assert bbs[11].id == 11
+        assert bbs[11].type == "BBExit"
+        assert bbs[11].preds == {5, 0}
+        assert bbs[11].succs == set()
