@@ -54,3 +54,8 @@ def run_checker(file_path: str) -> Tuple[List[Warning], int]:
     out, err = p.communicate()
     warnings = process_output(out)
     return (warnings, p.returncode)
+
+
+def filter_warns(warns: List[Warning], warn_id: str) -> List[Warning]:
+    """Filter warning by identifier."""
+    return list(filter(lambda w: w.id == warn_id, warns))

@@ -60,12 +60,12 @@ let run_checker filename fmt create_dumps quiet interactive =
       Dump.create_dump elements envs pou_cfgs
         (if read_stdin then "stdin" else filename);
     let decl_warnings = Declaration_analysis.run elements envs in
-    let flow_warnings = Control_flow_analysis.run pou_cfgs in
+    let cfa_warnings = Control_flow_analysis.run elements pou_cfgs in
     let lib_warnings = Lib.run_all_checks elements envs quiet in
     WO.print_report (
       parser_warns @
       decl_warnings @
-      flow_warnings @
+      cfa_warnings @
       lib_warnings)
       fmt;
     let rc = if not (List.is_empty parser_warns) then 1 else 0 in

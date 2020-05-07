@@ -1,5 +1,5 @@
-(** Declaration analysis, checks identifiers and declaration compatibility. *)
-
+(** Declaration analysis: inspect compatibility of the identifiers and their
+    declarations. *)
 open IECCheckerCore
 module S = Syntax
 
