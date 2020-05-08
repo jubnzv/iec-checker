@@ -60,9 +60,10 @@ let check_ty_decl = function
     begin
       match ty_spec with
       | S.DTySpecElementary ty_decl -> (check_str_init_expr ty_decl init_expr)
-      | S.DTySpecSimple _ | S.DTySpecGeneric _ -> []
+      | S.DTySpecSimple _ | S.DTySpecGeneric _ | S.DTySpecEnum _ -> []
     end
   | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
+  | S.DTyDeclEnumType _ -> []
 
 let[@warning "-27"] run elements envs =
   List.fold_left elements

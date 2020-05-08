@@ -308,19 +308,26 @@ and derived_ty =
 [@@deriving to_yojson]
 
 and derived_ty_decl =
+  (* Elementary type synonyms and strings *)
   | DTyDeclSingleElement of string (** type name *) *
                             single_element_ty_spec (** declaration ty *) *
                             expr option (** initialization expression *)
+  (* Reference: ch. 6.4.4.4 *)
   | DTyDeclSubrange of string (** type name *) *
                        subrange_ty_spec *
                        int (** initial value *)
+  | DTyDeclEnumType of string (** type name *) *
+                       elementary_ty option (** type of the elements *) *
+                       enum_element_spec list (** elements *) *
+                       enum_element_spec option (** default element *)
 (* | DTyDeclArrayType *)
+(* | DTyDeclRefType *)
 (* | DTyDeclStructType *)
-[@@deriving to_yojson]
 
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string
+  | DTySpecEnum of string
   | DTySpecGeneric of generic_ty
 [@@deriving to_yojson]
 
@@ -330,19 +337,21 @@ and subrange_ty_spec =
   int (** upper bound *)
 [@@deriving to_yojson]
 
+and enum_element_spec = {
+  enum_type_name: string option;  (** name of enum which this element belongs to *)
+  elem_name: string; (** name of the element *)
+  initial_value: constant option; (** initial value *)
+} [@@deriving to_yojson]
+
 and constant =
-  | CInteger of TI.t * int
-                [@name "Integer"]
-  | CBool of TI.t * bool
-             [@name "Bool"]
-  | CReal of TI.t * float
-             [@name "Real"]
-  | CString of TI.t * string
-               [@name "String"]
-  | CTimeValue of TI.t * TimeValue.t
-                  [@name "TimeValue"]
+  | CInteger of TI.t * int           [@name "Integer"]
+  | CBool of TI.t * bool             [@name "Bool"]
+  | CReal of TI.t * float            [@name "Real"]
+  | CString of TI.t * string         [@name "String"]
+  | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
               [@name "Range"]
+  | CEnumValue of TI.t * string      [@name "EnumValue"]
 [@@deriving to_yojson, show]
 
 and statement =
@@ -449,6 +458,7 @@ let c_is_zero c =
   | CString _ -> false
   | CTimeValue (_, tv) -> TimeValue.is_zero tv
   | CRange (_, lb, ub) -> (phys_equal lb 0) && (phys_equal ub 0)
+  | CEnumValue _ -> false
 
 let c_get_str_value c =
   match c with
@@ -458,6 +468,7 @@ let c_get_str_value c =
   | CString (_, v) -> v
   | CTimeValue (_, v) -> TimeValue.to_string v
   | CRange (_, lb, ub) -> Printf.sprintf "%d..%d" lb ub
+  | CEnumValue (_, v) -> v
 
 let c_get_ti c =
   match c with
@@ -467,6 +478,7 @@ let c_get_ti c =
   | CString (ti, _) -> ti
   | CTimeValue (ti, _) -> ti
   | CRange (ti, _, _) -> ti
+  | CEnumValue (ti, _) -> ti
 
 let c_add c1 c2 =
   match (c1, c2) with
@@ -701,5 +713,51 @@ let get_pou_vars_decl = function
   | IECProgram (_, p)        -> p.variables
   | IECConfiguration _       -> []
   | IECType _                -> []
+
+(* {{{ Yojson helpers *)
+let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
+  match dty with
+  | DTyDeclSingleElement (type_name, declaration_ty, expr_opt) -> begin
+      match expr_opt with
+      | Some (e) ->
+        `Assoc [
+          "type", `String("SingleElement");
+          "name", `String(type_name);
+          "declaration_type", single_element_ty_spec_to_yojson declaration_ty;
+          "init_expr", expr_to_yojson e;
+        ]
+      | None ->
+        `Assoc [
+          "type", `String("SingleElement");
+          "name", `String(type_name);
+          "declaration_type", single_element_ty_spec_to_yojson declaration_ty;
+        ]
+    end
+  | DTyDeclSubrange (type_name, spec, init_val) -> begin
+      let (int_ty, lb, ub) = spec in
+      `Assoc [
+        "type", `String("Subrange");
+        "name", `String(type_name);
+        "values_type", elementary_ty_to_yojson int_ty;
+        "lower_bound", `Int(lb);
+        "upper_bound", `Int(ub);
+        "init_val", `Int(init_val);
+      ]
+    end
+  | DTyDeclEnumType (type_name, elements_type_opt, _, _) -> begin
+      match elements_type_opt with
+      | Some (elements_type) ->
+        `Assoc [
+          "type", `String("Enum");
+          "name", `String(type_name);
+          "elements_type", elementary_ty_to_yojson elements_type;
+        ]
+      | None ->
+        `Assoc [
+          "type", `String("Enum");
+          "name", `String(type_name);
+        ]
+    end
+(* }}} *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

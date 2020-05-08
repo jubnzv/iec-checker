@@ -147,6 +147,8 @@ val vget_ti : variable -> TI.t
 (* }}} *)
 
 (* {{{ Data types, constants and statements *)
+(* FIXME: Here is some problems with redefining derived_ty_decl_to_yojson. *)
+[@@@warning "-32"]
 type iec_data_type =
   | TyElementary of elementary_ty
   | TyGeneric of generic_ty
@@ -220,14 +222,19 @@ and derived_ty_decl =
   | DTyDeclSubrange of string (** type name *) *
                        subrange_ty_spec *
                        int (** initial value *)
+  | DTyDeclEnumType of string (** type name *) *
+                       elementary_ty option (** type of the elements *) *
+                       enum_element_spec list (** elements *) *
+                       enum_element_spec option (** default element *)
 (* | DTyDeclArrayType *)
+(* | DTyDeclRefType *)
 (* | DTyDeclStructType *)
-[@@deriving to_yojson]
 
 (** Single element type specification (it works like typedef in C) *)
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
   | DTySpecSimple of string (** derived ty name *)
+  | DTySpecEnum of string
   | DTySpecGeneric of generic_ty
 [@@deriving to_yojson]
 
@@ -238,19 +245,22 @@ and subrange_ty_spec =
   int (** upper bound *)
 [@@deriving to_yojson]
 
+(** Enum element specification *)
+and enum_element_spec = {
+    enum_type_name: string option;  (** name of enum which this element belongs to *)
+    elem_name: string; (** name of the element *)
+    initial_value: constant option; (** initial value *)
+} [@@deriving to_yojson]
+
 and constant =
-  | CInteger of TI.t * int
-                [@name "Integer"]
-  | CBool of TI.t * bool
-             [@name "Bool"]
-  | CReal of TI.t * float
-             [@name "Real"]
-  | CString of TI.t * string
-               [@name "String"]
-  | CTimeValue of TI.t * TimeValue.t
-                  [@name "TimeValue"]
+  | CInteger of TI.t * int           [@name "Integer"]
+  | CBool of TI.t * bool             [@name "Bool"]
+  | CReal of TI.t * float            [@name "Real"]
+  | CString of TI.t * string         [@name "String"]
+  | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
-              [@name "Range"]
+                                     [@name "Range"]
+  | CEnumValue of TI.t * string      [@name "EnumValue"]
 [@@deriving to_yojson, show]
 
 and statement =
@@ -511,5 +521,9 @@ val get_pou_id : iec_library_element -> int
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
 (** Return variables declared for the given POU. *)
+
+(* {{{ Yojson helpers *)
+val derived_ty_decl_to_yojson : derived_ty_decl -> Yojson.Safe.t
+(* }}} *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable : *)

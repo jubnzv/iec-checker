@@ -74,3 +74,22 @@ def test_statements_order():
         # TODO: need recursive traverse in om
         # p = scheme.programs[0]
         # assert len(p.statemets) == 3
+
+
+def test_enum_types():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        TYPE
+          Traffic_Light: (Red, Amber, Green);
+        END_TYPE
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.types) == 1
+        ty = scheme.types[0]
+        assert ty.name == 'TRAFFIC_LIGHT'
+        assert ty.type == 'Enum'
+

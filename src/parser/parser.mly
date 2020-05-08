@@ -5,6 +5,7 @@
   module S = Syntax
   module TI = Tok_info
 
+  exception SyntaxError of string
   (* Raised when parser found simple semnatics errors while constructing AST. *)
   exception SemanticError of string
 
@@ -296,40 +297,38 @@ let int_literal :=
   | ~ = octal_int; <>
   | ~ = hex_int; <>
 
-unsigned_int:
-  | vi = T_INTEGER
+let unsigned_int :=
+  | vi = T_INTEGER;
   {
     let (v, ti) = vi in
     S.CInteger(ti, v)
   }
 
-signed_int:
-  | i = unsigned_int
-  { i }
-  | T_PLUS i = unsigned_int
-  { i }
-  | T_MINUS res = T_INTEGER
+let signed_int :=
+  | ~ = unsigned_int; <>
+  | T_PLUS; ~ = unsigned_int; <>
+  | T_MINUS; res = T_INTEGER;
   {
     let (v, ti) = res in
     S.CInteger(ti, -v)
   }
 
-binary_int:
-  | vi = T_BINARY_INTEGER
+let binary_int :=
+  | vi = T_BINARY_INTEGER;
   {
     let (v, ti) = vi in
     S.CInteger(ti, v)
   }
 
-octal_int:
-  | vi = T_OCTAL_INTEGER
+let octal_int :=
+  | vi = T_OCTAL_INTEGER;
   {
     let (v, ti) = vi in
     S.CInteger(ti, v)
   }
 
-hex_int:
-  | vi = T_HEX_INTEGER
+let hex_int :=
+  | vi = T_HEX_INTEGER;
   {
     let (v, ti) = vi in
     S.CInteger(ti, v)
@@ -699,7 +698,7 @@ let string_type_access :=
 let single_elem_type_access :=
   | ~ = simple_type_access; <S.DTySpecSimple>
   (* | ~ = subrange_type_access; <> *)
-  (* | ~ = enum_type_access; <> *)
+  | ~ = enum_type_access; <S.DTySpecEnum>
 
 let simple_type_access :=
   | ~ = simple_type_name; <>
@@ -707,9 +706,9 @@ let simple_type_access :=
 (* let subrange_type_access := *)
   (* | ~ = subrange_type_name; <> *)
 
-(* enum_type_access: *)
-  (* | id = T_IDENTIFIER *)
-  (* { } *)
+let enum_type_access :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
 (* array_type_access: *)
   (* | id = T_IDENTIFIER *)
@@ -728,21 +727,21 @@ let subrange_type_name :=
   { let name, _ = id in name }
 
 (** Helper rule for str_type_decl *)
-let str_type_name :=
-  | id = T_IDENTIFIER;
-  { let name, _ = id in name }
+(* let str_type_name :=           *)
+(*   | id = T_IDENTIFIER;         *)
+(*   { let name, _ = id in name } *)
 
 let enum_type_name :=
   | id = T_IDENTIFIER;
   { let name, _ = id in name }
 
-let array_type_name :=
-  | id = T_IDENTIFIER;
-  { let name, _ = id in name }
+(* let array_type_name :=         *)
+(*   | id = T_IDENTIFIER;         *)
+(*   { let name, _ = id in name } *)
 
-let struct_type_name :=
-  | id = T_IDENTIFIER;
-  { let name, _ = id in name }
+(* let struct_type_name :=        *)
+(*   | id = T_IDENTIFIER;         *)
+(*   { let name, _ = id in name } *)
 
 let data_type_decl :=
   | T_TYPE; ~ = list(type_decl); T_END_TYPE; <>
@@ -750,15 +749,18 @@ let data_type_decl :=
 let type_decl :=
   | ~ = simple_type_decl; T_SEMICOLON; <>
   | ~ = subrange_type_decl; T_SEMICOLON; <>
-  (* | ~ = enum_type_decl; T_SEMICOLON; <> *)
+  | ~ = enum_type_decl; T_SEMICOLON; <>
   (* | ~ = array_type_decl; T_SEMICOLON; <> *)
   (* | ~ = struct_type_decl; T_SEMICOLON; <> *)
   | ~ = str_type_decl; T_SEMICOLON; <>
   (* | ~ = ref_type_decl; T_SEMICOLON; <> *)
 
 (* Helper rules to resolve shift/reduce conflicts in types declaration *)
-let type_decl_helper :=
-  | name_id = T_IDENTIFIER; T_COLON; ty = type_spec_helper;
+(* let type_decl_helper :=                                     *)
+(*   | name_id = T_IDENTIFIER; T_COLON; ty = type_spec_helper; *)
+(*   { let name, _ = name_id in (name, ty) }                   *)
+let type_decl_helper_opt :=
+  | name_id = T_IDENTIFIER; T_COLON; ty = option(type_spec_helper);
   { let name, _ = name_id in (name, ty) }
 (* Same as elem_type_name, but with length of strings. *)
 let type_spec_helper :=
@@ -773,9 +775,13 @@ let type_spec_helper :=
 (* Implementation is modified to avoid shift/reduce conflicts *)
 let simple_type_decl :=
   (* | ty_decl_name = simple_type_name; T_COLON; init_vals = simple_spec_init; *)
-  | name_type = type_decl_helper; ci = assign_constant_expr?;
+  | name_type = type_decl_helper_opt; ci = assign_constant_expr?;
   {
-    let (ty_name, ty_decl) = name_type in
+    let (ty_name, ty_decl_opt) = name_type in
+    let ty_decl = match ty_decl_opt with
+    | Some(v) -> v
+    | None -> raise (SyntaxError "Missing type name declaration")
+    in
     let ty_spec = S.DTySpecElementary(ty_decl) in
     S.DTyDeclSingleElement(ty_name, ty_spec, ci)
   }
@@ -817,9 +823,13 @@ let subrange_spec_init :=
   | ~ = subrange_spec; <>
 
 let subrange_spec :=
-  | name_type = type_decl_helper; T_LPAREN; s = subrange; T_RPAREN;
+  | name_type = type_decl_helper_opt; T_LPAREN; s = subrange; T_RPAREN;
   {
-    let (ty_name, ty_decl) = name_type in
+    let (ty_name, ty_decl_opt) = name_type in
+    let ty_decl = match ty_decl_opt with
+    | Some(v) -> v
+    | None -> raise (SyntaxError "Missing subrange type declaration")
+    in
     if not (S.ety_is_integer ty_decl) then
         raise (SemanticError "Subrange types must be integer")
     else
@@ -835,19 +845,74 @@ let subrange_spec :=
      constant_expr '..' constant_expr
 
    I don't know how to evaluate constant expressions in compile time and have no
-   any examples, so I suppose that we always have integer values here.
+   any examples of it, so I suppose, that we always have integer values here.
 *)
 let subrange :=
   | lbc = signed_int; T_RANGE; ubc = signed_int;
-  { ((S.c_get_ti lbc), (cget_int_val lbc), (cget_int_val ubc)) }
+  { (S.c_get_ti lbc), (cget_int_val lbc), (cget_int_val ubc) }
 
-(* enum_type_decl: *)
+(* Implementation is modifiet to avoid shift/reduce conflicts with
+   declaration of other types. *)
+let enum_type_decl :=
+  | type_opts = type_decl_helper_opt; specs = named_spec_init;
+  {
+    let (enum_name, elem_type_name) = type_opts
+    and (element_specs, default_value) = specs in
+    S.DTyDeclEnumType(enum_name, elem_type_name, element_specs, default_value)
+  }
+  | enum_name = enum_type_name; T_COLON; specs = enum_spec_init;
+  {
+    let (element_specs, default_value) = specs in
+    S.DTyDeclEnumType(enum_name, None, element_specs, default_value)
+  }
 
-(* name_spec_init: *)
+let named_spec_init :=
+  | T_LPAREN; specs = separated_nonempty_list(T_COMMA, enum_value_spec); T_RPAREN; default_value_opt = optional_assign(enum_value_spec);
+  { (specs, default_value_opt) }
 
-(* enum_value_spec: *)
+let enum_spec_init :=
+  | T_LPAREN; values = separated_nonempty_list(T_COMMA, T_IDENTIFIER); T_RPAREN; default_value_opt = optional_assign(enum_value_spec);
+  {
+    let specs = List.fold_left
+      values
+      ~init:[]
+      ~f:(fun acc (name, _) -> acc @ [{ S.enum_type_name = None; S.elem_name = name; S.initial_value = None }])
+    in
+    (specs, default_value_opt)
+  }
+  (* FIXME: How does this should work? Standard defines this rule in BNF grammar, but there are no description
+     or examples. Neither in the standard nor in the manufacturers documentation (Beckhoff, Fernhill, CodeSyS).
+     I don't know what that means. *)
+  (* | enum_name = enum_type_access; initial_value = option(enum_spec_init_inval); { } *)
 
-(* enum_value: *)
+let enum_value_spec :=
+  | id = T_IDENTIFIER;
+  {
+    let name, _ = id in
+    { S.enum_type_name = None; S.elem_name = name; S.initial_value = None; }
+  }
+  | id = T_IDENTIFIER; T_ASSIGN; initial_value = int_literal;
+  {
+    let name, _ = id in
+    { S.enum_type_name = None; S.elem_name = name; S.initial_value = Some(initial_value); }
+  }
+  | id = T_IDENTIFIER; T_ASSIGN; initial_value = constant_expr;
+  {
+    let name, _ = id in
+    let initial_const = match initial_value with S.ExprConstant (_, c) -> c | _ -> assert false in
+    { S.enum_type_name = None; S.elem_name = name; S.initial_value = Some(initial_const); }
+  }
+
+let enum_value :=
+  | ty_opt = option(enum_value_opt); id = T_IDENTIFIER;
+  {
+    let name, _ = id in
+    { S.enum_type_name = ty_opt; S.elem_name = name; S.initial_value = None; }
+  }
+
+(* Helper rule for enum_value and enum_value_use  *)
+let enum_value_opt :=
+    | ~ = enum_type_name; T_SHARP;<>
 
 (* array_type_decl: *)
 
@@ -899,9 +964,13 @@ struct_elem_name_list:
      type_name ':' string_type_name ( ':=' char_str )?
 *)
 let str_type_decl :=
-  | name_type = type_decl_helper; init_expr = option(assign_constant_expr);
+  | name_type = type_decl_helper_opt; init_expr = option(assign_constant_expr);
   {
-    let (ty_name, ty_decl) = name_type in
+    let (ty_name, ty_decl_opt) = name_type in
+    let ty_decl = match ty_decl_opt with
+    | Some(v) -> v
+    | None -> raise (SyntaxError "Missing string type name declaration")
+    in
     if not (S.ety_is_string ty_decl) then
         raise (SemanticError "Expected string type")
     else
@@ -1054,12 +1123,12 @@ variable_list:
 
 (* fb_decl_init: *)
 
-fb_name:
-  | id = T_IDENTIFIER
-  {
-    let (name, ti) = id in
-    S.FunctionBlock.create name ti
-  }
+(* let fb_name :=                     *)
+(*   | id = T_IDENTIFIER;             *)
+(*   {                                *)
+(*     let (name, ti) = id in         *)
+(*     S.FunctionBlock.create name ti *)
+(*   }                                *)
 
 (* fb_instance_name: *)
 
@@ -1745,9 +1814,9 @@ prog_data_source:
     (* | v = direct_variable
     { v } *)
 
-  let data_sink :=
-    | ~ = global_var_access; <>
-    | ~ = direct_variable; <>
+(* let data_sink :=              *)
+(*   | ~ = global_var_access; <> *)
+(*   | ~ = direct_variable; <>   *)
 
 config_init:
     | T_VAR_CONFIG is = list(config_inst_init) T_END_VAR
@@ -1864,7 +1933,11 @@ let unary_expr :=
 
 let primary_expr :=
   | ~ = constant; <>
-  (* | enum_value { } *)
+  | values = enum_value_use;
+  {
+    let (name, ti) = values in
+    S.ExprConstant(ti, S.CEnumValue(ti, name))
+  }
   | v = variable_access;
   {
     let ti = S.vget_ti v in
@@ -1878,9 +1951,16 @@ let primary_expr :=
   (* | ref_value {  } *)
   | T_LPAREN; ~ = expression; T_RPAREN; <>
 
+(* Helper rule for primary_expr: "use" occurrence of enum element. Since we are not
+   interested in the complete enum type specification here, we need only the name
+   and token location.
+
+   Returns (name, ti). *)
+let enum_value_use :=
+  | option(enum_value_opt); ~ = T_IDENTIFIER; <>
+
 let variable_access :=
-  | v = variable_expr; option(multibit_part_access);
-  { v }
+  | ~ = variable_expr; option(multibit_part_access); <>
 
 (* Helper rule for variable_access.
  * This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
@@ -2152,19 +2232,19 @@ let generic_type_name :=
   | T_ANY_DATE;
   { S.ANY_DATE }
 
-let dir_var_location_prefix :=
-  | id = T_IDENTIFIER;
-  {
-    let (id_str, _) = id in
-    get_dir_var_loc_exn id_str
-  }
+(* let dir_var_location_prefix := *)
+(*   | id = T_IDENTIFIER;         *)
+(*   {                            *)
+(*     let (id_str, _) = id in    *)
+(*     get_dir_var_loc_exn id_str *)
+(*   }                            *)
 
-let dir_var_size_prefix :=
-  | id = T_IDENTIFIER;
-  {
-    let (id_str, _) = id in
-    get_dir_var_size_exn id_str
-  }
+(* let dir_var_size_prefix :=      *)
+(*   | id = T_IDENTIFIER;          *)
+(*   {                             *)
+(*     let (id_str, _) = id in     *)
+(*     get_dir_var_size_exn id_str *)
+(*   }                             *)
 
 let compare_expr_operator :=
   | T_GT;
@@ -2195,6 +2275,10 @@ let unary_operator :=
   { S.NEG }
   | T_NOT;
   { S.NEG }
+
+optional_assign(X):
+  | { None }
+  | T_ASSIGN x = X { Some x }
 (* }}} *)
 
-(* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)
+(* vim: set foldmethod=marker foldlevel=0 foldenable tw=2 sw=2 tw=120 wrap : *)

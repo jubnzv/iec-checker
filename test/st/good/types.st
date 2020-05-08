@@ -12,4 +12,7 @@ TYPE
   (* Subrange types *)
   ANALOG_DATA : INT (-4095 .. 4095);
 
+  (* Enum types *)
+  Traffic_Light: (Red, Amber, Green);
+  Painting_colors: (Red, Yellow, Blue) := Blue;
 END_TYPE

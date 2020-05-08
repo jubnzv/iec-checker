@@ -110,6 +110,14 @@ class Configuration:
 @dataclass
 class Type:
     name: str
+    type: str
+
+    @classmethod
+    def from_dict(cls, values):
+        args = {}
+        args['name'] = values.get('name', '')
+        args['type'] = values.get('type', '')
+        return Type(**args)
 
 
 @dataclass
@@ -181,14 +189,11 @@ class Scheme:
         # args['configurations'] = [Configuration.from_dict(
         #     i) for i in values.get('configurations', [])]
         args['configurations'] = []
-        # args['types'] = [Type.from_dict(
-        #     i) for i in values.get('types', [])]
-        args['types'] = []
+        args['types'] = [Type.from_dict(i) for i in values.get('types', [])]
         # args['environments'] = [Environment.from_dict(
         #     i) for i in values.get('environments', [])]
         args['environments'] = []
-        args['cfgs'] = [Cfg.from_dict(
-            i) for i in values.get('cfgs', [])]
+        args['cfgs'] = [Cfg.from_dict(i) for i in values.get('cfgs', [])]
         return Scheme(**args)
 
 
