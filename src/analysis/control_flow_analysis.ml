@@ -16,7 +16,8 @@ let find_unreachable_top_statements (elements: S.iec_library_element list) : (Wa
   let handle_return stmts : (Warn.t list) =
     let rec get_first_unreachable elem stmts found =
       match stmts with
-      | [] | [_] -> elem
+      | [] -> elem
+      | [s] -> if found then Some(s) else None
       | s :: stail -> begin
           if found then
             get_first_unreachable (Some(s)) [] true

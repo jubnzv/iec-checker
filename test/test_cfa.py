@@ -63,3 +63,26 @@ def test_cfa_dead_code_in_the_loops():
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme
+
+
+def test_cfa_multiple_pous():
+    fdump = f'stdin.dump.json'
+    warns, rc = check_program(
+        """
+        FUNCTION dead_code_after_return_1 : INT
+          VAR some_var : INT; END_VAR
+          RETURN;
+          some_var := SQRT(16#42); (* UnreachableCode error *)
+        END_FUNCTION
+
+        FUNCTION dead_code_after_return_2 : INT
+          VAR some_var : INT; END_VAR
+          RETURN;
+          some_var := SQRT(16#42); (* UnreachableCode error *)
+        END_FUNCTION
+        """.replace('\n', ''))
+    assert rc == 0
+    assert len(filter_warns(warns, 'UnreachableCode')) == 2
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
