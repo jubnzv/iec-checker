@@ -48,7 +48,9 @@ python3 checker.py test/st/*.st
 
 This will gives you the following output:
 ```
-Report for test/st/dead-code.st:
+Report for test/st/dead-code.st:[PLCOPEN-L17] 17:6 Each IF instruction should have an ELSE clause
+[UnreachableCode] 25:7 Code block will never be reached
+[UnreachableCode] 20:7 Code block will never be reached
 [UnreachableCode] 9:10 Code block will never be reached
 Report for test/st/declaration-analysis.st:
 [DeclarationAnalysis] Initial subrange value -4096 does not fit specified range (-4095 .. 4095)
@@ -60,6 +62,9 @@ Report for test/st/plcopen-l17.st:
 [PLCOPEN-L17] 10:4 Each IF instruction should have an ELSE clause
 Report for test/st/plcopen-n3.st:
 [PLCOPEN-N3] 6:7 IEC data types and standard library objects must be avoided
+Report for test/st/this.st:
+[UnreachableCode] 10:10 Code block will never be reached
+[UnreachableCode] 4:10 Code block will never be reached
 Report for test/st/unused-variable.st:
 [UnreachableCode] 10:10 Code block will never be reached
 Report for test/st/zero-division.st:
