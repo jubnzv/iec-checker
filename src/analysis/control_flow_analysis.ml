@@ -46,7 +46,7 @@ let find_unreachable_top_statements (elements: S.iec_library_element list) : (Wa
           match elem with
           | S.IECFunction _ | S.IECFunctionBlock _ ->
             warns @ (handle_return (AU.get_top_stmts elem))
-          | _ -> []
+          | _ -> warns
         end)
 
 (** Find basic blocks inside the loop statements that are unreachable after
