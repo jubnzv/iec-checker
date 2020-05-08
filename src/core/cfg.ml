@@ -48,6 +48,11 @@ module BBMap = struct
 
   let to_alist m = Map.to_alist m
 
+  let ids m = List.fold_left
+      (Map.to_alist m)
+      ~init:[]
+      ~f:(fun acc (k, _) -> acc @ [k])
+
   let first (m : t) : (bb option) =
     let all = Map.to_alist m in
     let values_opt = List.nth all 0 in
@@ -487,11 +492,29 @@ let mk iec_element =
 
 let get_pou_id c = c.pou_id
 
-let list_basic_blocks cfg =
-  BBMap.to_alist cfg.bbs_map
-  |> List.fold_left
-    ~init:[]
-    ~f:(fun acc i -> match i with (_, bb) -> acc @ [bb])
+let get_bb_by_id_exn cfg id =
+  BBMap.find_exn cfg.bbs_map id
+
+let get_all_ids cfg =
+  BBMap.ids cfg.bbs_map
+
+let get_reachable_ids cfg =
+  (* There are no nodes in CFG. *)
+  if (phys_equal cfg.entry_bb_id (-1)) then [] else
+    let module IntSet = Set.Make(Int) in
+    let visited = ref IntSet.empty in
+    let rec dfs (bb_id : int) =
+      let handle_node id =
+        if not (IntSet.mem !visited id) then dfs id
+      in
+      let bb = (BBMap.find_exn cfg.bbs_map bb_id) in
+      visited := IntSet.add !visited bb_id;
+      List.iter bb.succs ~f:(fun id -> handle_node id);
+      ()
+    in
+    dfs cfg.entry_bb_id;
+    IntSet.to_list !visited
+
 
 let bb_by_id cfg (id : int) =
   BBMap.find cfg.bbs_map id

@@ -32,3 +32,34 @@ def test_cfa_dead_code_top_statements():
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme
+
+
+def test_cfa_dead_code_in_the_loops():
+    fdump = f'stdin.dump.json'
+    warns, rc = check_program(
+        """
+        PROGRAM dead_code_in_the_loops
+        VAR a : INT; i : INT; END_VAR
+        WHILE i < 10 DO
+          IF i = 5 THEN
+            i := i + 1;
+            EXIT;
+            i := 19; (* UnreachableCode error *)
+            i := 42; (* No additional warnings *)
+            i := 42;
+          ELSIF i = 6 THEN
+            CONTINUE;
+            i := 3; (* UnreachableCode error *)
+            i := 44; (* No additional warnings *)
+            i := 19;
+          END_IF;
+          i := i + 2;
+        END_WHILE;
+        i := 0;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    assert len(filter_warns(warns, 'UnreachableCode')) == 2
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme

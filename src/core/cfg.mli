@@ -31,19 +31,28 @@ val mk : S.iec_library_element -> t
 val get_pou_id : t -> int
 (** Get the id of the POU that this CFG belongs to *)
 
-val list_basic_blocks : t -> bb list
-(** Get list of basic blocks from a given CFG instance. *)
+val get_bb_by_id_exn : t -> int -> bb
+(** [get_bb_by_id_exn id cfg] Return basic block stored in [cfg] by given ID.
+    Raise [Not_found] if there are no such block *)
+
+val get_all_ids : t -> int list
+(** [get_all_ids cfg] Return a list with ids of all basic blocks represented
+    in [cfg]. *)
+
+val get_reachable_ids : t -> int list
+(** [get_reachable_ids cfg] Return a list with ids of basic blocks that are
+    reachable from [cfg] entry point. *)
 
 val bb_by_id : t -> int -> bb option
 (** Get basic block entry from a given id. *)
-
-val to_string : t -> string
 
 val bb_get_ti : bb -> TI.t
 (** Get token info for the basic block. *)
 
 val create_cfgs : S.iec_library_element list -> t list
 (** Create list of CFGs for a given iec_library_element objects. *)
+
+val to_string : t -> string
 
 val to_yojson : t -> Yojson.Safe.t
 
