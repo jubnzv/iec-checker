@@ -93,3 +93,23 @@ def test_enum_types():
         assert ty.name == 'TRAFFIC_LIGHT'
         assert ty.type == 'Enum'
 
+
+def test_struct_types():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        TYPE
+          Cooler: STRUCT
+            Temp: INT;
+            Cooling: TOF;
+          END_STRUCT;
+        END_TYPE
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.types) == 1
+        ty = scheme.types[0]
+        assert ty.name == 'COOLER'
+        assert ty.type == 'Struct'

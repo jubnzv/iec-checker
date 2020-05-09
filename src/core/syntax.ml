@@ -198,6 +198,23 @@ module DirVar = struct
     else
       None
 
+  let path_to_string path =
+    List.fold_left
+      path
+      ~init:[]
+      ~f:(fun acc v -> acc @ [(string_of_int v)])
+    |> String.concat ~sep:"."
+
+  let to_string t =
+    let loc_str = match t.loc with
+      | Some(v) -> (location_to_string v)
+      | None -> ""
+    in
+    let sz_str = match t.sz with
+      | Some(v) -> (size_to_string v)
+      | None -> ""
+    in
+    Printf.sprintf "DirVar: %%%s%s%s" sz_str loc_str (path_to_string t.path)
   let to_yojson t = to_yojson t
 end
 
@@ -301,10 +318,10 @@ and generic_ty =
 [@@deriving to_yojson]
 
 and derived_ty =
-  | DTyUseSingleElement of single_element_ty_spec
+  | DTyUseSingleElement of single_element_ty_spec [@name "UseSingleElement"]
   (* | DTyUseArrayType *)
-  (* | DTyUseStructType *)
-  | DTyUseStringType of elementary_ty
+  | DTyUseStructType of string                    [@name "UseStructElement"]
+  | DTyUseStringType of elementary_ty             [@name "UseStringType"]
 [@@deriving to_yojson]
 
 and derived_ty_decl =
@@ -320,9 +337,11 @@ and derived_ty_decl =
                        elementary_ty option (** type of the elements *) *
                        enum_element_spec list (** elements *) *
                        enum_element_spec option (** default element *)
-(* | DTyDeclArrayType *)
-(* | DTyDeclRefType *)
-(* | DTyDeclStructType *)
+  (* | DTyDeclArrayType *)
+  (* | DTyDeclRefType *)
+  | DTyDeclStructType of string (** struct name *) *
+                         bool (** is overlap *) *
+                         struct_elem_spec list (** elements *)
 
 and single_element_ty_spec =
   | DTySpecElementary of elementary_ty
@@ -342,6 +361,22 @@ and enum_element_spec = {
   elem_name: string; (** name of the element *)
   initial_value: constant option; (** initial value *)
 } [@@deriving to_yojson]
+
+(** Struct element specification *)
+and struct_elem_spec = {
+  struct_elem_name: string;
+  struct_elem_loc: DirVar.t option;
+  struct_elem_ty: single_element_ty_spec;
+  struct_elem_init_value: struct_elem_init_value_spec option; (** initial values *)
+} [@@deriving to_yojson]
+
+(** Initial value of a struct element *)
+and struct_elem_init_value_spec =
+  | StructElemInvalConstant of constant                  [@name "InvalConstant"]
+  | StructElemInvalEnum of     enum_element_spec         [@name "InvalEnum"]
+  (* | StructElemInvalArray of string                    [@name "InvalArray"] *)
+  | StructElemInvalStruct of   string (** struct name *) [@name "InvalStruct"]
+[@@deriving to_yojson]
 
 and constant =
   | CInteger of TI.t * int           [@name "Integer"]
@@ -757,6 +792,19 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
           "type", `String("Enum");
           "name", `String(type_name);
         ]
+    end
+  | DTyDeclStructType (type_name, is_overlap, elem_specs) -> begin
+      let elems_yojson = List.fold_left
+          elem_specs
+          ~init:[]
+          ~f:(fun acc e -> acc @ [struct_elem_spec_to_yojson e])
+      in
+      `Assoc [
+        "type", `String("Struct");
+        "name", `String(type_name);
+        "overlap", `Bool(is_overlap);
+        "elem_specs", `List(elems_yojson);
+      ]
     end
 (* }}} *)
 

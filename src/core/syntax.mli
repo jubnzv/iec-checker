@@ -118,6 +118,9 @@ module DirVar : sig
   val location_to_string : location -> string
   val location_of_string : string -> location option
 
+  val path_to_string : int list -> string
+
+  val to_string : t -> string
   val to_yojson : t -> Yojson.Safe.t
 end
 
@@ -204,10 +207,10 @@ and generic_ty =
 
 (** "Use" occurence of a derived type *)
 and derived_ty =
-  | DTyUseSingleElement of single_element_ty_spec
+  | DTyUseSingleElement of single_element_ty_spec [@name "UseSingleElement"]
   (* | DTyUseArrayType *)
-  (* | DTyUseStructType *)
-  | DTyUseStringType of elementary_ty
+  | DTyUseStructType of string                    [@name "UseStructElement"]
+  | DTyUseStringType of elementary_ty             [@name "UseStringType"]
 [@@deriving to_yojson]
 
 (** Declaration of a derived type.
@@ -226,9 +229,11 @@ and derived_ty_decl =
                        elementary_ty option (** type of the elements *) *
                        enum_element_spec list (** elements *) *
                        enum_element_spec option (** default element *)
-(* | DTyDeclArrayType *)
-(* | DTyDeclRefType *)
-(* | DTyDeclStructType *)
+  (* | DTyDeclArrayType *)
+  (* | DTyDeclRefType *)
+  | DTyDeclStructType of string (** struct name *) *
+                         bool (** is overlap *) *
+                         struct_elem_spec list (** elements *)
 
 (** Single element type specification (it works like typedef in C) *)
 and single_element_ty_spec =
@@ -247,10 +252,26 @@ and subrange_ty_spec =
 
 (** Enum element specification *)
 and enum_element_spec = {
-    enum_type_name: string option;  (** name of enum which this element belongs to *)
-    elem_name: string; (** name of the element *)
-    initial_value: constant option; (** initial value *)
+  enum_type_name: string option;  (** name of enum which this element belongs to *)
+  elem_name: string; (** name of the element *)
+  initial_value: constant option; (** initial value *)
 } [@@deriving to_yojson]
+
+(** Struct element specification *)
+and struct_elem_spec = {
+  struct_elem_name: string;
+  struct_elem_loc: DirVar.t option;
+  struct_elem_ty: single_element_ty_spec;
+  struct_elem_init_value: struct_elem_init_value_spec option; (** initial values *)
+} [@@deriving to_yojson]
+
+(** Initial value of a struct element *)
+and struct_elem_init_value_spec =
+  | StructElemInvalConstant of constant                  [@name "InvalConstant"]
+  | StructElemInvalEnum of     enum_element_spec         [@name "InvalEnum"]
+  (* | StructElemInvalArray of string                    [@name "InvalArray"] *)
+  | StructElemInvalStruct of   string (** struct name *) [@name "InvalStruct"]
+[@@deriving to_yojson]
 
 and constant =
   | CInteger of TI.t * int           [@name "Integer"]
@@ -259,7 +280,7 @@ and constant =
   | CString of TI.t * string         [@name "String"]
   | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
-                                     [@name "Range"]
+              [@name "Range"]
   | CEnumValue of TI.t * string      [@name "EnumValue"]
 [@@deriving to_yojson, show]
 

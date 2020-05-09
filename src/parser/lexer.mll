@@ -89,6 +89,9 @@
       "var",                T_VAR;
       "constant",           T_CONSTANT;
       "task",               T_TASK;
+      "struct",             T_STRUCT;
+      "end_struct",         T_END_STRUCT;
+      "overlap",            T_OVERLAP;
       "read_only",          T_READ_ONLY;
       "read_write",         T_READ_WRITE;
       "priority",           T_PRIORITY;
@@ -463,7 +466,7 @@ and direct_variable var ti = parse
       direct_variable var ti lexbuf
   }
   | eof { T_EOF }
-  | _   { T_DIR_VAR(var, ti) }
+  | _   { (* Printf.printf "%s\n" (Syntax.DirVar.to_string var); *) T_DIR_VAR(var, ti) }
   (* }}}*)
 
   (* {{{ Comments *)

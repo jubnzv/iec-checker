@@ -38,7 +38,6 @@
 %}
 
 (* {{{ Tokens *)
-
 (* {{{ Common *)
 %token T_ASSIGN    ":="
 %token T_SENDTO    "=>"
@@ -84,9 +83,9 @@
 %token T_READ_ONLY
 %token T_TASK
 %token T_CONSTANT
+%token T_STRUCT T_OVERLAP T_END_STRUCT
 %token T_EOF
 (* }}} *)
-
 (* {{{ Picture 30 -- Common elements for textual languages *)
 %token T_TYPE T_END_TYPE
 %token T_VAR T_END_VAR
@@ -107,7 +106,6 @@
 (* %token T_ACTION T_END_ACTION *)
 (* %token T_NAMESPACE T_END_NAMESPACE *)
 (* }}} *)
-
 (* {{{ Elementary data types *)
 %token T_BYTE           "BYTE"
 %token T_WORD           "WORD"
@@ -141,7 +139,6 @@
 %token T_TOD            "TOD"
 %token T_LTOD           "LTOD"
 (* }}} *)
-
 (* {{{ Generic data types *)
 %token T_ANY            "ANY"
 %token T_ANY_DERIVED    "ANY_DERIVED"
@@ -154,14 +151,12 @@
 %token T_ANY_STRING     "ANY_STRING"
 %token T_ANY_DATE       "ANY_DATE"
 (* }}} *)
-
 (* {{{ ST operators *)
 %token T_OR             "OR"
 %token T_XOR            "XOR"
 %token T_AND            "AND"
 %token T_EQU            "EQU"
 (* }}} *)
-
 (* {{{ ST control statements *)
 %token<IECCheckerCore.Tok_info.t> T_IF T_THEN T_ELSIF T_ELSE T_END_IF
 %token<IECCheckerCore.Tok_info.t> T_CASE T_OF T_END_CASE
@@ -170,9 +165,7 @@
 %token<IECCheckerCore.Tok_info.t> T_EXIT T_CONTINUE
 %token<IECCheckerCore.Tok_info.t> T_RETURN
 (* }}} *)
-
 (* {{{ Helpers for date and time literals
-
    According standard T, LT, D and DT are not keywords, so we need to
    define an extra terminal symbols to distinguish them from regular
    identifiers.
@@ -182,7 +175,6 @@
 %token T_DSHARP     "D#"
 %token T_LDSHARP    "LD#"
 (* }}} *)
-
 (* {{{ Non-terminal symbols *)
 %token <string * IECCheckerCore.Tok_info.t> T_IDENTIFIER
 %token <int * IECCheckerCore.Tok_info.t> T_INTEGER
@@ -206,7 +198,6 @@
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_US
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_NS
 (* }}} *)
-
 (* }}} *)
 
 (* Parser entry point *)
@@ -686,8 +677,8 @@ multibits_type_name:
 let derived_type_access :=
   | ~ = single_elem_type_access; <S.DTyUseSingleElement>
   (* | ~ = array_type_access; <> *)
-  (* | ~ = struct_type_access; <> *)
-  | ty_def = string_type_access; <S.DTyUseStringType>
+  | ~ = struct_type_access; <S.DTyUseStructType>
+  | ~ = string_type_access; <S.DTyUseStringType>
   (* | ~ = class_type_access; <> *)
   (* | ~ = ref_type_access; <> *)
   (* | ~ = interface_type_access; <> *)
@@ -714,17 +705,17 @@ let enum_type_access :=
   (* | id = T_IDENTIFIER *)
   (* { } *)
 
-(* struct_type_access:
-  | id = T_IDENTIFIER
-  { } *)
+let struct_type_access :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
 let simple_type_name :=
   | id = T_IDENTIFIER;
   { let name, _ = id in name }
 
-let subrange_type_name :=
-  | id = T_IDENTIFIER;
-  { let name, _ = id in name }
+(* let subrange_type_name :=      *)
+(*   | id = T_IDENTIFIER;         *)
+(*   { let name, _ = id in name } *)
 
 (** Helper rule for str_type_decl *)
 (* let str_type_name :=           *)
@@ -739,9 +730,9 @@ let enum_type_name :=
 (*   | id = T_IDENTIFIER;         *)
 (*   { let name, _ = id in name } *)
 
-(* let struct_type_name :=        *)
-(*   | id = T_IDENTIFIER;         *)
-(*   { let name, _ = id in name } *)
+let struct_type_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
 let data_type_decl :=
   | T_TYPE; ~ = list(type_decl); T_END_TYPE; <>
@@ -751,7 +742,7 @@ let type_decl :=
   | ~ = subrange_type_decl; T_SEMICOLON; <>
   | ~ = enum_type_decl; T_SEMICOLON; <>
   (* | ~ = array_type_decl; T_SEMICOLON; <> *)
-  (* | ~ = struct_type_decl; T_SEMICOLON; <> *)
+  | ~ = struct_type_decl; T_SEMICOLON; <>
   | ~ = str_type_decl; T_SEMICOLON; <>
   (* | ~ = ref_type_decl; T_SEMICOLON; <> *)
 
@@ -775,7 +766,7 @@ let type_spec_helper :=
 (* Implementation is modified to avoid shift/reduce conflicts *)
 let simple_type_decl :=
   (* | ty_decl_name = simple_type_name; T_COLON; init_vals = simple_spec_init; *)
-  | name_type = type_decl_helper_opt; ci = assign_constant_expr?;
+  | name_type = type_decl_helper_opt; ci = optional_assign(constant_expr);
   {
     let (ty_name, ty_decl_opt) = name_type in
     let ty_decl = match ty_decl_opt with
@@ -785,7 +776,7 @@ let simple_type_decl :=
     let ty_spec = S.DTySpecElementary(ty_decl) in
     S.DTyDeclSingleElement(ty_name, ty_spec, ci)
   }
-  | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = simple_type_access; ci = assign_constant_expr?;
+  | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = simple_type_access; ci = optional_assign(constant_expr);
   {
     let ty_name, _ = ty_name_id in
     let ty_spec = S.DTySpecSimple(ty_decl) in
@@ -793,19 +784,14 @@ let simple_type_decl :=
   }
 
 let simple_spec_init :=
-  | ty = simple_spec; ci = assign_constant_expr?;
+  | ty = simple_spec; ci = optional_assign(constant_expr);
   { (ty, ci) }
-
-(* Helper rule for simple_spec_init *)
-let assign_constant_expr :=
-  | T_ASSIGN; ~ = constant_expr; <>
 
 let simple_spec :=
   | ~ = elem_type_name; <S.DTySpecElementary>
   | ~ = simple_type_access; <S.DTySpecSimple>
-  (* NOTE:
-    This is not represented in 3rd edition, search my comment for
-    generic_type_name` bellow. *)
+  (* NOTE: This is not presented in 3rd edition, search my comment
+     for generic_type_name bellow. *)
   | ~ = generic_type_name; <S.DTySpecGeneric>
 
 (* Implementation is modified to avoid shift/reduce conflicts *)
@@ -926,33 +912,74 @@ let enum_value_opt :=
 
 (* array_elem_init_value: *)
 
-(* struct_type_decl: *)
-
-(* struct_spec: *)
-
-(* struct_spec_init: *)
-
-(* struct_decl: *)
-
-(* struct_elem_decl: *)
-
-struct_elem_name:
-  | id = T_IDENTIFIER
+let struct_type_decl :=
+  | name_type = type_decl_helper_opt; spec = struct_spec;
   {
-    let name, _ = id in
-    name
+    let (name, _) = name_type
+    and (is_overlap, elem_specs) = spec in
+    S.DTyDeclStructType(name, is_overlap, elem_specs)
   }
 
-(* Helper rule for struct_elem_name *)
-struct_elem_name_list:
-  | n = struct_elem_name;
-  { n :: [] }
-  | ns = struct_elem_name_list; T_DOT n = struct_elem_name;
-  { n :: ns }
+let struct_spec :=
+  | ~ = struct_decl; <>
+  (* FIXME: Not sure how this should work. See same comment for [enum_spec_init] bellow. *)
+  (* | ~ = struct_spec_init; <> *)
 
-(* struct_init: *)
+(* let struct_spec_init :=                                                               *)
+(*   | type_name = struct_type_access; initial_value_opt = optional_assign(struct_init); *)
+(*   { (type_name, initial_value_opt) }                                                  *)
 
-(* struct_elem_init: *)
+let struct_decl :=
+  | T_STRUCT; overlap = option(T_OVERLAP); elems = nonempty_list(struct_elem_decl); T_END_STRUCT;
+  { match overlap with Some(v) -> (true, elems) | None -> (false, elems) }
+
+let struct_elem_decl :=
+  | name = struct_elem_name; loc = option(struct_elem_loc); T_COLON; ty = struct_elem_ty; inval = optional_assign(struct_elem_init); T_SEMICOLON;
+  {
+    let opt_inval = match inval with
+      | Some (_, v) -> Some(v)
+      | None -> None
+    in
+    { S.struct_elem_name = name;
+      S.struct_elem_loc = loc;
+      S.struct_elem_ty = ty;
+      S.struct_elem_init_value = opt_inval; }
+  }
+
+(* Helper rule for [struct_elem_decl] *)
+let struct_elem_ty :=
+  | ~ = simple_spec; <>
+
+(* Helper rule for struct_elem_decl. *)
+let struct_elem_loc :=
+  | T_AT; values = T_DIR_VAR;
+  { let (dir_var, _) = values in dir_var }
+
+let struct_elem_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
+
+let struct_init :=
+  | T_LPAREN; ~ = separated_nonempty_list(T_COMMA, struct_elem_init); T_RPAREN; <>
+
+let struct_elem_init :=
+  (* | name = struct_elem_name; T_ASSIGN; value = constant_expr; *)
+  | value = constant_expr;
+  {
+    let c = match value with
+      | S.ExprConstant (_, c) -> c
+      | _ -> assert false
+    in
+    ("" (* name *), S.StructElemInvalConstant(c))
+  }
+  | name = struct_elem_name; T_ASSIGN; value = enum_value;
+  { (name, S.StructElemInvalEnum(value)) }
+  (* | name = struct_elem_name; T_ASSIGN; value = array_init; {} *)
+  (* | name = struct_elem_name; T_ASSIGN; value = struct_spec_init; *)
+  (* {                                                              *)
+  (*   let (inval, _) = value in                                    *)
+  (*   (name, S.StructElemInvalStruct(inval))                       *)
+  (* }                                                              *)
 
 (* NOTE: This rule contains a typo in the IEC61131-3 standard.
 
@@ -964,7 +991,7 @@ struct_elem_name_list:
      type_name ':' string_type_name ( ':=' char_str )?
 *)
 let str_type_decl :=
-  | name_type = type_decl_helper_opt; init_expr = option(assign_constant_expr);
+  | name_type = type_decl_helper_opt; init_expr = optional_assign(constant_expr);
   {
     let (ty_name, ty_decl_opt) = name_type in
     let ty_decl = match ty_decl_opt with
@@ -981,11 +1008,12 @@ let str_type_decl :=
           | Some(expr) ->
             begin
               match expr with
-              | S.ExprConstant(_,c) ->
+              | S.ExprConstant(_,c) -> begin
                 match c with
                   | S.CString _ -> init_expr
-                  | _ -> raise (SemanticError "Unexpected constant type")
-              | _ -> raise (SemanticError "Unexpected expression")
+                  | _ -> assert false
+              end
+              | _ -> assert false
             end
           | None -> None
       in
@@ -1028,8 +1056,7 @@ let direct_variable :=
 let variable :=
   (* | v = direct_variable; *)
   (* | {} *)
-  | v = symbolic_variable;
-  { S.SymVar(v) }
+  | ~ = symbolic_variable; <S.SymVar>
 
 let symbolic_variable :=
   | out = variable_name;
@@ -1361,8 +1388,7 @@ let loc_partly_var :=
   }
 
 let var_spec :=
-  | ty = simple_spec;
-  { ty }
+  | ~ = simple_spec; <>
 
 (* }}} *)
 
@@ -1416,19 +1442,16 @@ let function_ty :=
   | ~ = derived_type_access; <S.TyDerived>
 
 (* Helper rule for func_decl *)
-function_vars:
-  | vs = io_var_decls
-  { vs }
-  | vs = func_var_decls
-  { vs }
-  | vs = temp_var_decls
-  { vs }
-  | vss = function_vars; vs = io_var_decls
-  { List.append vss vs }
-  | vss = function_vars; vs = func_var_decls
-  { List.append vss vs }
-  | vss = function_vars; vs = temp_var_decls
-  { List.append vss vs }
+let function_vars :=
+  | ~ = io_var_decls; <>
+  | ~ = func_var_decls; <>
+  | ~ = temp_var_decls; <>
+  | vss = function_vars; vs = io_var_decls;
+  { vss @ vs }
+  | vss = function_vars; vs = func_var_decls;
+  { vss @ vs }
+  | vss = function_vars; vs = temp_var_decls;
+  { vss @ vs }
 
 let io_var_decls :=
   | ~ = input_decls; <>
@@ -1688,15 +1711,15 @@ access_path:
     | prog_name; T_DOT; symbolic_variable
     {  }
 
-global_var_access:
+let global_var_access :=
     | out = global_var_name;
     { S.SymVar(out) }
     | separated_list(T_DOT, resource_name); out = global_var_name;
     { S.SymVar(out) }
-    | out = global_var_name; struct_elem_name_list
-    { S.SymVar(out) }
-    | separated_list(T_DOT, resource_name); out = global_var_name; struct_elem_name_list
-    { S.SymVar(out) }
+    (* | out = global_var_name; list(struct_elem_name); *)
+    (* { S.SymVar(out) }                                *)
+    (* | separated_list(T_DOT, resource_name); out = global_var_name; list(struct_elem_name); *)
+    (* { S.SymVar(out) }                                                                      *)
 
 let access_name :=
   | id = T_IDENTIFIER;
@@ -1804,15 +1827,11 @@ prog_cnxn:
     (* | v = symbolic_variable; T_SENDTO; data_sink
     { v } *)
 
-prog_data_source:
-    | v = constant
-    { v }
-    (* | v = enumerated_value
-    { v } *)
-    (* | v = global_var_access
-    { v } *)
-    (* | v = direct_variable
-    { v } *)
+let prog_data_source :=
+  | ~ = constant; <>
+  (* | ~ = enumerated_value; <> *)
+  (* | ~ = global_var_access; <> *)
+  (* | ~ = direct_variable; <> *)
 
 (* let data_sink :=              *)
 (*   | ~ = global_var_access; <> *)
@@ -1963,7 +1982,7 @@ let variable_access :=
   | ~ = variable_expr; option(multibit_part_access); <>
 
 (* Helper rule for variable_access.
- * This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
+   This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
 let variable_expr :=
   | id = T_IDENTIFIER;
   {
@@ -1972,13 +1991,13 @@ let variable_expr :=
     S.SymVar(sv)
   }
 
+(* Standard's BNF define this rule as:
+     '.' (unsigned_int | '%' ('X'|'B'|'W'|'D'|'L') ? unsigned_int)
+   I believe that this is a typo, because it will not work with dot-separated
+   paths like this: "%X3.0.1.2".
+   This behaviour is fixed in lexer.mll (see rules for T_DIR_VAR). *)
 let multibit_part_access :=
-  | T_DOT; v = unsigned_int;
-  {  }
-  | T_DOT; dir_var = T_DIR_VAR; v = unsigned_int;
-  {  }
-  | T_DOT; v = unsigned_int;
-  {  }
+  | T_DOT; ~ = T_DIR_VAR; <>
 
 let func_call :=
   | f = func_access; T_LPAREN; T_RPAREN;
