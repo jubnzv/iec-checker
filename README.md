@@ -15,7 +15,7 @@ The following features are currently implemented:
 
 For development you need to install [ocaml](https://ocaml.org/docs/install.html) environment and [dune](https://dune.readthedocs.io/en/stable/quick-start.html) build system:
 ```bash
-opam switch create 4.08.1
+opam switch create 4.10.0
 opam install dune
 ```
 
