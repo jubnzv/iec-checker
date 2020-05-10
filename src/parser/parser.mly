@@ -618,14 +618,10 @@ let string_type_name :=
   | T_CHAR; { S.CHAR(1) }
   | T_WCHAR; { S.WCHAR(1) }
 
-(* Helper rule for string_type_name *)
-string_type_length:
-  | T_LBRACK c = unsigned_int T_RBRACK
-  {
-    match c with
-    | CInteger(_, v) -> v
-    | _ -> assert false
-  }
+(* Helper rule for [string_type_name] *)
+let string_type_length :=
+  | T_LBRACK; c = unsigned_int; T_RBRACK;
+  { match c with | CInteger(_, v) -> v | _ -> assert false }
 
 time_type_name:
   | T_TIME
