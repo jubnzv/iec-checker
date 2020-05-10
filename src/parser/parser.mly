@@ -1197,13 +1197,13 @@ let input_decls :=
   }
 
 let input_decl :=
-  | vs = var_decl_init_list;
+  | vs = variables_decl_list(var_decl_init);
   {
-    let vsr = List.rev vs in
-    List.map ~f:(fun v -> (
+    List.rev vs
+    |> List.map ~f:(fun v -> begin
       let s = S.VarDecl.SpecIn(None) in
       S.VarDecl.create v s
-    )) vsr
+    end)
   }
 
 (* edge_decl: *)
@@ -1232,20 +1232,8 @@ let comma_separated_variables :=
       end)
   }
 
-(* Helper rule for [var_decl_init] *)
-let var_decl_init_list :=
-  | ~ = var_decl_init; T_SEMICOLON; <>
-  | vs = var_decl_init_list; v = var_decl_init; T_SEMICOLON;
-  { List.append vs v }
-
 let ref_var_decl :=
   | ~ = comma_separated_variables; T_COLON; ref_spec; <>
-
-(* Helper rule for [ref_var_decl] *)
-let ref_var_decl_list :=
-  | ~ = ref_var_decl; T_SEMICOLON; <>
-  | vs = var_decl_init_list; v = ref_var_decl; T_SEMICOLON;
-  { List.append vs v }
 
 (* interface_var_decl: *)
 
@@ -1274,7 +1262,7 @@ let fb_instance_name :=
   { let name, _ = id in name }
 
 let output_decls :=
-  | T_VAR_OUTPUT; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR_OUTPUT; vs = variables_decl_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -1283,7 +1271,7 @@ let output_decls :=
         S.VarDecl.create v s
       end)
   }
-  | T_VAR_OUTPUT; T_RETAIN; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR_OUTPUT; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -1292,7 +1280,7 @@ let output_decls :=
         S.VarDecl.create v s
       end)
   }
-  | T_VAR_OUTPUT; T_NON_RETAIN; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR_OUTPUT; T_NON_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -1348,7 +1336,7 @@ let var_decl_list :=
 (* struct_var_decl: *)
 
 let var_decls :=
-  | T_VAR; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR; vs = variables_decl_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -1357,7 +1345,7 @@ let var_decls :=
         S.VarDecl.create v s
       end)
   }
-  | T_VAR; T_RETAIN; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -1368,7 +1356,7 @@ let var_decls :=
   }
 
 let retain_var_decls :=
-  | T_VAR; T_RETAIN; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -1383,12 +1371,12 @@ let retain_var_decls :=
 (* loc_var_decl: *)
 
 let temp_var_decls :=
-  | T_VAR_TEMP; vs = var_decl_list; T_END_VAR;
+  | T_VAR_TEMP; vs = variables_decl_nonempty_list(var_decl); T_END_VAR;
   {
     List.rev vs
     |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecTemp)
   }
-  | T_VAR_TEMP; vs = ref_var_decl_list; T_END_VAR;
+  | T_VAR_TEMP; vs = variables_decl_nonempty_list(ref_var_decl); T_END_VAR;
   {
     List.rev vs
     |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecTemp)
@@ -1658,7 +1646,7 @@ let other_var_decls :=
   | ~ = loc_partly_var_decl; <>
 
 let no_retain_var_decls :=
-  | T_VAR; T_NON_RETAIN; vs = var_decl_init_list; T_END_VAR;
+  | T_VAR; T_NON_RETAIN; vs = variables_decl_list(var_decl_init); T_END_VAR;
   {
     List.map
       vs
@@ -2403,6 +2391,15 @@ let unary_operator :=
 optional_assign(X):
   | { None }
   | T_ASSIGN x = X { Some x }
+
+variables_decl_list(VD):
+  | l = option(variables_decl_nonempty_list(VD));
+  { match l with Some v -> v | None -> [] }
+
+variables_decl_nonempty_list(VD):
+  | v = VD; T_SEMICOLON; { v }
+  | vs = variables_decl_nonempty_list(VD); v = VD; T_SEMICOLON;
+  { List.append vs v }
 (* }}} *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable tw=2 sw=2 tw=120 wrap : *)
