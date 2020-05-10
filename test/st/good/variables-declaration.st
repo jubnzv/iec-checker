@@ -1,8 +1,10 @@
 PROGRAM REF_DEMO
   (* Elementary-typed variables *)
   VAR
+    error_state : INT;
+    error_state : INT := 1;
     error_state : BOOL;
-    (* error_state : BOOL := FALSE; *)
+    error_state : BOOL := FALSE;
   END_VAR
 
   (* Reference variables *)

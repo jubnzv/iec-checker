@@ -138,8 +138,8 @@ let binary_integer = '2' '#' (('_')?bit)+
 let octal_integer = '8' '#' (('_')?octal_digit)+
 let hex_integer = '1' '6' '#' (('_')?hex_digit)+
 
-let bool_false = "FALSE" | "BOOL#FALSE" | "BOOL#0"
-let bool_true = "TRUE" | "BOOL#TRUE" | "BOOL#1"
+let bool_false = "FALSE" | "False" | "false" | "BOOL#FALSE" | "BOOL#False" | "BOOL#0"
+let bool_true = "TRUE" | "True" | "true" | "BOOL#TRUE" | "BOOL#True" | "BOOL#1"
 
 let exponent = 'E' (['+' '-'])? integer
 
@@ -236,6 +236,21 @@ rule initial tokinfo =
   | "RETURN"         { let ti = tokinfo lexbuf in T_RETURN(ti) }
 (* }}} *)
 
+  (* {{{ Boolean literals *)
+  | bool_false
+  {
+      (* Printf.printf "BOOL_VALUE: false\n"; *)
+      let ti = tokinfo lexbuf in
+      T_BOOL_VALUE(false, ti)
+  }
+  | bool_true
+  {
+      (* Printf.printf "BOOL_VALUE: true\n"; *)
+      let ti = tokinfo lexbuf in
+      T_BOOL_VALUE(false, ti)
+  }
+  (* }}} *)
+
   (* {{{ Case-insensitive lexing of identifiers and reserved keywords. *)
   | label as v
   {
@@ -243,11 +258,10 @@ rule initial tokinfo =
       let keyword = Caml.Hashtbl.find keywords_table (String.lowercase v) in
       (* Printf.printf "KEYWORD: %s\n" v; *)
       keyword
-      with Not_found -> (
+      with Not_found -> begin
         (* Printf.printf "ID: %s\n" v; *)
-        let ti = tokinfo lexbuf in
-        T_IDENTIFIER(String.uppercase(v), ti)
-      )
+        T_IDENTIFIER(String.uppercase(v), (tokinfo lexbuf))
+      end
   }
   (* }}} *)
 
@@ -279,18 +293,6 @@ rule initial tokinfo =
       (* Printf.printf "HEX_INTEGER: %s -> %d\n" i v; *)
       let ti = tokinfo lexbuf in
       T_BINARY_INTEGER(v, ti)
-  }
-  | bool_false
-  {
-      (* Printf.printf "BOOL_VALUE: false\n"; *)
-      let ti = tokinfo lexbuf in
-      T_BOOL_VALUE(false, ti)
-  }
-  | bool_true
-  {
-      (* Printf.printf "BOOL_VALUE: true\n"; *)
-      let ti = tokinfo lexbuf in
-      T_BOOL_VALUE(false, ti)
   }
   (* }}} *)
 
