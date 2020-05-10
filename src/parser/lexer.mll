@@ -95,6 +95,7 @@
       "struct",             T_STRUCT;
       "end_struct",         T_END_STRUCT;
       "overlap",            T_OVERLAP;
+      "array",              T_ARRAY;
       "read_only",          T_READ_ONLY;
       "read_write",         T_READ_WRITE;
       "priority",           T_PRIORITY;

@@ -230,8 +230,11 @@ and derived_ty_decl =
                        elementary_ty option (** type of the elements *) *
                        enum_element_spec list (** elements *) *
                        enum_element_spec option (** default element *)
-  (* | DTyDeclArrayType *)
-  | DTyDeclRefType of string (** ref name *) *
+  | DTyDeclArrayType of string (** type name *) *
+                        arr_subrange list (** subranges for dimensions *) *
+                        iec_data_type (** type of the elements *) *
+                        arr_inval option (** initial value *)
+  | DTyDeclRefType of string (** type name *) *
                       int (** pointers level *) *
                       iec_data_type (** reference type *) *
                       ref_value option (** initial value *)
@@ -260,6 +263,17 @@ and enum_element_spec = {
   elem_name: string; (** name of the element *)
   initial_value: constant option; (** initial value *)
 } [@@deriving to_yojson]
+
+(** Subranges of array dimensions (e.g. [1..2, 1..3] means list with two
+    subranges). *)
+and arr_subrange = {
+    arr_lower: int [@name "lower"]; (** lower bound *)
+    arr_upper: int [@name "upper"]; (** upper bound *)
+} [@@deriving to_yojson]
+
+(** Initial value of array elements. Values like [1,2(3),4] will be converted
+    to [1,3,3,4] in parser. *)
+and arr_inval = int list [@@deriving to_yojson]
 
 (** Struct element specification *)
 and struct_elem_spec = {

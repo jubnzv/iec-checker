@@ -64,6 +64,7 @@ let check_ty_decl = function
     end
   | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
   | S.DTyDeclEnumType _ -> []
+  | S.DTyDeclArrayType _ -> []
   | S.DTyDeclRefType _ -> []
   | S.DTyDeclStructType _ -> []
 

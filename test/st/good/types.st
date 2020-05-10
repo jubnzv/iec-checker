@@ -16,6 +16,9 @@ TYPE
   Traffic_Light: (Red, Amber, Green);
   Painting_colors: (Red, Yellow, Blue) := Blue;
 
+  (* Array types *)
+  BITS: ARRAY [0..7] OF BOOL := [0,1,1,0,0,1,0,0];
+
   (* Struct types *)
   ANALOG_CHANNEL_CONFIGURATION: STRUCT
     RANGE: ANALOG_SIGNAL_RANGE;
@@ -33,3 +36,12 @@ TYPE
     end AT %B25 : BYTE;
   END_STRUCT;
 END_TYPE
+
+PROGRAM arr_demo
+  VAR
+    myAnalog_16: ARRAY [1..16] OF DINT;
+    TBT1 : ARRAY [1..2, 1..3] OF INT;
+    BITS: ARRAY [0..7] OF BOOL := [0,1,1,0,0,1,0,0];
+  END_VAR
+  myAnalog_16[0] := 3;
+END_PROGRAM

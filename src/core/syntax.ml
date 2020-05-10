@@ -338,8 +338,10 @@ and derived_ty_decl =
                        elementary_ty option (** type of the elements *) *
                        enum_element_spec list (** elements *) *
                        enum_element_spec option (** default element *)
-  (* | DTyDeclArrayType *)
-  (* | DTyDeclRefType *)
+  | DTyDeclArrayType of string (** type name *) *
+                        arr_subrange list (** subranges for dimensions *) *
+                        iec_data_type (** type of the elements *) *
+                        arr_inval option (** initial value *)
   | DTyDeclRefType of string (** ref name *) *
                       int (** pointers level *) *
                       iec_data_type (** reference type *) *
@@ -366,6 +368,17 @@ and enum_element_spec = {
   elem_name: string; (** name of the element *)
   initial_value: constant option; (** initial value *)
 } [@@deriving to_yojson]
+
+(** Subranges of array dimensions (e.g. [1..2, 1..3] means list with two
+    subranges). *)
+and arr_subrange = {
+    arr_lower: int [@name "lower"]; (** lower bound *)
+    arr_upper: int [@name "upper"]; (** upper bound *)
+} [@@deriving to_yojson]
+
+(** Initial value of array elements. Values like [1,2(3),4] will be converted
+    to [1,3,3,4] in parser. *)
+and arr_inval = int list [@@deriving to_yojson]
 
 (** Struct element specification *)
 and struct_elem_spec = {
@@ -805,6 +818,29 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
           "name", `String(type_name);
         ]
     end
+  | DTyDeclArrayType (type_name, subranges, ty, inval_opt) -> begin
+      let (subranges_json : Yojson.Safe.t list) = List.fold_left
+        subranges
+        ~init:[]
+        ~f:(fun acc sr -> acc @ [(arr_subrange_to_yojson sr)])
+      in
+      match inval_opt with
+      | Some(inval) ->
+        `Assoc [
+          "type", `String("Array");
+          "name", `String(type_name);
+          "subranges", `List(subranges_json);
+          "elements_type", iec_data_type_to_yojson ty;
+          "init_val", arr_inval_to_yojson inval;
+        ]
+      | None ->
+        `Assoc [
+          "type", `String("Array");
+          "name", `String(type_name);
+          "subranges", `List(subranges_json);
+          "elements_type", iec_data_type_to_yojson ty;
+        ]
+  end
   | DTyDeclRefType (type_name, ref_level, ty, opt_inval) -> begin
       match opt_inval with
       | Some(inval) ->

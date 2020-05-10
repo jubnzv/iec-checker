@@ -129,3 +129,19 @@ def test_ref_types():
         ty = scheme.types[0]
         assert ty.name == 'MYREF'
         assert ty.type == 'Ref'
+
+
+def test_array_types():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        TYPE BITS: ARRAY [0..7] OF BOOL; END_TYPE
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.types) == 1
+        ty = scheme.types[0]
+        assert ty.name == 'BITS'
+        assert ty.type == 'Array'

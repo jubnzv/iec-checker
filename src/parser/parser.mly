@@ -87,6 +87,7 @@
 %token T_TASK
 %token T_CONSTANT
 %token T_STRUCT T_OVERLAP T_END_STRUCT
+%token T_ARRAY
 %token T_EOF
 (* }}} *)
 (* {{{ Picture 30 -- Common elements for textual languages *)
@@ -740,7 +741,7 @@ let type_decl :=
   | ~ = simple_type_decl; T_SEMICOLON; <>
   | ~ = subrange_type_decl; T_SEMICOLON; <>
   | ~ = enum_type_decl; T_SEMICOLON; <>
-  (* | ~ = array_type_decl; T_SEMICOLON; <> *)
+  | ~ = array_type_decl; T_SEMICOLON; <>
   | ~ = struct_type_decl; T_SEMICOLON; <>
   | ~ = str_type_decl; T_SEMICOLON; <>
   | ~ = ref_type_decl; T_SEMICOLON; <>
@@ -897,19 +898,86 @@ let enum_value :=
 
 (* Helper rule for enum_value and enum_value_use  *)
 let enum_value_opt :=
-    | ~ = enum_type_name; T_SHARP;<>
+  | ~ = enum_type_name; T_SHARP; <>
 
-(* array_type_decl: *)
+let array_type_decl :=
+  | name_type = type_decl_helper_opt; specs = array_spec_init;
+  {
+    let (name, _) = name_type
+    and (subranges, ty, initializer_list) = specs in
+    S.DTyDeclArrayType(name, subranges, ty, initializer_list)
+  }
 
-(* array_spec_init: *)
+let array_spec_init :=
+  | specs = array_spec; initializer_list = optional_assign(array_init);
+  {
+    let (subranges, ty) = specs in
+    (subranges, ty, initializer_list)
+  }
 
-(* array_spec: *)
+let array_spec :=
+  | T_ARRAY; T_LBRACK; ranges = separated_nonempty_list(T_COMMA, subrange); T_RBRACK; T_OF; ty = data_type_access;
+  {
+  let subranges = List.fold_left
+    ranges
+    ~init:[]
+    ~f:(fun acc (_,l,u) -> acc @ [{S.arr_lower = l; S.arr_upper = u; }])
+  in
+  (subranges, ty)
+  }
+  (* FIXME: Not sure how this should work. See same comment for [enum_spec_init] bellow. *)
+  (* | ~ = array_type_access; <> *)
 
-(* array_init: *)
+(* Initializer list in the following format: [3, 2, 3(4), 5].
+   It will be converted to [3, 2, 4, 4, 4 5]. *)
+let array_init :=
+  | T_LBRACK; init_list = separated_nonempty_list(T_COMMA, array_elem_init); T_RBRACK;
+  {
+    let rec flatten = function
+      | [] -> []
+      | [] :: t -> flatten t
+      | (x::y) :: t -> x :: (flatten (y::t))
+    in
+    flatten init_list
+  }
 
-(* array_elem_init: *)
+let array_elem_init :=
+  | v = array_elem_init_value;
+  { [v] }
+  | mul_c = unsigned_int; T_LBRACE; inval = option(array_elem_init_value); T_RBRACE;
+  {
+    let (inval_list : 'a list) = match inval with
+      | Some v -> [v]
+      | None -> [0]
+    in
+    let (mul : int) = match mul_c with
+      | S.CInteger(_, v) -> v
+      | _ -> assert false
+    in
+    let build_list i n =
+      let get_next pos =
+        let inval_opt = (List.nth inval_list pos) in
+        match inval_opt with Some v -> v | None -> 0
+      in
+      let rec aux acc i =
+        if i <= n then
+          aux ((get_next i+1)::acc) (i+1)
+        else (List.rev acc)
+      in
+    aux [] i
+    in
+    (build_list 0 mul)
+  }
 
-(* array_elem_init_value: *)
+let array_elem_init_value :=
+  | expr = constant_expr;
+  {
+    let c = match expr with S.ExprConstant(_, c) -> c | _ -> assert false in
+    (cget_int_val c)
+  }
+  (* | ~ = enum_value; <>  *)
+  (* | ~ = struct_init; <> *)
+  (* | ~ = array_init; <>  *)
 
 let struct_type_decl :=
   | name_type = type_decl_helper_opt; spec = struct_spec;
@@ -1085,24 +1153,30 @@ let variable :=
 let symbolic_variable :=
   | out = variable_name;
   { let (name, ti) = out in S.SymVar.create name ti }
-  (* | multi_elem_var *)
+  | out = multi_elem_var;
+  { let (name, ti) = out in S.SymVar.create name ti }
 
-(* var_access: *)
+let var_access :=
+  | ~ = variable_name; <>
+  (* | ~ = ref_deref; <> *)
 
 let variable_name :=
   | id = T_IDENTIFIER;
   { let (name, ti) = id in (name, ti) }
 
-(* multi_elem_var:
-  | array_vairable
-  {  }
-  | struct_variable
-  {  } *)
+let multi_elem_var :=
+  | ~ = var_access; nonempty_list(multi_elem_var_subscript_helper); <>
 
-(* subscript_list: *)
-  (* LBRACK subscript (* { COMMA subrscipt }*) RBRACK *)
+(* Helper rule for [multi_elem_var]. *)
+let multi_elem_var_subscript_helper :=
+  | ~ = subscript_list; <>
+  (* | ~ = struct_variable; <> *)
 
-(* index: *)
+let subscript_list :=
+  | T_LBRACK; ~ = separated_nonempty_list(T_COMMA, subscript); T_RBRACK; <>
+
+let subscript :=
+  | e = expression; <>
 
 (* struct_variable: *)
 
@@ -1139,8 +1213,12 @@ let var_decl_init :=
   | ~ = comma_separated_variables; T_COLON; simple_spec_init; <>
   (* | ~ = comma_separated_variables; T_COLON; str_var_decl; <> *)
   | ~ = comma_separated_variables; T_COLON; ref_spec_init; <>
-  (* | ~ = comma_separated_variables; T_COLON; array_var_decl_init; <> *)
   (* | ~ = comma_separated_variables; T_COLON; struct_var_decl_init; <> *)
+  (* | ~ = comma_separated_variables; T_COLON; interface_spec_init; <> *)
+  | ~ = array_var_decl_init; <>
+  (* | ~ = struct_var_decl_init; <> *)
+  (* | ~ = fb_decl_init; <> *)
+  (* | ~ = interface_spec_init; <> *)
 
 (* Helper rule that takes list of comma-separated variable names and returns S.SymVar objects. *)
 let comma_separated_variables :=
@@ -1171,7 +1249,8 @@ let ref_var_decl_list :=
 
 (* interface_var_decl: *)
 
-(* array_var_decl_init: *)
+let array_var_decl_init :=
+  | ~ = comma_separated_variables; T_COLON; array_spec_init; <>
 
 (* array_conformand: *)
 
@@ -1435,7 +1514,14 @@ let loc_partly_var :=
   }
 
 let var_spec :=
-  | ~ = simple_spec; <>
+  | ~ = simple_spec; option(var_spec_index); <>
+  (* | ~ = array_spec; <> *)
+  (* | ~ = struct_type_access; <> *)
+
+(* Helper rule for [var_spec] *)
+let var_spec_index :=
+  | T_LBRACK; c = unsigned_int; T_RBRACK;
+  { cget_int_val c }
 
 (* }}} *)
 
@@ -2047,6 +2133,8 @@ let assign_stmt :=
     let eti = S.expr_get_ti e in
     S.StmExpr(vti, S.ExprBin(eti, S.ExprVariable(vti, v), S.ASSIGN, e))
   }
+  (* | ~ = assignment_attempt; <> *)
+  (* | ~ = ref_assign; <> *)
 
 (* assignment_attempt: *)
 
