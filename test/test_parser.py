@@ -113,3 +113,19 @@ def test_struct_types():
         ty = scheme.types[0]
         assert ty.name == 'COOLER'
         assert ty.type == 'Struct'
+
+
+def test_ref_types():
+    fdump = f'stdin.dump.json'
+    checker_warnings, rc = check_program(
+        """
+        TYPE myRef: REF_TO INT; END_TYPE
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager(fdump) as dm:
+        scheme = dm.scheme
+        assert scheme
+        assert len(scheme.types) == 1
+        ty = scheme.types[0]
+        assert ty.name == 'MYREF'
+        assert ty.type == 'Ref'

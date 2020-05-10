@@ -42,6 +42,9 @@
 %token T_ASSIGN    ":="
 %token T_SENDTO    "=>"
 %token T_DOT       "."
+%token T_NULL
+%token T_REF
+%token T_REF_TO
 %token T_DEREF     "^"
 %token T_GT        ">"
 %token T_LT        "<"
@@ -744,7 +747,7 @@ let type_decl :=
   (* | ~ = array_type_decl; T_SEMICOLON; <> *)
   | ~ = struct_type_decl; T_SEMICOLON; <>
   | ~ = str_type_decl; T_SEMICOLON; <>
-  (* | ~ = ref_type_decl; T_SEMICOLON; <> *)
+  | ~ = ref_type_decl; T_SEMICOLON; <>
 
 (* Helper rules to resolve shift/reduce conflicts in types declaration *)
 (* let type_decl_helper :=                                     *)
@@ -1031,25 +1034,50 @@ let direct_variable :=
 (* }}} *)
 
 (* {{{ Table 12 -- Operations with references *)
-(* ref_type_decl: *)
+let ref_type_decl :=
+  | name_type = type_decl_helper_opt; spec = ref_spec_init;
+  {
+    let (ref_name, _) = name_type
+    and (num_of_refs, ty, inval_opt) = spec in
+    S.DTyDeclRefType(ref_name, num_of_refs, ty, inval_opt)
+  }
 
-(* ref_spec_init: *)
+(* NOTE: There is typo in Standard. I believe that '; =' means ':='. *)
+let ref_spec_init :=
+  | specs = ref_spec; inval_opt = optional_assign(ref_value);
+  { let (num_of_refs, ty) = specs in (num_of_refs, ty, inval_opt) }
 
-(* ref_spec: *)
+let ref_spec :=
+  | refs = nonempty_list(T_REF_TO); ty = data_type_access;
+  { ((List.length refs), ty) }
 
 (* ref_type_name: *)
 
 (* ref_type_access: *)
 
-(* ref_name: *)
+let ref_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
-(* ref_value: *)
+let ref_value :=
+  | T_NULL; { S.RefNull }
+  | ~ = ref_addr; <>
 
-(* ref_addr: *)
+(* NOTE: They just forgot to add ref_assign rule to the BNF grammar. ¯\_(ツ)_/¯
+   There are also no examples how to use it. I have no idea what they mean, so
+   I drop it away from this rule. *)
+let ref_addr :=
+  | T_REF; T_LPAREN; ~ = ref_addr_value; T_RPAREN; <>
 
-(* ref_name: *)
+(* Helper symbol for [ref_addr] *)
+let ref_addr_value :=
+  | ~ = symbolic_variable; <S.RefSymVar>
+  | ~ = fb_instance_name; <S.RefFBInstance>
+  (* | ~ = class_instance_name; <> *)
 
-(* ref_deref: *)
+let ref_deref :=
+  | name = ref_name; nonempty_list(T_DEREF);
+  { S.ExprUn(S.DEREF, S.ExprVariable()) }
 (* }}} *)
 
 (* {{{ Table 13 -- Variables declaration / Table 14 -- Variables initialization *)
@@ -1110,22 +1138,40 @@ let input_decl :=
 
 (* edge_decl: *)
 
+(* TODO: Need revisit and write tests for variables declaration in the POUs. *)
 let var_decl_init :=
-  | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; simple_spec_init;
+  | ~ = comma_separated_variables; T_COLON; simple_spec_init; <>
+  (* | ~ = comma_separated_variables; T_COLON; str_var_decl; <> *)
+  | ~ = comma_separated_variables; T_COLON; ref_spec_init; <>
+  (* | ~ = comma_separated_variables; T_COLON; array_var_decl_init; <> *)
+  (* | ~ = comma_separated_variables; T_COLON; struct_var_decl_init; <> *)
+
+(* Helper rule that takes list of comma-separated variable names and returns S.SymVar objects. *)
+let comma_separated_variables :=
+  | vs = separated_nonempty_list(T_COMMA, variable_name);
   {
-    List.map vs ~f:(fun (n, ti) -> (
-      let v = S.SymVar.create n ti in
-      S.SymVar(v)))
+    List.map
+      vs
+      ~f:(fun (n, ti) -> begin
+        let v = S.SymVar.create n ti in
+        S.SymVar(v)
+      end)
   }
 
-(* Helper rule for var_decl_init *)
+(* Helper rule for [var_decl_init] *)
 let var_decl_init_list :=
-  | v = var_decl_init; T_SEMICOLON;
-  { v }
+  | ~ = var_decl_init; T_SEMICOLON; <>
   | vs = var_decl_init_list; v = var_decl_init; T_SEMICOLON;
   { List.append vs v }
 
-(* ref_var_decl: *)
+let ref_var_decl :=
+  | ~ = comma_separated_variables; T_COLON; ref_spec; <>
+
+(* Helper rule for [ref_var_decl] *)
+let ref_var_decl_list :=
+  | ~ = ref_var_decl; T_SEMICOLON; <>
+  | vs = var_decl_init_list; v = ref_var_decl; T_SEMICOLON;
+  { List.append vs v }
 
 (* interface_var_decl: *)
 
@@ -1148,7 +1194,9 @@ let var_decl_init_list :=
 (*     S.FunctionBlock.create name ti *)
 (*   }                                *)
 
-(* fb_instance_name: *)
+let fb_instance_name :=
+  | id = T_IDENTIFIER;
+  { let name, _ = id in name }
 
 let output_decls :=
   | T_VAR_OUTPUT; vs = var_decl_init_list; T_END_VAR;
@@ -1260,17 +1308,17 @@ let retain_var_decls :=
 (* loc_var_decl: *)
 
 let temp_var_decls :=
-  | T_VAR_TEMP; ~ = temp_var_decl; T_END_VAR; <>
-  (* | ref_var_decl *)
-  (* | interface_var_decl *)
-
-(* Helper rule for temp_var_decls_list. *)
-let temp_var_decl :=
-  | vs = var_decl_list;
+  | T_VAR_TEMP; vs = var_decl_list; T_END_VAR;
   {
-    let vsr = List.rev vs in
-    List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecTemp) vsr
+    List.rev vs
+    |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecTemp)
   }
+  | T_VAR_TEMP; vs = ref_var_decl_list; T_END_VAR;
+  {
+    List.rev vs
+    |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecTemp)
+  }
+  (* | interface_var_decl *)
 
 let external_var_decls :=
   | T_VAR_EXTERNAL; vl = list(external_decl); T_END_VAR;

@@ -75,6 +75,9 @@
       "sint",               T_SINT;
   (* }}} *)
   (* {{{ Keywords *)
+      "null",               T_NULL;
+      "ref",                T_REF;
+      "ref_to",             T_REF_TO;
       "end_type",           T_END_TYPE;
       "type",               T_TYPE;
       "end_var",            T_END_VAR;

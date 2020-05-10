@@ -82,6 +82,7 @@ type operator =
   | NEQ
   | ASSIGN
   | SENDTO
+  | DEREF (** ^ *)
 [@@deriving to_yojson, show]
 (* }}} *)
 
@@ -339,6 +340,10 @@ and derived_ty_decl =
                        enum_element_spec option (** default element *)
   (* | DTyDeclArrayType *)
   (* | DTyDeclRefType *)
+  | DTyDeclRefType of string (** ref name *) *
+                      int (** pointers level *) *
+                      iec_data_type (** reference type *) *
+                      ref_value option (** initial value *)
   | DTyDeclStructType of string (** struct name *) *
                          bool (** is overlap *) *
                          struct_elem_spec list (** elements *)
@@ -376,6 +381,13 @@ and struct_elem_init_value_spec =
   | StructElemInvalEnum of     enum_element_spec         [@name "InvalEnum"]
   (* | StructElemInvalArray of string                    [@name "InvalArray"] *)
   | StructElemInvalStruct of   string (** struct name *) [@name "InvalStruct"]
+[@@deriving to_yojson]
+
+and ref_value =
+  | RefNull
+  | RefSymVar of SymVar.t
+  | RefFBInstance of string (** instance name *)
+(* | RefClassInstance of string (* instance name *) *)
 [@@deriving to_yojson]
 
 and constant =
@@ -791,6 +803,24 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
         `Assoc [
           "type", `String("Enum");
           "name", `String(type_name);
+        ]
+    end
+  | DTyDeclRefType (type_name, ref_level, ty, opt_inval) -> begin
+      match opt_inval with
+      | Some(inval) ->
+        `Assoc [
+          "type", `String("Ref");
+          "name", `String(type_name);
+          "ref_level", `Int(ref_level);
+          "ref_type", iec_data_type_to_yojson ty;
+          "init_val", ref_value_to_yojson inval;
+        ]
+      | None ->
+        `Assoc [
+          "type", `String("Ref");
+          "name", `String(type_name);
+          "ref_level", `Int(ref_level);
+          "ref_type", iec_data_type_to_yojson ty;
         ]
     end
   | DTyDeclStructType (type_name, is_overlap, elem_specs) -> begin
