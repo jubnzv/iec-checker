@@ -19,6 +19,13 @@ PROGRAM REF_DEMO
     myRefInt: REF_TO INT;
   END_VAR
 
+  (* Arrays *)
+  VAR
+    A : ARRAY[0..5] OF INT;
+    A : ARRAY[0..5] OF INT := [1,2,3];
+    aWStrings: ARRAY[0..1] OF WSTRING := ["1234", "5678"];
+  END_VAR
+
   (* Empty case *)
   VAR
   END_VAR

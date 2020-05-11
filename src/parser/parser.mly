@@ -946,22 +946,25 @@ let array_elem_init :=
   { [v] }
   | mul_c = unsigned_int; T_LBRACE; inval = option(array_elem_init_value); T_RBRACE;
   {
+    let mk_int_const (i: int) =
+      S.CInteger((TI.create_dummy ()), i)
+    in
     let (inval_list : 'a list) = match inval with
       | Some v -> [v]
-      | None -> [0]
+      | None -> [mk_int_const 0]
     in
     let (mul : int) = match mul_c with
       | S.CInteger(_, v) -> v
       | _ -> assert false
     in
     let build_list i n =
-      let get_next pos =
+      let get_next (pos : int) : S.constant =
         let inval_opt = (List.nth inval_list pos) in
-        match inval_opt with Some v -> v | None -> 0
+        match inval_opt with Some v -> v | None -> mk_int_const 0
       in
       let rec aux acc i =
         if i <= n then
-          aux ((get_next i+1)::acc) (i+1)
+          aux ((get_next (i+1))::acc) (i+1)
         else (List.rev acc)
       in
     aux [] i
@@ -973,7 +976,7 @@ let array_elem_init_value :=
   | expr = constant_expr;
   {
     let c = match expr with S.ExprConstant(_, c) -> c | _ -> assert false in
-    (cget_int_val c)
+    c
   }
   (* | ~ = enum_value; <>  *)
   (* | ~ = struct_init; <> *)

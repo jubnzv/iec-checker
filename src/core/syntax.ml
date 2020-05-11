@@ -377,8 +377,8 @@ and arr_subrange = {
 } [@@deriving to_yojson]
 
 (** Initial value of array elements. Values like [1,2(3),4] will be converted
-    to [1,3,3,4] in parser. *)
-and arr_inval = int list [@@deriving to_yojson]
+    to [1,3,3,4] in the parser. *)
+and arr_inval = constant list [@@deriving to_yojson]
 
 (** Struct element specification *)
 and struct_elem_spec = {
