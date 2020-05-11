@@ -318,36 +318,34 @@ and generic_ty =
   | ANY_DATE
 [@@deriving to_yojson]
 
+(** "Use" occurence of the derived type. *)
 and derived_ty =
   | DTyUseSingleElement of single_element_ty_spec [@name "UseSingleElement"]
-  (* | DTyUseArrayType *)
   | DTyUseStructType of string                    [@name "UseStructElement"]
   | DTyUseStringType of elementary_ty             [@name "UseStringType"]
 [@@deriving to_yojson]
 
-and derived_ty_decl =
+(** Declaration of the derived type (defined with TYPE .. END_TYPE signature). *)
+and derived_ty_decl = string (** type name *) * derived_ty_decl_spec
+
+(** Specification used in declaration of the derived type. It could be used
+    with variables declaration in POU as well as to declare new types. *)
+and derived_ty_decl_spec =
   (* Elementary type synonyms and strings *)
-  | DTyDeclSingleElement of string (** type name *) *
-                            single_element_ty_spec (** declaration ty *) *
+  | DTyDeclSingleElement of single_element_ty_spec (** declaration ty *) *
                             expr option (** initialization expression *)
-  (* Reference: ch. 6.4.4.4 *)
-  | DTyDeclSubrange of string (** type name *) *
-                       subrange_ty_spec *
+  | DTyDeclSubrange of subrange_ty_spec *
                        int (** initial value *)
-  | DTyDeclEnumType of string (** type name *) *
-                       elementary_ty option (** type of the elements *) *
+  | DTyDeclEnumType of elementary_ty option (** type of the elements *) *
                        enum_element_spec list (** elements *) *
                        enum_element_spec option (** default element *)
-  | DTyDeclArrayType of string (** type name *) *
-                        arr_subrange list (** subranges for dimensions *) *
+  | DTyDeclArrayType of arr_subrange list (** subranges for dimensions *) *
                         iec_data_type (** type of the elements *) *
                         arr_inval option (** initial value *)
-  | DTyDeclRefType of string (** ref name *) *
-                      int (** pointers level *) *
+  | DTyDeclRefType of int (** pointers level *) *
                       iec_data_type (** reference type *) *
                       ref_value option (** initial value *)
-  | DTyDeclStructType of string (** struct name *) *
-                         bool (** is overlap *) *
+  | DTyDeclStructType of bool (** is overlap *) *
                          struct_elem_spec list (** elements *)
 
 and single_element_ty_spec =
@@ -372,8 +370,8 @@ and enum_element_spec = {
 (** Subranges of array dimensions (e.g. [1..2, 1..3] means list with two
     subranges). *)
 and arr_subrange = {
-    arr_lower: int [@name "lower"]; (** lower bound *)
-    arr_upper: int [@name "upper"]; (** upper bound *)
+  arr_lower: int [@name "lower"]; (** lower bound *)
+  arr_upper: int [@name "upper"]; (** upper bound *)
 } [@@deriving to_yojson]
 
 (** Initial value of array elements. Values like [1,2(3),4] will be converted
@@ -783,8 +781,9 @@ let get_pou_vars_decl = function
 
 (* {{{ Yojson helpers *)
 let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
-  match dty with
-  | DTyDeclSingleElement (type_name, declaration_ty, expr_opt) -> begin
+  let (type_name, dty_spec) = dty in
+  match dty_spec with
+  | DTyDeclSingleElement (declaration_ty, expr_opt) -> begin
       match expr_opt with
       | Some (e) ->
         `Assoc [
@@ -800,7 +799,7 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
           "declaration_type", single_element_ty_spec_to_yojson declaration_ty;
         ]
     end
-  | DTyDeclSubrange (type_name, spec, init_val) -> begin
+  | DTyDeclSubrange (spec, init_val) -> begin
       let (int_ty, lb, ub) = spec in
       `Assoc [
         "type", `String("Subrange");
@@ -811,7 +810,7 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
         "init_val", `Int(init_val);
       ]
     end
-  | DTyDeclEnumType (type_name, elements_type_opt, _, _) -> begin
+  | DTyDeclEnumType (elements_type_opt, _, _) -> begin
       match elements_type_opt with
       | Some (elements_type) ->
         `Assoc [
@@ -825,11 +824,11 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
           "name", `String(type_name);
         ]
     end
-  | DTyDeclArrayType (type_name, subranges, ty, inval_opt) -> begin
+  | DTyDeclArrayType (subranges, ty, inval_opt) -> begin
       let (subranges_json : Yojson.Safe.t list) = List.fold_left
-        subranges
-        ~init:[]
-        ~f:(fun acc sr -> acc @ [(arr_subrange_to_yojson sr)])
+          subranges
+          ~init:[]
+          ~f:(fun acc sr -> acc @ [(arr_subrange_to_yojson sr)])
       in
       match inval_opt with
       | Some(inval) ->
@@ -847,8 +846,8 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
           "subranges", `List(subranges_json);
           "elements_type", iec_data_type_to_yojson ty;
         ]
-  end
-  | DTyDeclRefType (type_name, ref_level, ty, opt_inval) -> begin
+    end
+  | DTyDeclRefType (ref_level, ty, opt_inval) -> begin
       match opt_inval with
       | Some(inval) ->
         `Assoc [
@@ -866,7 +865,7 @@ let derived_ty_decl_to_yojson (dty : derived_ty_decl) : Yojson.Safe.t =
           "ref_type", iec_data_type_to_yojson ty;
         ]
     end
-  | DTyDeclStructType (type_name, is_overlap, elem_specs) -> begin
+  | DTyDeclStructType (is_overlap, elem_specs) -> begin
       let elems_yojson = List.fold_left
           elem_specs
           ~init:[]

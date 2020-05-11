@@ -80,25 +80,33 @@ let check_array_init_val ty_name subranges inval_opt =
         []
     end
 
-let check_ty_decl = function
-  | S.DTyDeclSingleElement (_, ty_spec, init_expr) ->
+let check_ty_decl ty_name = function
+  | S.DTyDeclSingleElement (ty_spec, init_expr) ->
     begin
       match ty_spec with
       | S.DTySpecElementary ty_decl -> (check_str_init_expr ty_decl init_expr)
       | S.DTySpecSimple _ | S.DTySpecGeneric _ | S.DTySpecEnum _ -> []
     end
-  | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
+  | S.DTyDeclSubrange (ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
   | S.DTyDeclEnumType _ -> []
-  | S.DTyDeclArrayType (ty_name, subranges, _, inval_opt) -> check_array_init_val ty_name subranges inval_opt
+  | S.DTyDeclArrayType (subranges, _, inval_opt) -> check_array_init_val ty_name subranges inval_opt
   | S.DTyDeclRefType _ -> []
   | S.DTyDeclStructType _ -> []
+
+(** [check_var_decls pou] Searching for errors in variables declaration for given [pou]. *)
+(* let check_var_decls pou =           *)
+(*   AU.get_var_decls e                *)
+(*   |> List.fold_left                 *)
+(*     ~init:[]                        *)
+(*     ~f:(fun acc var_decl -> acc @ ) *)
 
 let[@warning "-27"] run elements envs =
   List.fold_left elements
     ~f:(fun warns e ->
         let ws = match e with
-          | S.IECType (_, ty) -> check_ty_decl ty
+          | S.IECType (_, (ty_name, ty_spec)) -> check_ty_decl ty_name ty_spec
           | _ -> []
+          (* | _ -> check_var_decls pou *)
         in
         warns @ ws)
     ~init:[]

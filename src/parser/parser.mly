@@ -774,13 +774,13 @@ let simple_type_decl :=
     | None -> raise (SyntaxError "Missing type name declaration")
     in
     let ty_spec = S.DTySpecElementary(ty_decl) in
-    S.DTyDeclSingleElement(ty_name, ty_spec, ci)
+    ty_name, S.DTyDeclSingleElement(ty_spec, ci)
   }
   | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = simple_type_access; ci = optional_assign(constant_expr);
   {
     let ty_name, _ = ty_name_id in
     let ty_spec = S.DTySpecSimple(ty_decl) in
-    S.DTyDeclSingleElement(ty_name, ty_spec, ci)
+    ty_name, S.DTyDeclSingleElement(ty_spec, ci)
   }
 
 let simple_spec_init :=
@@ -802,8 +802,8 @@ let subrange_spec_init :=
   | s = subrange_spec; T_ASSIGN; ic = signed_int;
   {
     match s with
-    | S.DTyDeclSubrange(ty_name, ty_spec, _) ->
-      S.DTyDeclSubrange(ty_name, ty_spec, (cget_int_val ic))
+    | ty_name, S.DTyDeclSubrange(ty_spec, _) ->
+      ty_name, S.DTyDeclSubrange(ty_spec, (cget_int_val ic))
     | _ -> assert false
   }
   | ~ = subrange_spec; <>
@@ -821,7 +821,7 @@ let subrange_spec :=
     else
       let (_, lb, ub) = s in
       (* According the Standard, the initial value is assigned to lower bound by default. *)
-      S.DTyDeclSubrange(ty_name, (ty_decl, lb, ub), lb)
+      ty_name, S.DTyDeclSubrange((ty_decl, lb, ub), lb)
   }
   (* | tn = subrange_type_access;
   { } *)
@@ -844,12 +844,12 @@ let enum_type_decl :=
   {
     let (enum_name, elem_type_name) = type_opts
     and (element_specs, default_value) = specs in
-    S.DTyDeclEnumType(enum_name, elem_type_name, element_specs, default_value)
+    enum_name, S.DTyDeclEnumType(elem_type_name, element_specs, default_value)
   }
   | enum_name = enum_type_name; T_COLON; specs = enum_spec_init;
   {
     let (element_specs, default_value) = specs in
-    S.DTyDeclEnumType(enum_name, None, element_specs, default_value)
+    enum_name, S.DTyDeclEnumType(None, element_specs, default_value)
   }
 
 let named_spec_init :=
@@ -905,7 +905,7 @@ let array_type_decl :=
   {
     let (name, _) = name_type
     and (subranges, ty, initializer_list) = specs in
-    S.DTyDeclArrayType(name, subranges, ty, initializer_list)
+    name, S.DTyDeclArrayType(subranges, ty, initializer_list)
   }
 
 let array_spec_init :=
@@ -987,7 +987,7 @@ let struct_type_decl :=
   {
     let (name, _) = name_type
     and (is_overlap, elem_specs) = spec in
-    S.DTyDeclStructType(name, is_overlap, elem_specs)
+    name, S.DTyDeclStructType(is_overlap, elem_specs)
   }
 
 let struct_spec :=
@@ -1087,7 +1087,7 @@ let str_type_decl :=
             end
           | None -> None
       in
-      S.DTyDeclSingleElement(ty_name, ty_spec, initial_value)
+      ty_name, S.DTyDeclSingleElement(ty_spec, initial_value)
   }
 (* }}} *)
 
@@ -1106,7 +1106,7 @@ let ref_type_decl :=
   {
     let (ref_name, _) = name_type
     and (num_of_refs, ty, inval_opt) = spec in
-    S.DTyDeclRefType(ref_name, num_of_refs, ty, inval_opt)
+    ref_name, S.DTyDeclRefType(num_of_refs, ty, inval_opt)
   }
 
 (* NOTE: There is typo in Standard. I believe that '; =' means ':='. *)
@@ -1223,7 +1223,7 @@ let var_decl_init :=
   (* | ~ = fb_decl_init; <> *)
   (* | ~ = interface_spec_init; <> *)
 
-(* Helper rule that takes list of comma-separated variable names and returns S.SymVar objects. *)
+(* Helper rule that takes list of comma-separated variable names and returns S.SymVar list. *)
 let comma_separated_variables :=
   | vs = separated_nonempty_list(T_COMMA, variable_name);
   {

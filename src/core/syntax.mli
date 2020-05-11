@@ -206,40 +206,34 @@ and generic_ty =
   | ANY_DATE
 [@@deriving to_yojson]
 
-(** "Use" occurence of a derived type *)
+(** "Use" occurence of the derived type. *)
 and derived_ty =
   | DTyUseSingleElement of single_element_ty_spec [@name "UseSingleElement"]
-  (* | DTyUseArrayType *)
   | DTyUseStructType of string                    [@name "UseStructElement"]
   | DTyUseStringType of elementary_ty             [@name "UseStringType"]
 [@@deriving to_yojson]
 
-(** Declaration of a derived type.
-    This include "use" symbol value of a declared type and optional
-    initialization values. *)
-and derived_ty_decl =
+(** Declaration of the derived type (defined with TYPE .. END_TYPE signature). *)
+and derived_ty_decl = string (** type name *) * derived_ty_decl_spec
+
+(** Specification used in declaration of the derived type. It could be used
+    with variables declaration in POU as well as to declare new types. *)
+and derived_ty_decl_spec =
   (* Elementary type synonyms and strings *)
-  | DTyDeclSingleElement of string (** type name *) *
-                            single_element_ty_spec (** declaration ty *) *
+  | DTyDeclSingleElement of single_element_ty_spec (** declaration ty *) *
                             expr option (** initialization expression *)
-  (* Reference: ch. 6.4.4.4 *)
-  | DTyDeclSubrange of string (** type name *) *
-                       subrange_ty_spec *
+  | DTyDeclSubrange of subrange_ty_spec *
                        int (** initial value *)
-  | DTyDeclEnumType of string (** type name *) *
-                       elementary_ty option (** type of the elements *) *
+  | DTyDeclEnumType of elementary_ty option (** type of the elements *) *
                        enum_element_spec list (** elements *) *
                        enum_element_spec option (** default element *)
-  | DTyDeclArrayType of string (** type name *) *
-                        arr_subrange list (** subranges for dimensions *) *
+  | DTyDeclArrayType of arr_subrange list (** subranges for dimensions *) *
                         iec_data_type (** type of the elements *) *
                         arr_inval option (** initial value *)
-  | DTyDeclRefType of string (** type name *) *
-                      int (** pointers level *) *
+  | DTyDeclRefType of int (** pointers level *) *
                       iec_data_type (** reference type *) *
                       ref_value option (** initial value *)
-  | DTyDeclStructType of string (** struct name *) *
-                         bool (** is overlap *) *
+  | DTyDeclStructType of bool (** is overlap *) *
                          struct_elem_spec list (** elements *)
 
 (** Single element type specification (it works like typedef in C) *)
