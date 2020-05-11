@@ -1361,29 +1361,29 @@ let retain_var_decls :=
   }
 
 let loc_var_decls :=
-  | T_VAR; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  | T_VAR; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
     |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
   }
-  | T_VAR; T_CONSTANT; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  | T_VAR; T_CONSTANT; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
     |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
   }
-  | T_VAR; T_RETAIN; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  | T_VAR; T_RETAIN; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
     |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
   }
-  | T_VAR; T_NON_RETAIN; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  | T_VAR; T_NON_RETAIN; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
     |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
   }
 
 let loc_var_decl :=
-  | name_ti = T_IDENTIFIER; located_at; T_COLON; loc_var_spec_init;
+  | name_ti = T_IDENTIFIER; located_at; T_COLON; loc_var_spec_init; T_SEMICOLON;
   {
     let (n, ti) = name_ti in
     let v = S.SymVar.create n ti in

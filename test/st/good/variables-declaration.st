@@ -1,13 +1,17 @@
 PROGRAM REF_DEMO
-  (* Elementary-typed variables *)
+  (* Elementary *)
   VAR
     v : INT;
     v : INT := 1;
     v : BOOL;
     v : BOOL := FALSE;
     v : REAL := 10.0;
+  END_VAR
 
-    (* v AT %IW1.2 : REAL := 200.0; *)
+  (* Direct and partly-located *)
+  VAR
+    v AT %IW1.2 : REAL;
+    v AT %IW1.2 : REAL := 200.0;
   END_VAR
 
   (* Reference variables *)
