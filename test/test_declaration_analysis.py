@@ -14,7 +14,7 @@ def test_initialization_literal():
     assert rc == 0
     assert len(checker_warnings) == 3
     cv = checker_warnings[0]
-    assert cv.id == 'DeclarationAnalysis'
+    assert cv.id == 'OutOfBounds'
     # assert cv.linenr == 8
     # assert cv.column == 31
     with DumpManager(fdump):

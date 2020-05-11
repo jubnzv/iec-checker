@@ -57,9 +57,9 @@ Report for test/st/dead-code.st:
 [UnreachableCode] 20:7 Code block will never be reached
 [UnreachableCode] 9:10 Code block will never be reached
 Report for test/st/declaration-analysis.st:
-[DeclarationAnalysis] Initial subrange value -4096 does not fit specified range (-4095 .. 4095)
-[DeclarationAnalysis] Initial subrange value 4099 does not fit specified range (-4095 .. 4095)
-[DeclarationAnalysis] Length of initialization string literal exceeds string length (6 > 5)
+[OutOfBounds] Initial subrange value -4096 does not fit the specified range (-4095 .. 4095)
+[OutOfBounds] Initial subrange value 4099 does not fit the specified range (-4095 .. 4095)
+[OutOfBounds] Length of initialization string literal exceeds string length (6 > 5)
 Report for test/st/plcopen-cp13.st:
 [PLCOPEN-CP13] 8:30 POUs shall not call themselves directly or indirectly
 Report for test/st/plcopen-l17.st:

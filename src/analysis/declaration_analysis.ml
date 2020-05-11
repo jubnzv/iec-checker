@@ -40,7 +40,7 @@ let check_str_init_expr ty_init init_expr =
         "Length of initialization string literal exceeds string length (%d > %d)"
         len_init len_decl
     in
-    let w = Warn.mk 0 0 "DeclarationAnalysis" msg in
+    let w = Warn.mk 0 0 "OutOfBounds" msg in
     [ w ]
   | Some _ -> [] (* no violations *)
   | None -> []
@@ -50,9 +50,9 @@ let check_subrange_init_val ty_spec init_val =
   let (_, lb, ub) = ty_spec in
   if (init_val < lb) || (init_val > ub) then
     let msg =
-      Printf.sprintf "Initial subrange value %d does not fit specified range (%d .. %d)"
+      Printf.sprintf "Initial subrange value %d does not fit the specified range (%d .. %d)"
         init_val lb ub
-    in let w = Warn.mk 0 0 "DeclarationAnalysis" msg in [ w ]
+    in let w = Warn.mk 0 0 "OutOfBounds" msg in [ w ]
   else []
 
 let check_ty_decl = function
