@@ -1,19 +1,13 @@
 open Core_kernel
 module S = Syntax
+module TI = Tok_info
 
-let get_var_decl elems =
-  let get_vd = function
-    | S.IECFunction (_, f) -> f.variables
-    | S.IECFunctionBlock (_, fb) -> fb.variables
-    | S.IECProgram (_, p) -> p.variables
-    | S.IECConfiguration (_, c) -> c.variables
-    | S.IECType _ -> []
-  in
-  List.fold_left elems
-    ~f:(fun x e ->
-        let es = get_vd e in
-        x @ es)
-    ~init:[]
+let get_var_decls = function
+  | S.IECFunction (_, f) -> f.variables
+  | S.IECFunctionBlock (_, fb) -> fb.variables
+  | S.IECProgram (_, p) -> p.variables
+  | S.IECConfiguration (_, c) -> c.variables
+  | S.IECType _ -> []
 
 let expr_to_stmts expr : S.statement list =
   let rec aux = function
@@ -150,6 +144,116 @@ let get_exprs elems =
   List.fold_left all_stmts
     ~init:[]
     ~f:(fun acc stmt -> (get_stmt_exprs stmt) @ acc)
+
+let filter_exprs ~f elem =
+  let rec aux acc stmt =
+    let get_nested stmts =
+      List.fold_left
+        stmts
+        ~init:[]
+        ~f:(fun acc s -> acc @ (aux [] s))
+    in
+    let rec get_nested_exprs acc = function
+        | S.ExprBin (_,e1,_,e2) -> begin
+            acc @
+            [e1] @ (get_nested_exprs acc e1) @
+            [e2] @ (get_nested_exprs acc e2)
+        end
+      | S.ExprUn (_,_,e) -> begin
+          acc @ [e] @ (get_nested_exprs acc e)
+      end
+      | S.ExprVariable _ | S.ExprConstant _ | S.ExprFuncCall _ -> acc
+    in
+    let apply_filter (exprs : S.expr list) =
+      List.filter exprs ~f
+    in
+    match stmt with
+    | S.StmExpr (_, e) -> begin
+        [e] @ (get_nested_exprs [] e)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmElsif (_, cond_s, ss) -> begin
+        (get_nested [cond_s]) @
+        (get_nested ss)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) -> begin
+        (get_nested [cond_s]) @
+        (get_nested body_ss) @
+        (get_nested elsif_ss) @
+        (get_nested else_ss)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmCase (_, cond_s, case_sels, else_ss) ->
+      begin
+        let case_stmts =
+          List.fold_left
+            case_sels
+            ~init:[]
+            ~f:(fun acc case_sel -> begin
+                  acc @
+                  (get_nested case_sel.case) @
+                  (get_nested case_sel.body)
+                end)
+        in
+        (get_nested [cond_s]) @
+        (case_stmts) @
+        (get_nested else_ss)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmFor (_, ctrl, body_stmts) -> begin
+        (get_nested [ctrl.assign]) @
+        [ctrl.range_end; ctrl.range_step] @
+        (get_nested body_stmts)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmWhile (_, cond_stmt, ss) -> begin
+        (get_nested [cond_stmt]) @
+        (get_nested ss)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmRepeat (_, body_stmts, cond_stmt) -> begin
+        (get_nested body_stmts) @
+        (get_nested [cond_stmt])
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmFuncCall (_, _, func_params) -> begin
+        let func_params_stmts = List.fold_left
+            func_params
+            ~init:[]
+            ~f:(fun acc fp -> acc @ [fp.stmt])
+        in
+        (get_nested func_params_stmts)
+        |> apply_filter
+        |> List.append acc
+      end
+    | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> acc
+  in
+  let all_stmts = get_pou_stmts elem in
+  List.fold_left
+    all_stmts
+    ~init:[]
+    ~f:(fun acc stmt -> acc @ (aux [] stmt))
+
+let get_ti_by_name_exn elem var_name =
+  let (tis : TI.t list) = List.fold_left
+      (get_var_decls elem)
+      ~init:[]
+      ~f:(fun acc vardecl -> begin
+            if String.equal (S.VarDecl.get_var_name vardecl) var_name then
+              acc @ [(S.VarDecl.get_var_ti vardecl)]
+            else
+              acc
+          end)
+  in
+  List.nth_exn tis 0
 
 (** Bound declaration of global variables in global env. *)
 let fill_global_env env = function

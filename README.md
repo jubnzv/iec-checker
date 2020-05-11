@@ -9,7 +9,9 @@ The following features are currently implemented:
 + Some checks for [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines);
 + Declaration analysis for derived types;
 + Intraprocedural control flow analysis: searching for unreachable code blocks inside the [POUs](https://en.wikipedia.org/wiki/IEC_61131-3#Program_organization_unit_(POU));
-+ Ability to dump AST of the IEC program into a JSON file (`-dump true` argument);
++ Found unused variables;
++ Ability to integrate with other tools. Checker can dump AST with IR into a JSON file (`-dump true` argument) and produce warnings in JSON format (`-output-format json`);
++ Can be extended with plugins in Python. See demo plugin that plots control flow graph: [cfg_plotter.py](./src/python/plugins/cfg_plotter.py).
 
 ## Installation
 
@@ -48,7 +50,9 @@ python3 checker.py test/st/*.st
 
 This will gives you the following output:
 ```
-Report for test/st/dead-code.st:[PLCOPEN-L17] 17:6 Each IF instruction should have an ELSE clause
+Report for test/st/dead-code.st:
+[PLCOPEN-L17] 17:6 Each IF instruction should have an ELSE clause
+[UnusedVariable] 15:5 Found unused local variable: A
 [UnreachableCode] 25:7 Code block will never be reached
 [UnreachableCode] 20:7 Code block will never be reached
 [UnreachableCode] 9:10 Code block will never be reached
@@ -62,9 +66,11 @@ Report for test/st/plcopen-l17.st:
 [PLCOPEN-L17] 10:4 Each IF instruction should have an ELSE clause
 Report for test/st/plcopen-n3.st:
 [PLCOPEN-N3] 6:7 IEC data types and standard library objects must be avoided
+[UnusedVariable] 6:7 Found unused local variable: TOF
+[UnusedVariable] 7:14 Found unused local variable: OK_ALLOWED
+[UnusedVariable] 4:21 Found unused local variable: NO_FALSE_POSITIVE
 Report for test/st/this.st:
-[UnreachableCode] 10:10 Code block will never be reached
-[UnreachableCode] 4:10 Code block will never be reached
+[UnusedVariable] 3:3 Found unused local variable: A
 Report for test/st/unused-variable.st:
 [UnreachableCode] 10:10 Code block will never be reached
 Report for test/st/zero-division.st:

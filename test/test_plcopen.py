@@ -41,7 +41,7 @@ def test_n3():
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0
-    assert len(checker_warnings) == 1
+    assert len(checker_warnings) >= 1
     cv = checker_warnings[0]
     assert cv.id == 'PLCOPEN-N3'
     assert cv.linenr == 6

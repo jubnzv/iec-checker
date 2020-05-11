@@ -462,7 +462,7 @@ and expr =
   | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
   | ExprUn       of TI.t * operator * expr        [@name "Un"]
   | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
-[@@deriving to_yojson, show]
+[@@deriving show, to_yojson]
 and case_selection = {case: statement list; body: statement list}
 [@@deriving to_yojson, show]
 and for_control = {
@@ -685,6 +685,11 @@ module VarDecl = struct
     match dcl.var with
     | SymVar v -> SymVar.get_name v
     | DirVar v -> DirVar.get_name v
+
+  let get_var_ti dcl =
+    match dcl.var with
+    | SymVar v -> SymVar.get_ti v
+    | DirVar v -> DirVar.get_ti v
 
   let set_qualifier_exn dcl qa =
     match dcl.spec with

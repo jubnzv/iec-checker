@@ -180,10 +180,17 @@ let check_name var =
   | None -> None
 
 let do_check elems =
-  let vs = AU.get_var_decl elems in
-  List.map vs ~f:(fun d ->
-      let var = S.VarDecl.get_var d in
-      check_name var)
+  let vardecls = List.fold_left
+      elems
+      ~init:[]
+      ~f:(fun acc elem -> acc @ (AU.get_var_decls elem))
+  in
+  List.map
+    vardecls
+    ~f:(fun d -> begin
+          let var = S.VarDecl.get_var d in
+          check_name var
+        end)
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
       match w with Some w -> w | None -> assert false)

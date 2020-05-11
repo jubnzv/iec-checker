@@ -358,7 +358,7 @@ and expr =
   | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
   | ExprUn       of TI.t * operator * expr        [@name "Un"]
   | ExprFuncCall of TI.t * statement              [@name "FuncCall"]
-[@@deriving to_yojson, show]
+[@@deriving show, to_yojson]
 and case_selection = {case: statement list; body: statement list}
 and for_control = {
   assign : statement; (** control variable assignment *)
@@ -494,6 +494,7 @@ module VarDecl : sig
   val get_var : t -> variable
 
   val get_var_name : t -> string
+  val get_var_ti : t -> TI.t
 
   val set_qualifier_exn : t -> qualifier -> t
   (** Set qualifier for variable. Raise an exception if this variable doesn't support qualifiers. *)
