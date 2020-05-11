@@ -660,8 +660,10 @@ module VarDecl = struct
     | SpecGlobal of qualifier option
     | SpecAccess of string (** access name *)
     | SpecTemp
-    | SpecConfig of
-        string (** resource name *) * string (** program name *) * string (** fb name *)
+    | SpecLocated
+    | SpecConfig of string (** resource name *) *
+                    string (** program name *) *
+                    string (** fb name *)
   [@@deriving to_yojson]
 
   type t = {

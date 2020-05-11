@@ -1297,7 +1297,7 @@ let in_out_decls :=
 
 (* Return list of S.VarDecl.t *)
 let in_out_var_decl :=
-  | vs = var_decl_list;
+  | vs = variables_decl_nonempty_list(var_decl);
   {
     List.map
       vs
@@ -1324,12 +1324,6 @@ let var_decl :=
   (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; *)
   (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; array_var_decl; *)
   (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl; *)
-
-(* Helper rule for var_decl *)
-let var_decl_list :=
-  | ~ = var_decl; T_SEMICOLON; <>
-  | vs = var_decl_list; v = var_decl; T_SEMICOLON;
-  { List.append vs v }
 
 (* array_var_decl: *)
 
@@ -1366,9 +1360,36 @@ let retain_var_decls :=
       end)
   }
 
-(* loc_var_decls: *)
+let loc_var_decls :=
+  | T_VAR; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  {
+    List.rev vs
+    |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
+  }
+  | T_VAR; T_CONSTANT; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  {
+    List.rev vs
+    |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
+  }
+  | T_VAR; T_RETAIN; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  {
+    List.rev vs
+    |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
+  }
+  | T_VAR; T_NON_RETAIN; vs = separated_nonempty_list(T_SEMICOLON, loc_var_decl); T_END_VAR;
+  {
+    List.rev vs
+    |> List.map ~f:(fun v -> S.VarDecl.create v S.VarDecl.SpecLocated)
+  }
 
-(* loc_var_decl: *)
+let loc_var_decl :=
+  | name_ti = T_IDENTIFIER; located_at; T_COLON; loc_var_spec_init;
+  {
+    let (n, ti) = name_ti in
+    let v = S.SymVar.create n ti in
+    let vv = S.SymVar(v) in
+    vv
+  }
 
 let temp_var_decls :=
   | T_VAR_TEMP; vs = variables_decl_nonempty_list(var_decl); T_END_VAR;
@@ -1696,17 +1717,25 @@ let fb_body :=
 
 (* {{{ Table 47 -- Program definition *)
 let prog_decl :=
-  | T_PROGRAM; n = prog_type_name; vdl = program_var_decls_list; ss = fb_body; T_END_PROGRAM;
-  { {S.is_retain = false; S.name = n; S.variables = vdl; S.statements = ss} }
+  | T_PROGRAM; n = prog_type_name; var_decls_opt = option(program_var_decls_list); ss = fb_body; T_END_PROGRAM;
+  {
+    let var_decls = match var_decls_opt with
+      | Some v -> v
+      | None -> []
+    in
+    { S.is_retain = false;
+      S.name = n;
+      S.variables = var_decls;
+      S.statements = ss }
+  }
 
-(* Helper for prog_decl *)
 (* Helper for prog_decl *)
 let program_var_decls_list :=
   | ~ = io_var_decls; <>
   | ~ = func_var_decls; <>
   | ~ = temp_var_decls; <>
   | ~ = other_var_decls; <>
-  (* | ~ = loc_var_decls; <> *)
+  | ~ = loc_var_decls; <>
   | ~ = prog_access_decls; <>
   | vdss = program_var_decls_list; vds = io_var_decls;
   { List.append vdss vds }
@@ -1716,7 +1745,8 @@ let program_var_decls_list :=
   { List.append vdss vds }
   | vdss = program_var_decls_list; vds = other_var_decls;
   { List.append vdss vds }
-  (* | vars = located_vars_declaration *) (* {vars} *)
+  | vdss = program_var_decls_list; vds = loc_var_decls;
+  { List.append vdss vds }
   | vdss = program_var_decls_list; vds = prog_access_decls;
   { List.append vdss vds }
 

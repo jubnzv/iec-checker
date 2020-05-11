@@ -1,10 +1,13 @@
 PROGRAM REF_DEMO
   (* Elementary-typed variables *)
   VAR
-    error_state : INT;
-    error_state : INT := 1;
-    error_state : BOOL;
-    error_state : BOOL := FALSE;
+    v : INT;
+    v : INT := 1;
+    v : BOOL;
+    v : BOOL := FALSE;
+    v : REAL := 10.0;
+
+    (* v AT %IW1.2 : REAL := 200.0; *)
   END_VAR
 
   (* Reference variables *)
@@ -20,5 +23,9 @@ PROGRAM REF_DEMO
   VAR RETAIN foo : INT; END_VAR
   VAR NON_RETAIN bar : INT; END_VAR
 
+  myRefInt := 1;
+END_PROGRAM
+
+PROGRAM no_variables
   myRefInt := 1;
 END_PROGRAM

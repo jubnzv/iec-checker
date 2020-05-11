@@ -267,8 +267,8 @@ and enum_element_spec = {
 (** Subranges of array dimensions (e.g. [1..2, 1..3] means list with two
     subranges). *)
 and arr_subrange = {
-    arr_lower: int [@name "lower"]; (** lower bound *)
-    arr_upper: int [@name "upper"]; (** upper bound *)
+  arr_lower: int [@name "lower"]; (** lower bound *)
+  arr_upper: int [@name "upper"]; (** upper bound *)
 } [@@deriving to_yojson]
 
 (** Initial value of array elements. Values like [1,2(3),4] will be converted
@@ -483,8 +483,10 @@ module VarDecl : sig
     | SpecGlobal of qualifier option
     | SpecAccess of string (** access name *)
     | SpecTemp
-    | SpecConfig of
-        string (** resource name *) * string (** program name *) * string (** fb name *)
+    | SpecLocated
+    | SpecConfig of string (** resource name *) *
+                    string (** program name *) *
+                    string (** fb name *)
   [@@deriving to_yojson]
 
   val create : variable -> spec -> t
