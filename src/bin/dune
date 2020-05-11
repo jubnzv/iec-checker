@@ -7,8 +7,10 @@
  (preprocess
   (pps ppx_variants_conv ppx_jane)))
 
-; Make warnings non-fatal
 (env
  (dev
   (flags
-   (:standard -warn-error -A))))
+   ; Make warnings non-fatal
+   (:standard -warn-error -A)))
+ (release
+  (ocamlopt_flags :standard -ccopt -static)))
