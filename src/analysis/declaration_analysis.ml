@@ -55,6 +55,31 @@ let check_subrange_init_val ty_spec init_val =
     in let w = Warn.mk 0 0 "OutOfBounds" msg in [ w ]
   else []
 
+(** Search for errors in array initialization. *)
+let check_array_init_val ty_name subranges inval_opt =
+  match inval_opt with
+  | None -> (* no initializer list *) []
+  | Some (inlist) -> begin
+      let dimensions_capacity = List.fold_left
+          subranges
+          ~init:(0)
+          ~f:(fun acc (sr : S.arr_subrange) -> begin
+                let mul = if phys_equal acc 0 then 1 else acc in
+                (mul * (sr.arr_upper - sr.arr_lower + 1))
+              end)
+      in
+      let diff = (List.length inlist) - dimensions_capacity in
+      if diff > 0 then begin
+        let m = Printf.sprintf
+            "%s: Array initializer list exceeds capacity. Last %d values will be lost."
+            ty_name diff
+        in
+        [(Warn.mk 0 0 "OutOfBounds" m)]
+      end
+      else
+        []
+    end
+
 let check_ty_decl = function
   | S.DTyDeclSingleElement (_, ty_spec, init_expr) ->
     begin
@@ -64,7 +89,7 @@ let check_ty_decl = function
     end
   | S.DTyDeclSubrange (_, ty_spec, init_val) -> check_subrange_init_val ty_spec init_val
   | S.DTyDeclEnumType _ -> []
-  | S.DTyDeclArrayType _ -> []
+  | S.DTyDeclArrayType (ty_name, subranges, _, inval_opt) -> check_array_init_val ty_name subranges inval_opt
   | S.DTyDeclRefType _ -> []
   | S.DTyDeclStructType _ -> []
 
@@ -72,8 +97,8 @@ let[@warning "-27"] run elements envs =
   List.fold_left elements
     ~f:(fun warns e ->
         let ws = match e with
-            | S.IECType (_, ty) -> check_ty_decl ty
-            | _ -> []
+          | S.IECType (_, ty) -> check_ty_decl ty
+          | _ -> []
         in
         warns @ ws)
     ~init:[]
