@@ -1,4 +1,5 @@
 open Core_kernel
+module AU = IECCheckerCore.Ast_util
 module S = IECCheckerCore.Syntax
 module Env = IECCheckerCore.Env
 module Warn = IECCheckerCore.Warn
@@ -25,7 +26,7 @@ let check_str_init_size ty_init init_expr =
         begin
           match c with
           | S.CString(_, str) -> check_length str
-          | _ -> assert false
+          | _ -> None
         end
       | _ -> None
     end
@@ -93,20 +94,26 @@ let check_ty_decl ty_name = function
   | S.DTyDeclRefType _ -> []
   | S.DTyDeclStructType _ -> []
 
-(** [check_var_decls pou] Searching for errors in variables declaration for given [pou]. *)
-(* let check_var_decls pou =           *)
-(*   AU.get_var_decls e                *)
-(*   |> List.fold_left                 *)
-(*     ~init:[]                        *)
-(*     ~f:(fun acc var_decl -> acc @ ) *)
+(** [check_var_decls pou] Searching for errors in variables declaration for the
+    given [pou]. *)
+let check_var_decls pou =
+  AU.get_var_decls pou
+  |> List.fold_left
+    ~init:[]
+    ~f:(fun acc var_decl -> begin
+          let ty_decl_opt = S.VarDecl.get_ty_spec var_decl
+          and var_name = S.VarDecl.get_var_name var_decl in
+          match ty_decl_opt with
+          | Some (ty_decl) -> acc @ (check_ty_decl var_name ty_decl)
+          | None -> acc
+        end)
 
 let[@warning "-27"] run elements envs =
   List.fold_left elements
     ~f:(fun warns e ->
         let ws = match e with
           | S.IECType (_, (ty_name, ty_spec)) -> check_ty_decl ty_name ty_spec
-          | _ -> []
-          (* | _ -> check_var_decls pou *)
+          | _ -> check_var_decls e
         in
         warns @ ws)
     ~init:[]

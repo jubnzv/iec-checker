@@ -26,12 +26,20 @@ def test_array_initialized_list():
     warns, rc = check_program(
         """
         TYPE BITS: ARRAY [1..2, 1..3] OF BOOL := [0,0,0,0,0,0,1,1,1]; END_TYPE
+        PROGRAM test_p
+          VAR
+            ARR1: ARRAY [1..2, 1..3] OF BOOL := [0,0,0,0,0,0,1,1,1];
+          END_VAR
+          ARR1[0] := 19;
+        END_PROGRAM
         """.replace('\n', ''))
     assert rc == 0
-    assert len(warns) >= 1
-    w0 = filter_warns(warns, 'OutOfBounds')[0]
-    assert w0.id == 'OutOfBounds'
-    assert '3 values will be lost' in w0.msg
+    assert len(warns) >= 2
+    oob_warns = filter_warns(warns, 'OutOfBounds')
+    assert len(oob_warns) == 2
+    for w in oob_warns:
+        assert w.id == 'OutOfBounds'
+        assert '3 values will be lost' in w.msg
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme
