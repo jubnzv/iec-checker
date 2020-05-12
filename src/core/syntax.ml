@@ -648,34 +648,36 @@ module VarDecl = struct
   type qualifier = QRetain | QNonRetain | QConstant
   [@@deriving to_yojson]
 
-  type spec =
-    | Spec of qualifier option
-    | SpecDirect of qualifier option
-    | SpecOut of qualifier option
-    | SpecIn of qualifier option
-    | SpecInOut
-    | SpecExternal of qualifier option
-    | SpecGlobal of qualifier option
-    | SpecAccess of string (** access name *)
-    | SpecTemp
-    | SpecLocated
-    | SpecConfig of string (** resource name *) *
-                    string (** program name *) *
-                    string (** fb name *)
+  type attribute =
+    | Var of qualifier option
+    | VarDirect of qualifier option
+    | VarOut of qualifier option
+    | VarIn of qualifier option
+    | VarInOut
+    | VarExternal of qualifier option
+    | VarGlobal of qualifier option
+    | VarAccess of string (** access name *)
+    | VarTemp
+    | VarLocated
+    | VarConfig of string (** resource name *) *
+                   string (** program name *) *
+                   string (** fb name *)
   [@@deriving to_yojson]
 
   type t = {
     var : variable;
-    spec : spec;
+    attr : attribute option;
     qual: qualifier option;
     dir: direction option;
+    ty_spec: derived_ty_decl_spec option; (** specification of the variable type *)
   }
   [@@deriving to_yojson]
 
-  let create var spec =
+  let create var ty_spec =
     let qual = None in
+    let attr = None in
     let dir = None in
-    { var; spec; qual; dir }
+    { var; attr; qual; dir; ty_spec }
 
   let get_var dcl = dcl.var
 
@@ -690,16 +692,23 @@ module VarDecl = struct
     | DirVar v -> DirVar.get_ti v
 
   let set_qualifier_exn dcl qa =
-    match dcl.spec with
-    | Spec _ | SpecDirect _ | SpecOut _ | SpecIn _
-    | SpecExternal _ | SpecGlobal _ ->
-      let s = Spec (Some qa) in
-      { dcl with spec = s }
-    | _ -> raise @@ InternalError "Can't set qualifier for this type of variables!"
+    match dcl.attr with
+    | None -> let new_a = Var (Some qa) in { dcl with attr = Some new_a }
+    | Some a -> begin
+        match a with
+        | Var _ | VarDirect _ | VarOut _ | VarIn _
+        | VarExternal _ | VarGlobal _ ->
+          let new_a = Var (Some qa) in
+          { dcl with attr = Some new_a }
+        | _ -> raise @@ InternalError "Can't set qualifier for this type of variables!"
+      end
 
+  let set_attr dcl v = { dcl with attr = Some v }
+  let get_attr dcl = dcl.attr
+  let set_direction dcl v = { dcl with dir = Some v }
   let get_direction dcl = dcl.dir
-
-  let set_direction dcl d = { dcl with dir = Some d }
+  let set_ty_spec var v = { var with ty_spec = Some v }
+  let get_ty_spec var = var.ty_spec
 
   let to_yojson t = to_yojson t
 end

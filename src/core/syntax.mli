@@ -466,36 +466,35 @@ module VarDecl : sig
   type qualifier = QRetain | QNonRetain | QConstant
   [@@deriving to_yojson]
 
-  (** ExprVariable specification *)
-  type spec =
-    | Spec of qualifier option
-    | SpecDirect of qualifier option
-    | SpecOut of qualifier option
-    | SpecIn of qualifier option
-    | SpecInOut
-    | SpecExternal of qualifier option
-    | SpecGlobal of qualifier option
-    | SpecAccess of string (** access name *)
-    | SpecTemp
-    | SpecLocated
-    | SpecConfig of string (** resource name *) *
-                    string (** program name *) *
-                    string (** fb name *)
+  type attribute =
+    | Var of qualifier option
+    | VarDirect of qualifier option
+    | VarOut of qualifier option
+    | VarIn of qualifier option
+    | VarInOut
+    | VarExternal of qualifier option
+    | VarGlobal of qualifier option
+    | VarAccess of string (** access name *)
+    | VarTemp
+    | VarLocated
+    | VarConfig of string (** resource name *) *
+                   string (** program name *) *
+                   string (** fb name *)
   [@@deriving to_yojson]
 
-  val create : variable -> spec -> t
+  val create : variable -> derived_ty_decl_spec option -> t
 
   val get_var : t -> variable
-
   val get_var_name : t -> string
   val get_var_ti : t -> TI.t
-
   val set_qualifier_exn : t -> qualifier -> t
   (** Set qualifier for variable. Raise an exception if this variable doesn't support qualifiers. *)
-
-  val get_direction : t -> direction option
-
+  val set_attr : t -> attribute -> t
+  val get_attr : t -> attribute option
   val set_direction : t -> direction -> t
+  val get_direction : t -> direction option
+  val set_ty_spec : t -> derived_ty_decl_spec -> t
+  val get_ty_spec : t -> derived_ty_decl_spec option
 
   val to_yojson : t -> Yojson.Safe.t
 end
