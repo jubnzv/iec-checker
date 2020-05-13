@@ -74,6 +74,12 @@ end
 (** Identifier of symbolically represented variable *)
 module SymVar : sig
   include ID
+
+  val set_subscription_length : t -> int -> t
+  (** [set_subscription_length var len] Set subscriptions length of the variable
+      (for arrays). *)
+  val get_subscription_length : t -> int option
+
   val to_yojson : t -> Yojson.Safe.t
 end
 
@@ -161,11 +167,6 @@ module VarUse : sig
 
   val get_name : t -> string
   val get_ti : t -> TI.t
-
-  val set_subscription_length : t -> int -> t
-  (** [set_subscription_length var len] Set subscriptions length of the variable
-      (for arrays). *)
-  val get_subscription_length : t -> int option
 end
 (* }}} *)
 

@@ -95,14 +95,20 @@ module type ID = sig
 end
 
 module SymVar = struct
-  type t = { name : string; ti : TI.t } [@@deriving to_yojson]
+  type t = {
+    name : string;
+    ti : TI.t;
+    subscript_len: int option;
+  } [@@deriving to_yojson]
 
   let create name ti =
-    { name; ti }
+    let subscript_len = None in
+    { name; ti; subscript_len; }
 
   let get_name id = id.name
-
   let get_ti id = id.ti
+  let set_subscription_length var len = { var with subscript_len = Some(len) }
+  let get_subscription_length var = var.subscript_len
 
   let to_yojson t = to_yojson t
 end
@@ -270,18 +276,15 @@ module VarUse = struct
   type t = {
     loc: loc_type;
     ty: var_type;
-    subscript_len: int option;
   } [@@deriving to_yojson]
 
   let create_sym sym_var ty =
     let loc = SymVar(sym_var) in
-    let subscript_len = None in
-    { loc; ty; subscript_len; }
+    { loc; ty; }
 
   let create_dir dir_var ty =
     let loc = DirVar(dir_var) in
-    let subscript_len = None in
-    { loc; ty; subscript_len; }
+    { loc; ty; }
 
   let get_name var =
     match var.loc with
@@ -292,9 +295,6 @@ module VarUse = struct
     match var.loc with
     | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti)
     | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
-
-  let set_subscription_length var len = { var with subscript_len = Some(len) }
-  let get_subscription_length var = var.subscript_len
 end
 (* }}} *)
 

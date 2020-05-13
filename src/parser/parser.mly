@@ -26,7 +26,11 @@
     let tv = (fn v) in
     S.CTimeValue(ti, tv)
 
-  let cget_int_val = function
+  let c_get_int = function
+    | S.CInteger (_,v) -> Some(v)
+    | _ -> None
+
+  let c_get_int_exn = function
     | S.CInteger (_, v) -> v
     | _ -> assert false
 
@@ -45,6 +49,7 @@
   let mk_var_use_sym sv =
     let var_use = S.VarUse.create_sym sv S.VarUse.Elementary in
     var_use
+
 %}
 
 (* {{{ Tokens *)
@@ -507,8 +512,8 @@ daytime:
   {
     let ctime_of_timevals ch cm ss =
       let ti = S.c_get_ti ch in
-      let hf = float_of_int (cget_int_val ch) in
-      let mf = float_of_int (cget_int_val cm) in
+      let hf = float_of_int (c_get_int_exn ch) in
+      let mf = float_of_int (c_get_int_exn cm) in
       let sf = float_of_string ss in
       let tv = S.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
       S.CTimeValue(ti, tv)
@@ -539,9 +544,9 @@ date_literal:
   {
     let cdate_of_timevals cy cmo cd =
       let ti = S.c_get_ti cy in
-      let yi = (cget_int_val cy) in
-      let moi = (cget_int_val cmo) in
-      let df = float_of_int (cget_int_val cd) in
+      let yi = (c_get_int_exn cy) in
+      let moi = (c_get_int_exn cmo) in
+      let df = float_of_int (c_get_int_exn cd) in
       let tv = S.TimeValue.mk ~y:yi ~mo:moi ~d:df () in
       S.CTimeValue(ti, tv)
     in
@@ -813,7 +818,7 @@ let subrange_spec_init :=
   {
     match s with
     | ty_name, S.DTyDeclSubrange(ty_spec, _) ->
-      ty_name, S.DTyDeclSubrange(ty_spec, (cget_int_val ic))
+      ty_name, S.DTyDeclSubrange(ty_spec, (c_get_int_exn ic))
     | _ -> assert false
   }
   | ~ = subrange_spec; <>
@@ -845,7 +850,7 @@ let subrange_spec :=
 *)
 let subrange :=
   | lbc = signed_int; T_RANGE; ubc = signed_int;
-  { (S.c_get_ti lbc), (cget_int_val lbc), (cget_int_val ubc) }
+  { (S.c_get_ti lbc), (c_get_int_exn lbc), (c_get_int_exn ubc) }
 
 (* Implementation is modifiet to avoid shift/reduce conflicts with
    declaration of other types. *)
@@ -1106,7 +1111,7 @@ let str_type_decl :=
 let direct_variable :=
   | dir_var = T_DIR_VAR; pcs = list(unsigned_int);
   {
-    let pvals = List.map ~f:(fun c -> cget_int_val c) pcs in
+    let pvals = List.map ~f:(fun c -> c_get_int_exn c) pcs in
     S.VarDecl.VarDirect(None)
   }
 (* }}} *)
@@ -1168,8 +1173,7 @@ let variable :=
 let symbolic_variable :=
   | out = variable_name;
   { let (name, ti) = out in S.SymVar.create name ti }
-  | out = multi_elem_var;
-  { let (name, ti) = out in S.SymVar.create name ti }
+  | ~ = multi_elem_var; <>
 
 let var_access :=
   | ~ = variable_name; <>
@@ -1180,15 +1184,34 @@ let variable_name :=
   { let (name, ti) = id in (name, ti) }
 
 let multi_elem_var :=
-  | ~ = var_access; nonempty_list(multi_elem_var_subscript_helper); <>
-
-(* Helper rule for [multi_elem_var]. *)
-let multi_elem_var_subscript_helper :=
-  | ~ = subscript_list; <>
-  (* | ~ = struct_variable; <> *)
+  | name_ti = var_access; T_LBRACK; sub_list = subscript_list; T_RBRACK;
+  {
+   let (name, ti) = name_ti in
+   let sv = S.SymVar.create name ti in
+   (* Evaluate length of the subscription if we can. *)
+   let sub_values_opt = List.fold_left
+     sub_list
+     ~init:[]
+     ~f:(fun acc e -> begin
+       let int_opt =
+         match e with
+         | S.ExprConstant (_,c) -> c_get_int c
+         | _ -> None
+       in acc @ [int_opt]
+     end)
+   in
+   let len_opt = Common.sum_maybe_list sub_values_opt in
+   match len_opt with
+   | Some len_v -> S.SymVar.set_subscription_length sv len_v
+   | None -> sv
+  }
+  (* | ~ = var_access; sub_list = nonempty_list(struct_variable); *)
 
 let subscript_list :=
-  | T_LBRACK; ~ = separated_nonempty_list(T_COMMA, subscript); T_RBRACK; <>
+ | s = subscript;
+ { [s] }
+ | vs = subscript_list; T_COMMA; s = subscript;
+ { List.append vs [s] }
 
 let subscript :=
   | e = expression; <>
@@ -1586,7 +1609,7 @@ let var_spec :=
 (* Helper rule for [var_spec] *)
 let var_spec_index :=
   | T_LBRACK; c = unsigned_int; T_RBRACK;
-  { cget_int_val c }
+  { c_get_int_exn c }
 
 (* }}} *)
 
