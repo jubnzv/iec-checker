@@ -1847,10 +1847,8 @@ let config_decl :=
 
 (* Helper rule for config_decl *)
 let resource_decls :=
-  | rcs = single_resource_decl;
-  { [rcs] }
-  | rcs = list(resource_decl);
-  { rcs }
+  | r = single_resource_decl; {[r]}
+  | ~ = list(resource_decl); <>
 
 (* Return S.resource_decl *)
 let resource_decl :=
