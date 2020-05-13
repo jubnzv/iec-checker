@@ -140,14 +140,33 @@ module Function : sig
   val to_yojson : t -> Yojson.Safe.t
 end
 
-type variable = SymVar of SymVar.t | DirVar of DirVar.t
-[@@deriving to_yojson]
+(** "Use" occurrence of the variable *)
+module VarUse : sig
+  type t
 
-val vget_name : variable -> string
-(** Return name of a given variable *)
+  type var_type =
+    | Elementary
+    | Array
+    | String
+    | Enum
+    | Struct
 
-val vget_ti : variable -> TI.t
-(** Return token info of a given variable *)
+  (** Location type of the variable *)
+  type loc_type =
+    | SymVar of SymVar.t
+    | DirVar of DirVar.t
+
+  val create_sym : SymVar.t -> var_type -> t
+  val create_dir : DirVar.t -> var_type -> t
+
+  val get_name : t -> string
+  val get_ti : t -> TI.t
+
+  val set_subscription_length : t -> int -> t
+  (** [set_subscription_length var len] Set subscriptions length of the variable
+      (for arrays). *)
+  val get_subscription_length : t -> int option
+end
 (* }}} *)
 
 (* {{{ Data types, constants and statements *)
@@ -347,7 +366,7 @@ and statement =
 [@@deriving to_yojson, show]
 
 and expr =
-  | ExprVariable of TI.t * variable               [@name "Variable"]
+  | ExprVariable of TI.t * VarUse.t               [@name "Variable"]
   | ExprConstant of TI.t * constant               [@name "Constant"]
   | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
   | ExprUn       of TI.t * operator * expr        [@name "Un"]
@@ -411,9 +430,9 @@ module Task : sig
   (** Data sources used in task configruation *)
   type data_source =
     | DSConstant of constant
-    | DSGlobalVar of variable
-    | DSDirectVar of variable
-    | DSProgOutput of string (** program name *) * variable
+    | DSGlobalVar of VarUse.t
+    | DSDirectVar of VarUse.t
+    | DSProgOutput of string (** program name *) * VarUse.t
   [@@deriving to_yojson]
 
   val create : string -> TI.t -> t
@@ -443,7 +462,7 @@ module ProgramConfig : sig
   val set_task : t -> Task.t -> t
   (** Set task configuration. *)
 
-  val set_conn_vars : t -> variable list -> t
+  val set_conn_vars : t -> VarUse.t list -> t
   (** Set connected variables. *)
 
   val get_name : t -> string
@@ -482,9 +501,9 @@ module VarDecl : sig
                    string (** fb name *)
   [@@deriving to_yojson]
 
-  val create : variable -> derived_ty_decl_spec option -> t
+  val create : VarUse.t -> derived_ty_decl_spec option -> t
 
-  val get_var : t -> variable
+  val get_var : t -> VarUse.t
   val get_var_name : t -> string
   val get_var_ti : t -> TI.t
   val set_qualifier_exn : t -> qualifier -> t

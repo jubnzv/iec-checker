@@ -253,15 +253,49 @@ module Function = struct
   let to_yojson t = to_yojson t
 end
 
-type variable = SymVar of (SymVar.t [@opaque]) | DirVar of (DirVar.t [@opaque])
-[@@deriving to_yojson, show]
+module VarUse = struct
+  type var_type =
+    | Elementary
+    | Array
+    | String
+    | Enum
+    | Struct
+  [@@deriving to_yojson, show]
 
-let vget_name = function
-  | SymVar(v) -> (let n = SymVar.get_name(v) in n) | DirVar(v) -> (let n = DirVar.get_name(v) in n)
+  type loc_type =
+    | SymVar of SymVar.t
+    | DirVar of DirVar.t
+  [@@deriving to_yojson]
 
-let vget_ti = function
-  | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti) | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
+  type t = {
+    loc: loc_type;
+    ty: var_type;
+    subscript_len: int option;
+  } [@@deriving to_yojson]
 
+  let create_sym sym_var ty =
+    let loc = SymVar(sym_var) in
+    let subscript_len = None in
+    { loc; ty; subscript_len; }
+
+  let create_dir dir_var ty =
+    let loc = DirVar(dir_var) in
+    let subscript_len = None in
+    { loc; ty; subscript_len; }
+
+  let get_name var =
+    match var.loc with
+    | SymVar(v) -> (let n = SymVar.get_name(v) in n)
+    | DirVar(v) -> (let n = DirVar.get_name(v) in n)
+
+  let get_ti var =
+    match var.loc with
+    | SymVar(v) -> (let ti = SymVar.get_ti(v) in ti)
+    | DirVar(v) -> (let ti = DirVar.get_ti(v) in ti)
+
+  let set_subscription_length var len = { var with subscript_len = Some(len) }
+  let get_subscription_length var = var.subscript_len
+end
 (* }}} *)
 
 (* {{{ Data types, constants and statements *)
@@ -455,7 +489,7 @@ and statement =
                    [@name "FuncCall"]
 [@@deriving to_yojson, show { with_path = false }]
 and expr =
-  | ExprVariable of TI.t * variable               [@name "Variable"]
+  | ExprVariable of TI.t * VarUse.t               [@name "Variable"]
   | ExprConstant of TI.t * constant               [@name "Constant"]
   | ExprBin      of TI.t * expr * operator * expr [@name "Bin"]
   | ExprUn       of TI.t * operator * expr        [@name "Un"]
@@ -589,9 +623,9 @@ module Task = struct
   [@@deriving to_yojson]
   and data_source =
     | DSConstant of constant
-    | DSGlobalVar of variable
-    | DSDirectVar of variable
-    | DSProgOutput of string * variable
+    | DSGlobalVar of VarUse.t
+    | DSDirectVar of VarUse.t
+    | DSProgOutput of string * VarUse.t
   [@@deriving to_yojson]
 
   let create name ti =
@@ -618,7 +652,7 @@ module ProgramConfig = struct
     ti : TI.t;
     qual : qualifier option;
     task : Task.t option;
-    conn_vars : variable list; (** Variables connected to program data flow. *)
+    conn_vars : VarUse.t list; (** Variables connected to program data flow. *)
   } [@@deriving to_yojson]
 
   let create name ti =
@@ -665,7 +699,7 @@ module VarDecl = struct
   [@@deriving to_yojson]
 
   type t = {
-    var : variable;
+    var : VarUse.t;
     attr : attribute option;
     qual: qualifier option;
     dir: direction option;
@@ -681,15 +715,9 @@ module VarDecl = struct
 
   let get_var dcl = dcl.var
 
-  let get_var_name dcl =
-    match dcl.var with
-    | SymVar v -> SymVar.get_name v
-    | DirVar v -> DirVar.get_name v
+  let get_var_name dcl = VarUse.get_name dcl.var
 
-  let get_var_ti dcl =
-    match dcl.var with
-    | SymVar v -> SymVar.get_ti v
-    | DirVar v -> DirVar.get_ti v
+  let get_var_ti dcl = VarUse.get_ti dcl.var
 
   let set_qualifier_exn dcl qa =
     match dcl.attr with

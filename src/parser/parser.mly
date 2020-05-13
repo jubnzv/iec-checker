@@ -30,16 +30,21 @@
     | S.CInteger (_, v) -> v
     | _ -> assert false
 
-  let mk_global_decl v =
-    let vv = S.SymVar(v) in
+  let mk_global_decl (sym_var : S.SymVar.t) =
+    let var = S.VarUse.create_sym sym_var S.VarUse.Elementary in
     let attr = S.VarDecl.VarGlobal(None) in
-    let var_decl = S.VarDecl.create vv None in
+    let var_decl = S.VarDecl.create var None in
     let var_decl = S.VarDecl.set_attr var_decl attr in
     var_decl
 
-  let mk_variable name ti =
+  let mk_var_use name ti =
     let sv = S.SymVar.create name ti in
-    S.SymVar(sv)
+    let var_use = S.VarUse.create_sym sv S.VarUse.Elementary in
+    var_use
+
+  let mk_var_use_sym sv =
+    let var_use = S.VarUse.create_sym sv S.VarUse.Elementary in
+    var_use
 %}
 
 (* {{{ Tokens *)
@@ -1097,6 +1102,7 @@ let str_type_decl :=
 (* }}} *)
 
 (* {{{ Table 16 -- Direct variables *)
+(* TODO: Should this really return S.VarDecl? *)
 let direct_variable :=
   | dir_var = T_DIR_VAR; pcs = list(unsigned_int);
   {
@@ -1156,7 +1162,8 @@ let ref_deref :=
 let variable :=
   (* | v = direct_variable; *)
   (* | {} *)
-  | ~ = symbolic_variable; <S.SymVar>
+  | sv = symbolic_variable;
+  { mk_var_use_sym sv }
 
 let symbolic_variable :=
   | out = variable_name;
@@ -1224,7 +1231,7 @@ let var_decl_init :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_variable n ti in
+        let var = mk_var_use n ti in
         S.VarDecl.create var (Some(spec))
       end)
   }
@@ -1236,7 +1243,7 @@ let var_decl_init :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_variable n ti in
+        let var = mk_var_use n ti in
         S.VarDecl.create var (Some(spec))
       end)
   }
@@ -1255,7 +1262,7 @@ let ref_var_decl :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_variable n ti in
+        let var = mk_var_use n ti in
         S.VarDecl.create var (Some(spec))
       end)
   }
@@ -1270,7 +1277,7 @@ let array_var_decl_init :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_variable n ti in
+        let var = mk_var_use n ti in
         S.VarDecl.create var (Some(spec))
       end)
   }
@@ -1352,7 +1359,7 @@ let var_decl :=
     List.map
       vars
       ~f:(fun (n, ti) -> begin
-        let var = mk_variable n ti in
+        let var = mk_var_use n ti in
         S.VarDecl.create var None
       end)
   }
@@ -1421,7 +1428,7 @@ let loc_var_decl :=
   | name_ti = T_IDENTIFIER; located_at; T_COLON; loc_var_spec_init; T_SEMICOLON;
   {
     let (n, ti) = name_ti in
-    let var = mk_variable n ti in
+    let var = mk_var_use n ti in
     S.VarDecl.create var None
   }
 
@@ -1462,7 +1469,7 @@ let external_decl :=
   | out = variable_name; T_COLON; simple_spec; T_SEMICOLON;
   {
     let (n, ti) = out in
-    let var = mk_variable n ti in
+    let var = mk_var_use n ti in
     S.VarDecl.create var None
   }
 
@@ -1510,9 +1517,9 @@ let global_var_decl_list :=
 
 let global_var_spec :=
   | ~ = global_var_list; <>
-  | v = global_var_name; l = located_at;
+  | sv = global_var_name; l = located_at;
   {
-    let var = S.SymVar(v) in
+    let var = mk_var_use_sym sv in
     let var_decl = S.VarDecl.create var None in
     let attr = S.VarDecl.VarGlobal(None) in
     [(S.VarDecl.set_attr var_decl attr)]
@@ -1567,7 +1574,7 @@ let loc_partly_var :=
   | out = variable_name; T_AT; dir_var = T_DIR_VAR; T_COLON; s = var_spec; T_SEMICOLON;
   {
     let (n, ti) = out in
-    let var = mk_variable n ti in
+    let var = mk_var_use n ti in
     S.VarDecl.create var None
   }
 
@@ -1810,9 +1817,9 @@ let prog_access_decls :=
   | T_VAR_ACCESS; ~ = list(prog_access_decl); T_END_VAR; <>
 
 let prog_access_decl :=
-  | an = access_name; T_COLON; v = symbolic_variable; T_COLON; data_type_access; T_SEMICOLON;
+  | an = access_name; T_COLON; sv = symbolic_variable; T_COLON; data_type_access; T_SEMICOLON;
   {
-    let var = S.SymVar(v) in
+    let var = mk_var_use_sym sv in
     let var_decl = S.VarDecl.create var None in
     let attr = S.VarDecl.VarAccess(an) in
     S.VarDecl.set_attr var_decl attr
@@ -1892,10 +1899,10 @@ let access_path :=
   {  }
 
 let global_var_access :=
-    | out = global_var_name;
-    { S.SymVar(out) }
-    | separated_list(T_DOT, resource_name); out = global_var_name;
-    { S.SymVar(out) }
+    | sv = global_var_name;
+    { mk_var_use_sym sv }
+    | separated_list(T_DOT, resource_name); sv = global_var_name;
+    { mk_var_use_sym sv }
     (* | out = global_var_name; list(struct_elem_name); *)
     (* { S.SymVar(out) }                                *)
     (* | separated_list(T_DOT, resource_name); out = global_var_name; list(struct_elem_name); *)
@@ -1906,8 +1913,12 @@ let access_name :=
   { let name, _ = id in name }
 
 let prog_output_access :=
-  | p = prog_name; T_DOT; v = symbolic_variable;
-  { let vv = S.SymVar(v) in let n = S.ProgramConfig.get_name p in (n, vv) }
+  | p = prog_name; T_DOT; sv = symbolic_variable;
+  {
+    let var_use = mk_var_use_sym sv in
+    let config_name = S.ProgramConfig.get_name p in
+    (config_name, var_use)
+  }
 
 let prog_name :=
   | id = T_IDENTIFIER;
@@ -1992,7 +2003,8 @@ let prog_conf_elem :=
 (* This stmt assigns program inputs and outputs to IEC variable. *)
 let prog_cnxn :=
   (* Input *)
-  | v = symbolic_variable; T_ASSIGN; prog_data_source; <S.SymVar>
+  | sv = symbolic_variable; T_ASSIGN; prog_data_source;
+  { mk_var_use_sym sv }
   (* Output *)
   (* | v = symbolic_variable; T_SENDTO; data_sink
   { v } *)
@@ -2128,7 +2140,7 @@ let primary_expr :=
   }
   | v = variable_access;
   {
-    let ti = S.vget_ti v in
+    let ti = S.VarUse.get_ti v in
     S.ExprVariable(ti, v)
   }
   | fc = func_call;
@@ -2156,8 +2168,7 @@ let variable_expr :=
   | id = T_IDENTIFIER;
   {
     let (name, ti) = id in
-    let sv = S.SymVar.create name ti in
-    S.SymVar(sv)
+    mk_var_use name ti
   }
 
 (* Standard's BNF define this rule as:
@@ -2195,7 +2206,7 @@ let stmt :=
 let assign_stmt :=
   | v = variable; T_ASSIGN; e = expression;
   {
-    let vti = S.vget_ti v in
+    let vti = S.VarUse.get_ti v in
     let eti = S.expr_get_ti e in
     S.StmExpr(vti, S.ExprBin(eti, S.ExprVariable(vti, v), S.ASSIGN, e))
   }
@@ -2219,8 +2230,7 @@ let param_assign :=
   {
     (* Source *)
     let (name, ti) = vn in
-    let src_var = S.SymVar.create name ti in
-    let src_var = S.SymVar(src_var) in
+    let src_var = mk_var_use name ti in
     let expr_var_src = S.ExprVariable(ti, src_var) in
 
     let assign_expr = S.ExprBin(ti, expr_var_src, S.ASSIGN, expr) in
@@ -2239,12 +2249,11 @@ let param_assign :=
   {
     (* Source *)
     let (name, ti) = vn in
-    let src_var = S.SymVar.create name ti in
-    let src_var = S.SymVar(src_var) in
+    let src_var = mk_var_use name ti in
     let expr_var_src = S.ExprVariable(ti, v) in
 
     (* Destination *)
-    let ti_dest = S.vget_ti v in
+    let ti_dest = S.VarUse.get_ti v in
     let expr_var_dest = S.ExprVariable(ti_dest, v) in
 
     let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
@@ -2254,12 +2263,11 @@ let param_assign :=
   {
     (* Source *)
     let (name, ti) = vn in
-    let src_var = S.SymVar.create name ti in
-    let src_var = S.SymVar(src_var) in
+    let src_var = mk_var_use name ti in
     let expr_var_src = S.ExprVariable(ti, v) in
 
     (* Destination *)
-    let ti_dest = S.vget_ti v in
+    let ti_dest = S.VarUse.get_ti v in
     let expr_var_dest = S.ExprVariable(ti_dest, v) in
 
     let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
@@ -2350,7 +2358,8 @@ let for_stmt :=
     let (e_start, e_end, e_step) = fl in
     let ctrl_assign_stmt =
       let vti = S.SymVar.get_ti cv in
-      let assign_expr = S.ExprBin(vti, S.ExprVariable(vti, S.SymVar(cv)), S.ASSIGN, e_start) in
+      let var = mk_var_use_sym cv in
+      let assign_expr = S.ExprBin(vti, S.ExprVariable(vti, var), S.ASSIGN, e_start) in
       S.StmExpr(ti, assign_expr)
     in
     let ctrl = {

@@ -14,8 +14,8 @@ let rec collect_warnings (e: S.expr) : Warn.t list =
       | _, _, S.ExprBin _ -> collect_warnings e2
       | S.ExprVariable(_, lhs), S.DIV, S.ExprConstant(_, rhs) ->
         if S.c_is_zero rhs then
-          let name = S.vget_name lhs in
-          let ti = S.vget_ti lhs in
+          let name = S.VarUse.get_name lhs in
+          let ti = S.VarUse.get_ti lhs in
           let msg = (Printf.sprintf "Variable %s is divided by zero!" name) in
           let w = Warn.mk ti.linenr ti.col "ZeroDivision" msg in
           [w]

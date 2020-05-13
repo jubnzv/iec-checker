@@ -169,8 +169,8 @@ let reserved_keywords =
   ]
 
 let check_name var =
-  let name = S.vget_name var in
-  let ti = S.vget_ti var in
+  let name = S.VarUse.get_name var in
+  let ti = S.VarUse.get_ti var in
   let m = List.find reserved_keywords ~f:(fun k -> String.equal name k) in
   match m with
   | Some _ ->

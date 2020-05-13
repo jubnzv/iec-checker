@@ -22,7 +22,7 @@ let check_pou elem =
     |> List.map
       ~f:(fun expr -> begin
             match expr with
-            | S.ExprVariable (_, v) -> (S.vget_name v)
+            | S.ExprVariable (_, v) -> (S.VarUse.get_name v)
             | _ -> assert false
           end)
   in
