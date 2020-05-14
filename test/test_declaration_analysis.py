@@ -30,7 +30,7 @@ def test_array_initialized_list():
           VAR
             ARR1: ARRAY [1..2, 1..3] OF BOOL := [0,0,0,0,0,0,1,1,1];
           END_VAR
-          ARR1[0] := 19;
+          ARR1[1] := 19;
         END_PROGRAM
         """.replace('\n', ''))
     assert rc == 0

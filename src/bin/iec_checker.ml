@@ -62,12 +62,14 @@ let run_checker filename fmt create_dumps quiet interactive =
     let decl_warns = Declaration_analysis.run elements envs in
     let cfa_warns = Control_flow_analysis.run elements pou_cfgs in
     let unused_warns = Unused_variable.run elements in
+    let ud_warns = Use_define.run elements in
     let lib_warns = Lib.run_all_checks elements envs quiet in
     WO.print_report (
       parser_warns @
       decl_warns @
       cfa_warns @
       unused_warns @
+      ud_warns @
       lib_warns)
       fmt;
     let rc = if not (List.is_empty parser_warns) then 1 else 0 in

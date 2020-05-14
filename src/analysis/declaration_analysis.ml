@@ -61,14 +61,7 @@ let check_array_init_val ty_name subranges inval_opt =
   match inval_opt with
   | None -> (* no initializer list *) []
   | Some (inlist) -> begin
-      let dimensions_capacity = List.fold_left
-          subranges
-          ~init:(0)
-          ~f:(fun acc (sr : S.arr_subrange) -> begin
-                let mul = if phys_equal acc 0 then 1 else acc in
-                (mul * (sr.arr_upper - sr.arr_lower + 1))
-              end)
-      in
+      let dimensions_capacity = AU.eval_array_capacity subranges in
       let diff = (List.length inlist) - dimensions_capacity in
       if diff > 0 then begin
         let m = Printf.sprintf

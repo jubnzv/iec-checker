@@ -29,3 +29,7 @@ val get_ti_by_name_exn : S.iec_library_element -> string -> TI.t
 
 val create_envs : S.iec_library_element list -> Env.t list
 (** Create the environments for a given configuration elements *)
+
+val eval_array_capacity : S.arr_subrange list -> int
+(** [eval_array_capacity subranges] Evaluate maximum capacity of the array with
+    respect to [subranges]. *)

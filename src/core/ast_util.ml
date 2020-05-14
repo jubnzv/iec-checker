@@ -154,14 +154,14 @@ let filter_exprs ~f elem =
         ~f:(fun acc s -> acc @ (aux [] s))
     in
     let rec get_nested_exprs acc = function
-        | S.ExprBin (_,e1,_,e2) -> begin
-            acc @
-            [e1] @ (get_nested_exprs acc e1) @
-            [e2] @ (get_nested_exprs acc e2)
+      | S.ExprBin (_,e1,_,e2) -> begin
+          acc @
+          [e1] @ (get_nested_exprs acc e1) @
+          [e2] @ (get_nested_exprs acc e2)
         end
       | S.ExprUn (_,_,e) -> begin
           acc @ [e] @ (get_nested_exprs acc e)
-      end
+        end
       | S.ExprVariable _ | S.ExprConstant _ | S.ExprFuncCall _ -> acc
     in
     let apply_filter (exprs : S.expr list) =
@@ -279,3 +279,11 @@ let create_envs elems =
         envs @ [ local_env ])
     ~init:[ global_env ]
 
+let eval_array_capacity subranges =
+  List.fold_left
+    subranges
+    ~init:(0)
+    ~f:(fun acc (sr : S.arr_subrange) -> begin
+          let mul = if phys_equal acc 0 then 1 else acc in
+          (mul * (sr.arr_upper - sr.arr_lower + 1))
+        end)

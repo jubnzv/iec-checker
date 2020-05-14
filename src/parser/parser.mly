@@ -1188,22 +1188,20 @@ let multi_elem_var :=
   {
    let (name, ti) = name_ti in
    let sv = S.SymVar.create name ti in
-   (* Evaluate length of the subscription if we can. *)
-   let sub_values_opt = List.fold_left
+   (* Add array indexes to variable. *)
+   List.fold_left
      sub_list
-     ~init:[]
-     ~f:(fun acc e -> begin
-       let int_opt =
+     ~init:sv
+     ~f:(fun acc_sv e -> begin
          match e with
-         | S.ExprConstant (_,c) -> c_get_int c
-         | _ -> None
-       in acc @ [int_opt]
+         | S.ExprConstant (_,c) -> begin
+           let val_opt = c_get_int c in
+           match val_opt with
+           | Some v -> S.SymVar.add_array_index acc_sv v
+           | None -> S.SymVar.add_array_index_opaque acc_sv
+         end
+         | _ -> S.SymVar.add_array_index_opaque acc_sv
      end)
-   in
-   let len_opt = Common.sum_maybe_list sub_values_opt in
-   match len_opt with
-   | Some len_v -> S.SymVar.set_subscription_length sv len_v
-   | None -> sv
   }
   (* | ~ = var_access; sub_list = nonempty_list(struct_variable); *)
 
