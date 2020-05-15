@@ -173,6 +173,7 @@ rule initial tokinfo =
   | whitespace+          { initial tokinfo lexbuf }
   | '\n'                 { incr_linenum lexbuf; initial tokinfo lexbuf }
   | ":="                 { T_ASSIGN }
+  | "?="                 { T_ASSIGN_REF }
   | "=>"                 { T_SENDTO }
   | "."                  { T_DOT }
   | "^"                  { T_DEREF }

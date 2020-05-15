@@ -54,38 +54,39 @@
 
 (* {{{ Tokens *)
 (* {{{ Common *)
-%token T_ASSIGN    ":="
-%token T_SENDTO    "=>"
-%token T_DOT       "."
+%token T_ASSIGN     ":="
+%token T_SENDTO     "=>"
+%token T_DOT        "."
 %token T_NULL
 %token T_REF
 %token T_REF_TO
-%token T_DEREF     "^"
-%token T_GT        ">"
-%token T_LT        "<"
-%token T_GE        ">="
-%token T_LE        "<="
-%token T_MUL       "*"
-%token T_MOD       "MOD"
-%token T_DIV       "/"
-%token T_POW       "**"
-%token T_EQ        "="
-%token T_NEQ       "<>"
-%token T_NOT       "NOT"
-%token T_RANGE     ".."
-%token T_LBRACE    "{"
-%token T_RBRACE    "}"
-%token T_LPAREN    "("
-%token T_RPAREN    ")"
-%token T_LBRACK    "["
-%token T_RBRACK    "]"
-%token T_SHARP     "#"
-%token T_COLON     ":"
-%token T_PLUS      "+"
-%token T_MINUS     "-"
-%token T_SEMICOLON ";"
-%token T_COMMA     ","
-%token T_AT        "AT"
+%token T_ASSIGN_REF "?="
+%token T_DEREF      "^"
+%token T_GT         ">"
+%token T_LT         "<"
+%token T_GE         ">="
+%token T_LE         "<="
+%token T_MUL        "*"
+%token T_MOD        "MOD"
+%token T_DIV        "/"
+%token T_POW        "**"
+%token T_EQ         "="
+%token T_NEQ        "<>"
+%token T_NOT        "NOT"
+%token T_RANGE      ".."
+%token T_LBRACE     "{"
+%token T_RBRACE     "}"
+%token T_LPAREN     "("
+%token T_RPAREN     ")"
+%token T_LBRACK     "["
+%token T_RBRACK     "]"
+%token T_SHARP      "#"
+%token T_COLON      ":"
+%token T_PLUS       "+"
+%token T_MINUS      "-"
+%token T_SEMICOLON  ";"
+%token T_COMMA      ","
+%token T_AT         "AT"
 %token T_WITH
 %token T_RETAIN
 %token T_NON_RETAIN
@@ -1125,7 +1126,7 @@ let ref_type_decl :=
     ref_name, S.DTyDeclRefType(num_of_refs, ty, inval_opt)
   }
 
-(* NOTE: There is typo in Standard. I believe that '; =' means ':='. *)
+(* NOTE: There is typo in Standard. I believe that '; =' means ':=' *)
 let ref_spec_init :=
   | specs = ref_spec; inval_opt = optional_assign(ref_value);
   { let (num_of_refs, ty) = specs in (num_of_refs, ty, inval_opt) }
@@ -1140,7 +1141,7 @@ let ref_spec :=
 
 let ref_name :=
   | id = T_IDENTIFIER;
-  { let name, _ = id in name }
+  { let name, ti = id in (name, ti) }
 
 let ref_value :=
   | T_NULL; { S.RefNull }
@@ -1155,12 +1156,20 @@ let ref_addr :=
 (* Helper symbol for [ref_addr] *)
 let ref_addr_value :=
   | ~ = symbolic_variable; <S.RefSymVar>
-  | ~ = fb_instance_name; <S.RefFBInstance>
+  (* | ~ = fb_instance_name; <S.RefFBInstance> *)
   (* | ~ = class_instance_name; <> *)
 
 let ref_deref :=
-  | name = ref_name; nonempty_list(T_DEREF);
-  { S.ExprUn(S.DEREF, S.ExprVariable()) }
+  | name_ti = ref_name; derefs = nonempty_list(T_DEREF);
+  {
+    let name, ti = name_ti in
+    let var = mk_var_use name ti in
+    let var_expr = S.ExprVariable(ti, var) in
+    List.fold_left
+      derefs
+      ~init:var_expr
+      ~f:(fun prev_expr _ -> S.ExprUn(ti, S.DEREF, prev_expr))
+  }
 (* }}} *)
 
 (* {{{ Table 13 -- Variables declaration / Table 14 -- Variables initialization *)
@@ -2231,10 +2240,34 @@ let assign_stmt :=
     let eti = S.expr_get_ti e in
     S.StmExpr(vti, S.ExprBin(eti, S.ExprVariable(vti, v), S.ASSIGN, e))
   }
-  (* | ~ = assignment_attempt; <> *)
+  | ~ = assignment_attempt; <>
   (* | ~ = ref_assign; <> *)
 
-(* assignment_attempt: *)
+let assignment_attempt :=
+  | name_ti = ref_name; T_ASSIGN_REF; rhs_expr = assignment_attempt_rhs;
+  {
+    let name, ti = name_ti in
+    let var = mk_var_use name ti in
+    S.StmExpr(ti, S.ExprBin(ti, S.ExprVariable(ti, var), S.ASSIGN_REF, rhs_expr))
+  }
+
+(* Helper rule for [assignment_attempt] *)
+let assignment_attempt_rhs :=
+  | name_ti = ref_name;
+  {
+    let name, ti = name_ti in
+    let var = mk_var_use name ti in
+    S.ExprVariable(ti, var)
+  }
+  | ~ = ref_deref; <>
+  | ref_val = ref_value;
+  {
+    let ti = match ref_val with
+      | S.RefNull | S.RefFBInstance _ -> TI.create_dummy ()
+      | S.RefSymVar sv -> S.SymVar.get_ti sv
+    in
+    S.ExprConstant(ti, S.CPointer(ti, ref_val))
+  }
 
 (* invocation: *)
 

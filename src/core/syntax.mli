@@ -55,7 +55,8 @@ type operator =
   | LE (** <= *)
   | EQ (** = *)
   | NEQ (** <> *)
-  | ASSIGN
+  | ASSIGN (** := *)
+  | ASSIGN_REF (** ?= *)
   | SENDTO (** => *)
   | DEREF (** ^ *)
 [@@deriving to_yojson, show]
@@ -321,6 +322,7 @@ and constant =
   | CBool of TI.t * bool             [@name "Bool"]
   | CReal of TI.t * float            [@name "Real"]
   | CString of TI.t * string         [@name "String"]
+  | CPointer of TI.t * ref_value     [@name "Pointer"]
   | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
               [@name "Range"]

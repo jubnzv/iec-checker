@@ -81,6 +81,7 @@ type operator =
   | EQ
   | NEQ
   | ASSIGN
+  | ASSIGN_REF (** ?= *)
   | SENDTO
   | DEREF (** ^ *)
 [@@deriving to_yojson, show]
@@ -446,6 +447,7 @@ and constant =
   | CBool of TI.t * bool             [@name "Bool"]
   | CReal of TI.t * float            [@name "Real"]
   | CString of TI.t * string         [@name "String"]
+  | CPointer of TI.t * ref_value     [@name "Pointer"]
   | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
   | CRange of TI.t * int (** lower bound *) * int (** upper bound *)
               [@name "Range"]
@@ -554,6 +556,11 @@ let c_is_zero c =
   | CBool (_, v) -> phys_equal v false
   | CReal (_, v) -> phys_equal v 0.0
   | CString _ -> false
+  | CPointer (_, v) -> begin
+      match v with
+      | RefNull -> true
+      | RefSymVar _ | RefFBInstance _ -> false
+  end
   | CTimeValue (_, tv) -> TimeValue.is_zero tv
   | CRange (_, lb, ub) -> (phys_equal lb 0) && (phys_equal ub 0)
   | CEnumValue _ -> false
@@ -564,6 +571,12 @@ let c_get_str_value c =
   | CBool (_, v) -> string_of_bool v
   | CReal (_, v) -> string_of_float v
   | CString (_, v) -> v
+  | CPointer (_, v) -> begin
+      match v with
+      | RefNull -> "NULL"
+      | RefSymVar sv -> SymVar.get_name sv
+      | RefFBInstance v -> v
+    end
   | CTimeValue (_, v) -> TimeValue.to_string v
   | CRange (_, lb, ub) -> Printf.sprintf "%d..%d" lb ub
   | CEnumValue (_, v) -> v
@@ -574,6 +587,7 @@ let c_get_ti c =
   | CBool (ti, _) -> ti
   | CReal (ti, _) -> ti
   | CString (ti, _) -> ti
+  | CPointer (ti, _) -> ti
   | CTimeValue (ti, _) -> ti
   | CRange (ti, _, _) -> ti
   | CEnumValue (ti, _) -> ti
