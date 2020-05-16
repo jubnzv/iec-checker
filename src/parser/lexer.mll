@@ -473,7 +473,7 @@ and direct_variable var ti = parse
       direct_variable var ti lexbuf
   }
   | eof { T_EOF }
-  | _   { (* Printf.printf "%s\n" (Syntax.DirVar.to_string var); *) T_DIR_VAR(var, ti) }
+  | _   { (* Printf.printf "DIR_VAR=%s\n" (Syntax.DirVar.to_string var); *) T_DIR_VAR(var) }
   (* }}}*)
 
   (* {{{ Comments *)

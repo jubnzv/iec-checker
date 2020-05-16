@@ -50,6 +50,9 @@
     let var_use = S.VarUse.create_sym sv S.VarUse.Elementary in
     var_use
 
+  let mk_var_use_dir dv =
+    let var_use = S.VarUse.create_dir dv S.VarUse.Elementary in
+    var_use
 %}
 
 (* {{{ Tokens *)
@@ -208,7 +211,7 @@
 %token <string * IECCheckerCore.Tok_info.t> T_SSTRING_LITERAL
 %token <string * IECCheckerCore.Tok_info.t> T_DSTRING_LITERAL
 
-%token <IECCheckerCore.Syntax.DirVar.t * IECCheckerCore.Tok_info.t> T_DIR_VAR
+%token <IECCheckerCore.Syntax.DirVar.t> T_DIR_VAR
 
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_D
 %token <float * IECCheckerCore.Tok_info.t> T_TIME_INTERVAL_H
@@ -1038,8 +1041,7 @@ let struct_elem_ty :=
 
 (* Helper rule for struct_elem_decl. *)
 let struct_elem_loc :=
-  | T_AT; values = T_DIR_VAR;
-  { let (dir_var, _) = values in dir_var }
+  | T_AT; ~ = T_DIR_VAR; <>
 
 let struct_elem_name :=
   | id = T_IDENTIFIER;
@@ -1108,13 +1110,9 @@ let str_type_decl :=
 (* }}} *)
 
 (* {{{ Table 16 -- Direct variables *)
-(* TODO: Should this really return S.VarDecl? *)
+(* Lexer does all work. *)
 let direct_variable :=
-  | dir_var = T_DIR_VAR; pcs = list(unsigned_int);
-  {
-    let pvals = List.map ~f:(fun c -> c_get_int_exn c) pcs in
-    S.VarDecl.VarDirect(None)
-  }
+  | ~ = T_DIR_VAR; <>
 (* }}} *)
 
 (* {{{ Table 12 -- Operations with references *)
@@ -1126,7 +1124,7 @@ let ref_type_decl :=
     ref_name, S.DTyDeclRefType(num_of_refs, ty, inval_opt)
   }
 
-(* NOTE: There is typo in Standard. I believe that '; =' means ':=' *)
+(* There is typo in Standard. I believe that '; =' means ':=' *)
 let ref_spec_init :=
   | specs = ref_spec; inval_opt = optional_assign(ref_value);
   { let (num_of_refs, ty) = specs in (num_of_refs, ty, inval_opt) }
@@ -1601,7 +1599,7 @@ let loc_partly_var_decl :=
   }
 
 let loc_partly_var :=
-  | out = variable_name; T_AT; dir_var = T_DIR_VAR; T_COLON; s = var_spec; T_SEMICOLON;
+  | out = variable_name; T_AT; T_DIR_VAR; T_COLON; s = var_spec; T_SEMICOLON;
   {
     let (n, ti) = out in
     let var = mk_var_use n ti in
@@ -1987,30 +1985,33 @@ let task_init :=
 
 let data_source :=
   | v = constant;
-  { let c = S.c_from_expr_exn v in S.Task.DSConstant(c) }
-  | v = global_var_access;
-  { S.Task.DSGlobalVar(v) }
+  {
+    let c = S.c_from_expr_exn v in
+    S.Task.DSConstant(c)
+  }
+  | ~ = global_var_access; <S.Task.DSGlobalVar>
   | out = prog_output_access;
   {
     let (prog_name, var) = out in
     S.Task.DSProgOutput(prog_name, var)
   }
-  (* TODO: Need refactor direct_variable rule to return Variable.t. *)
-  (* | v = direct_variable
-  { S.Task.DSGlobalVar(v) } *)
+  | dv = direct_variable;
+  {
+    let var_use = mk_var_use_dir dv in
+    S.Task.DSGlobalVar(var_use)
+  }
 
 let prog_config :=
   | T_PROGRAM; ~ = prog_name_qual; T_COLON; prog_type_access; <>
-  | T_PROGRAM; pc = prog_name_qual; T_COLON; prog_type_access; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
-  { let pc = S.ProgramConfig.set_conn_vars pc cvs in pc }
-  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; ty = prog_type_name;
-  { let pc = S.ProgramConfig.set_task pc t in pc }
-  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; ty = prog_type_name; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
+  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; prog_type_name;
+  { (S.ProgramConfig.set_task pc t) }
+  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; prog_type_name; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
   {
     let pc = S.ProgramConfig.set_conn_vars pc cvs in
-    let pc = S.ProgramConfig.set_task pc t in
-    pc
+    (S.ProgramConfig.set_task pc t)
   }
+  | T_PROGRAM; pc = prog_name_qual; T_COLON; prog_type_access; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
+  { (S.ProgramConfig.set_conn_vars pc cvs) }
 
 (* Helper rule for prog_config *)
 let prog_config_list :=
