@@ -2211,11 +2211,6 @@ let multibit_part_access :=
   | T_DOT; ~ = T_DIR_VAR; <>
 
 let func_call :=
-  | f = func_access; T_LPAREN; T_RPAREN;
-  {
-    let ti = S.Function.get_ti f in
-    S.StmFuncCall(ti, f, [])
-  }
   | f = func_access; T_LPAREN; stmts = separated_list(T_COMMA, param_assign); T_RPAREN;
   {
     let ti = S.Function.get_ti f in
