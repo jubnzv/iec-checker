@@ -4,7 +4,7 @@ import os
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
-from python.core import run_checker  # noqa
+from python.core import run_checker, filter_warns  # noqa
 from python.dump import DumpManager  # noqa
 
 
@@ -46,5 +46,15 @@ def test_n3():
     assert cv.id == 'PLCOPEN-N3'
     assert cv.linenr == 6
     assert cv.column == 7
+    with DumpManager(fdump):
+        pass
+
+
+def test_cp9():
+    f = './test/st/plcopen-cp9.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker(f)
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-CP9')) == 1
     with DumpManager(fdump):
         pass

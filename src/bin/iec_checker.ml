@@ -55,15 +55,15 @@ let run_checker filename fmt create_dumps quiet interactive =
       end
     in
     let envs = Ast_util.create_envs elements in
-    let pou_cfgs = Cfg.create_cfgs elements in
+    let cfgs = Cfg.create_cfgs elements in
     if create_dumps then
-      Dump.create_dump elements envs pou_cfgs
+      Dump.create_dump elements envs cfgs
         (if read_stdin then "stdin" else filename);
     let decl_warns = Declaration_analysis.run elements envs in
-    let cfa_warns = Control_flow_analysis.run pou_cfgs in
+    let cfa_warns = Control_flow_analysis.run cfgs in
     let unused_warns = Unused_variable.run elements in
     let ud_warns = Use_define.run elements in
-    let lib_warns = Lib.run_all_checks elements envs quiet in
+    let lib_warns = Lib.run_all_checks elements envs cfgs quiet in
     WO.print_report (
       parser_warns @
       decl_warns @

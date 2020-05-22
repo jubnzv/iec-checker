@@ -45,6 +45,9 @@ val get_reachable_ids : t -> int list
 (** [get_reachable_ids cfg] Return a list with ids of basic blocks that are
     reachable from [cfg] entry point. *)
 
+val get_number_of_edges : t -> int
+(** [get_number_of_edges cfg] Return number of edges in [cfg]. *)
+
 val bb_by_id : t -> int -> bb option
 (** Get basic block entry from a given id. *)
 

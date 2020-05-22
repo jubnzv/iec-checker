@@ -608,6 +608,14 @@ let get_reachable_ids cfg =
     dfs cfg.entry_bb_id;
     IntSet.to_list !visited
 
+let get_number_of_edges cfg =
+  List.fold_left
+    (BBMap.ids cfg.bbs_map)
+    ~init:0
+    ~f:(fun acc id -> begin
+          let bb = (BBMap.find_exn cfg.bbs_map id) in
+          acc + (List.length bb.succs) + (List.length bb.preds)
+        end)
 
 let bb_by_id cfg (id : int) =
   BBMap.find cfg.bbs_map id
