@@ -53,10 +53,9 @@ This will gives you the following output:
 Report for test/st/dead-code.st:
 [PLCOPEN-L17] 17:6 Each IF instruction should have an ELSE clause
 [UnusedVariable] 15:5 Found unused local variable: A
-[UnreachableCode] 25:7 Code block will never be reached
-[UnreachableCode] 20:7 Code block will never be reached
 [UnreachableCode] 9:10 Code block will never be reached
-Report for test/st/declaration-analysis.st:
+[UnreachableCode] 25:7 Code block will never be reached
+[UnreachableCode] 20:7 Code block will never be reachedReport for test/st/declaration-analysis.st:
 [OutOfBounds] Initial subrange value -4096 does not fit the specified range (-4095 .. 4095)
 [OutOfBounds] Initial subrange value 4099 does not fit the specified range (-4095 .. 4095)
 [OutOfBounds] Length of initialization string literal exceeds string length (6 > 5)
@@ -69,8 +68,6 @@ Report for test/st/plcopen-n3.st:
 [UnusedVariable] 6:7 Found unused local variable: TOF
 [UnusedVariable] 7:14 Found unused local variable: OK_ALLOWED
 [UnusedVariable] 4:21 Found unused local variable: NO_FALSE_POSITIVE
-Report for test/st/this.st:
-[UnusedVariable] 3:3 Found unused local variable: A
 Report for test/st/unused-variable.st:
 [UnreachableCode] 10:10 Code block will never be reached
 Report for test/st/zero-division.st:
