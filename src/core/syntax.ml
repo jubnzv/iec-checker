@@ -495,7 +495,7 @@ and statement =
                    Function.t *
                    func_param_assign list
                    [@name "FuncCall"]
-[@@deriving to_yojson, show { with_path = false }]
+[@@deriving to_yojson, show]
 and expr =
   | ExprVariable of TI.t * VarUse.t               [@name "Variable"]
   | ExprConstant of TI.t * constant               [@name "Constant"]
@@ -534,6 +534,19 @@ let stmt_get_ti = function
 let stmt_get_id stmt =
   let ti = stmt_get_ti stmt in
   ti.id
+
+let stmt_to_string = function
+  | StmExpr _ -> "Expr"
+  | StmElsif _ -> "Elsif"
+  | StmIf _ -> "If"
+  | StmCase _ -> "Case"
+  | StmFor _ -> "For"
+  | StmWhile _ -> "While"
+  | StmRepeat _ -> "Repeat"
+  | StmExit _ -> "Exit"
+  | StmContinue _ -> "Continue"
+  | StmReturn _ -> "Return"
+  | StmFuncCall _ -> "FuncCall"
 (* }}} *)
 
 (* {{{ Functions to work with expressions *)

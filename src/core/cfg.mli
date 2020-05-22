@@ -22,7 +22,9 @@ type bb =
     mutable ty: bb_ty;
     mutable preds : int list; (** Ids of predecessor nodes *)
     mutable succs : int list; (** Ids of successor nodes *)
-    stmt : S.statement;
+    (* TODO: This should be replaced with ids of statements. But it will
+     require additional symbol tables and a lot of refactoring in the parser. *)
+    mutable stmts : S.statement list [@opaque]; (** Statements that makes up this BB *)
   }
 
 val mk : S.iec_library_element -> t

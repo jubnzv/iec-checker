@@ -2,5 +2,5 @@
 open IECCheckerCore
 module S = Syntax
 
-val run : S.iec_library_element list -> Cfg.t list -> Warn.t list
+val run : Cfg.t list -> Warn.t list
 (** Run all intraprocedural inspections. *)

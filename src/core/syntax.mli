@@ -396,6 +396,7 @@ and func_param_assign = {
 (* {{{ Functions to work with statements *)
 val stmt_get_ti : statement -> TI.t
 val stmt_get_id : statement -> int
+val stmt_to_string : statement -> string
 (* }}} *)
 
 (* {{{ Functions to work with expressions *)

@@ -19,12 +19,30 @@ class Tok_info:
 
 @dataclass
 class Statement:
-    type: str
-    ti: Tok_info
+    ty: str
+    nested: List
+
+    def detect_ty(values):
+        if not isinstance(values, list):
+            return 'Opaque'
+        if len(values) == 0:
+            return 'Opaque'
+        return values[0]
+
+    def get_nested(ty, values):
+        if len(values) < 2:
+            return []
+        if ty == 'While':
+            return Statement.from_dict(values[1])
+        return []
 
     @classmethod
     def from_dict(cls, values):
-        pass
+        args = {}
+        args['ty'] = cls.detect_ty(values)
+        args['nested'] = cls.get_nested(args['ty'], values)
+
+        return Statement(**args)
 
 
 @dataclass
@@ -132,7 +150,7 @@ class BasicBlock:
     type: str
     preds: Set[int]
     succs: Set[int]
-    stmt_id: int
+    stmt_ids: List[int]
 
     @classmethod
     def from_dict(cls, values):
@@ -143,7 +161,7 @@ class BasicBlock:
             args['type'] = args['type'][0]
         args['preds'] = set(values.get('preds', []))
         args['succs'] = set(values.get('succs', []))
-        args['stmt_id'] = values.get('stmt_id', -1)
+        args['stmt_ids'] = values.get('stmt_ids', [])
         return BasicBlock(**args)
 
 

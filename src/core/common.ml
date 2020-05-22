@@ -2,6 +2,9 @@ open Core_kernel
 
 exception InternalError of string
 
+let ignore v =
+  let _ = v in ()
+
 let next_id =
   let n = ref (-1) in
   fun () ->
@@ -15,17 +18,18 @@ let head_exn = function
   | [] -> raise @@ InternalError "List is empty!\n"
   | x::_ -> x
 
+(** Tail-recursive append to process large lists. *)
 let append_tr xs ys = List.rev_append (List.rev xs) ys
 
 (* {{{ Basic routines to work with monads *)
 (* The implementation is based on CS3110 Maybe Monad:
    https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/ads/ex_maybe_monad.html *)
-let bind o f =
-  match o with
-  | Some x  -> f x
-  | None    -> None
+let ( >>| ) = Option.( >>| )
+let ( >>= ) = Option.( >>= )
 
-let ( >>= ) o f = bind o f
+let unwrap_list = function
+  | Some l -> l
+  | None -> []
 
 let return (x : int) : int option =
   Some x
@@ -38,8 +42,8 @@ let upgrade_binary op x y =
   y >>= fun b ->
   op a b
 
-let ( + ) = upgrade_binary (return_binary Caml.( + ))
 let sum_maybe_list values =
+  let ( + ) = upgrade_binary (return_binary Caml.( + )) in
   let rec aux acc values =
     match acc with
     | Some _ -> begin
