@@ -212,7 +212,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           link_preds first_bb bbs_pred_ids;
 
           let (first_bb_last_ids, first_bb_id) = (mk_nested_bbs stmt first_bb [first_bb.id])
-          and stmts_tail = (sublist stmts 1 (List.length stmts)) in
+          and stmts_tail = List.tl_exn stmts in
 
           (* Link EXIT/CONTINUE statement properely. *)
           let first_bb_last_ids = handle_exit_continue first_bb first_bb_last_ids stmt in

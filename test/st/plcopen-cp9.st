@@ -5,7 +5,12 @@
    McCabe complexity of 12
    Prater complexity of 3,89
    Halstead complexity of 44,9
-   Elshof complexity of 0,14 *)
+   Elshof complexity of 0,14
+
+  NOTE: I'm not sure how they evaluated number of statements and appropriate
+  complexity metrics. I have 4 additional statements for this program, and it
+  seems correct for me.
+ *)
 
 FUNCTION_BLOCK CHARCURVE
   VAR_INPUT

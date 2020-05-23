@@ -14,6 +14,10 @@ val get_pou_stmts : S.iec_library_element -> S.statement list
 val get_top_stmts : S.iec_library_element -> S.statement list
 (** [get_top_stmts pou] Non-recursively get statements from a [pou]. *)
 
+val get_stmts_num : S.iec_library_element -> int
+(** [get_stmts_num elem] Return number of statemenets from [elem] including
+    nested ones. *)
+
 val get_stmts : S.iec_library_element list -> S.statement list
 (** Collect all statements from each POU *)
 

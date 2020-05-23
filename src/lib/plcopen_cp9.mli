@@ -5,4 +5,4 @@ open IECCheckerCore
 
 module S = Syntax
 
-val do_check : Cfg.t list -> Warn.t list
+val do_check : S.iec_library_element list -> Cfg.t list -> Warn.t list

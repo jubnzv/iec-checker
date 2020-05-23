@@ -90,6 +90,9 @@ let get_top_stmts = function
   | S.IECConfiguration _ -> []
   | S.IECType _ -> []
 
+let get_stmts_num elem =
+    List.length (get_pou_stmts elem)
+
 let get_stmts elems =
   List.fold_left elems
     ~f:(fun x e ->
