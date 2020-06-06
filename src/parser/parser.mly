@@ -1689,6 +1689,8 @@ let func_var_decls :=
 
 let func_body :=
   | ~ = stmt_list; <>
+  (* Allow empty body of function with {} *)
+  | T_LBRACE; T_RBRACE; { [] }
 (* }}} *)
 
 (* {{{ Table 40 -- Function block definition / Table 41 -- Function block instantiation *)
@@ -1763,6 +1765,8 @@ let no_retain_var_decls :=
 
 let fb_body :=
   | ~ = stmt_list; <>
+  (* Allow empty body of function block with {} *)
+  | T_LBRACE; T_RBRACE; { [] }
 
 (* method_decl: *)
 
