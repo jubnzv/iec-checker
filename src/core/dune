@@ -2,7 +2,7 @@
  (name IECCheckerCore)
  (public_name iec_checker.core)
  (synopsis "The core of iec-checker")
- (libraries core yojson)
+ (libraries core yojson xmlm)
  (preprocess
   (pps ppxlib ppx_fields_conv ppx_deriving.std ppx_deriving.show
     ppx_deriving_yojson)))
