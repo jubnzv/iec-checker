@@ -170,11 +170,19 @@ module POUNode = struct
     in
     src
 
-  (** Read data content of the next tag. *)
-  let pull_data i =
+  (** Read data content for source code element *)
+  let rec pull_src i d acc =
     match Xmlm.input i with
-    | `Data v -> v
-    | _ -> ""
+    (* CodeSyS use these tags inside source code, e.g.: <ST><xhtml ...> *)
+    | `El_start ((_, tag), _) when (String.equal tag "xhtml") -> begin
+        pull_src i (d + 1) acc
+      end
+    | `El_end -> if (phys_equal d 1) then acc else pull_src i (d - 1) acc
+    | `Data v -> pull_src i d v
+    | _ -> begin
+        let (linenr, col) = Xmlm.pos i in
+        raise @@ XMLError (Printf.sprintf "XML is broken at %d:%d" linenr col)
+      end
 
   (** Pull IEC61131-3 type use occurrence *)
   let pull_type_use i =
@@ -347,7 +355,7 @@ module POUNode = struct
     if Xmlm.eoi i then data else
       match Xmlm.input i with
       | `El_start ((_, tag), _) when (String.equal tag "ST") -> begin
-          let data = pull_data i in
+          let data = pull_src i 0 "" in
           pull_body i (d + 1) data
         end
       | `El_start ((_, tag), _) when (String.equal tag "body") -> begin
