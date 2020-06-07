@@ -1,13 +1,5 @@
 (** PLCOpen XML reference: https://www.plcopen.org/system/files/downloads/tc6_xml_v201_technical_doc.pdf
     See also test/plcopen directory. *)
-[@@@warning "-33"]
-[@@@warning "-26"]
-[@@@warning "-38"]
-[@@@warning "-37"]
-[@@@warning "-32"]
-[@@@warning "-27"]
-[@@@warning "-34"]
-
 open Core_kernel
 module S = Syntax
 
@@ -25,25 +17,26 @@ let rec xmlm_skip i d =
     These nodes are described in <pous> tags. *)
 module POUNode = struct
 
-  type node_type =
-    | Program
-    | Function
-    | FunctionBlock
+  (** "Use" occurrence of IEC type. *)
+  type iec_ty_use = {
+    ty_name: string; (** String representation of this type *)
+    is_pointer: bool;
+  }
 
   (* See: tc6_xml_v201_technical_doc page 29 *)
   type pou_var = {
     name: string;
-    ty_str: string option; (* String representation of the variable type *)
+    var_ty: iec_ty_use option;
     address: string;
     global_id: int option;
   }
 
   let mk_pou_var () =
     let name = ""
-    and ty_str = None
+    and var_ty = None
     and address = ""
     and global_id = None in
-    { name; ty_str; address; global_id }
+    { name; var_ty; address; global_id }
 
   type pou_var_list_ty =
     | VarLocal
@@ -87,9 +80,14 @@ module POUNode = struct
     and vars = [] in
     {ty; name; constant; retain; nonretain; persistent; nonpersistent; vars }
 
+  type node_type =
+    | Program
+    | Function
+    | FunctionBlock
+
   type t = {
     ty: node_type;
-    return_ty: string option; (** Return type of Function and FBs *)
+    return_ty: iec_ty_use option; (** Return type of Function and FBs *)
     name: string; (** POU name *)
     mutable var_lists: pou_var_list list; (** POU variables *)
     body: string; (** Body source code *)
@@ -102,14 +100,19 @@ module POUNode = struct
     let body = "" in
     { ty; return_ty; name; var_lists; body; }
 
+  let extract_source_ty ty =
+    if ty.is_pointer then
+      "REF_TO " ^ ty.ty_name
+    else
+      ty.ty_name
+
   (** Extract source code of a single variable *)
   let extract_source_var (var : pou_var) =
-    let ty = match var.ty_str with
-      | Some v -> v
-      | None ->
-        raise @@ XMLError (Printf.sprintf "Missing return type for variable %s" var.name)
+    let ty_str = match var.var_ty with
+      | Some ty -> extract_source_ty ty
+      | None -> raise @@ XMLError (Printf.sprintf "Variable type is missing: %s" var.name)
     in
-    Printf.sprintf "%s : %s;" var.name ty
+    Printf.sprintf "%s : %s;" var.name ty_str
 
   (** Extract source code of variables list *)
   let extract_source_var_list (vl : pou_var_list) =
@@ -142,7 +145,7 @@ module POUNode = struct
     in
     let extract_function n vars_src body =
       let rt = match n.return_ty with
-        | Some v -> v
+        | Some ty -> extract_source_ty ty
         | None -> raise @@ XMLError ("Undefined return type for function " ^ n.name)
       in
       Printf.sprintf "FUNCTION %s : %s\n%s\n%s\nEND_FUNCTION\n" n.name rt vars_src body
@@ -168,25 +171,37 @@ module POUNode = struct
     src
 
   (** Read data content of the next tag. *)
-  let pull_data i (v : string) : string =
+  let pull_data i =
     match Xmlm.input i with
     | `Data v -> v
     | _ -> ""
 
-  (** Pull string representation of IEC61131-3 type *)
-  let pull_type_str i attrs =
-    let rec aux i d rt =
+  (** Pull IEC61131-3 type use occurrence *)
+  let pull_type_use i =
+    let rec aux i d (ty : iec_ty_use) =
       match Xmlm.input i with
-      (* TODO *)
-      | `El_start ((_, tag), _) -> aux i (d + 1) tag
-      | `Data _ -> aux i d rt
-      | `El_end -> if (phys_equal d 0) then rt else aux i (d - 1) rt
+      | `El_start ((_, tag),_) when (String.equal tag "pointer") -> begin
+          aux i (d + 1) { ty with is_pointer = true }
+        end
+      | `El_start ((_, tag), attrs) when (String.equal tag "derived") -> begin
+          let ty_name_opt = List.find attrs ~f:(fun ((_,k),_) -> String.equal k "name") in
+          match ty_name_opt with
+          | Some (_,v) -> aux i (d + 1) { ty with ty_name = v }
+          | None -> begin
+              let (linenr, col) = Xmlm.pos i in
+              raise @@ XMLError (Printf.sprintf "Unknown derived type name at %d:%d" linenr col)
+            end
+        end
+      (* Elementary type, e.g. <BOOL /> *)
+      | `El_start ((_, tag), _) -> aux i (d + 1) { ty with ty_name = tag }
+      | `Data _ -> aux i d ty
+      | `El_end -> if (phys_equal d 0) then ty else aux i (d - 1) ty
       | _ -> begin
           let (linenr, col) = Xmlm.pos i in
-          raise @@ XMLError (Printf.sprintf "Unexpected return type at %d:%d" linenr col)
+          raise @@ XMLError (Printf.sprintf "XML is broken at %d:%d" linenr col)
         end
     in
-    aux i 0 ""
+    aux i 0 ({ ty_name = ""; is_pointer = false })
 
   (** Pull a single variable *)
   let pull_var i attrs =
@@ -209,15 +224,11 @@ module POUNode = struct
         | `El_end -> if (phys_equal d 0) then var else aux i (d - 1) var
         | `Data _ -> aux i d var
         (* Pull variable type *)
-        | `El_start ((_, tag), attrs) when (String.equal tag "type") -> begin
-            let ty_str = pull_type_str i attrs in
-            let ty_str = if (String.is_empty ty_str) then None else Some(ty_str) in
-            let var = { var with ty_str = ty_str } in
-            aux i d var
+        | `El_start ((_, tag), _) when (String.equal tag "type") -> begin
+            let ty = pull_type_use i in
+            aux i d { var with var_ty = Some(ty) }
           end
-        | `El_start ((_, tag), attrs) -> begin
-            aux i (d + 1) var
-          end
+        | `El_start _ -> aux i (d + 1) var
         | _ -> aux i (d + 1) var
     in
     let var = set_attrs (mk_pou_var ()) attrs in
@@ -263,9 +274,9 @@ module POUNode = struct
     let rec aux i d acc =
       if Xmlm.eoi i then acc else
         match Xmlm.input i with
-        | `El_start ((_, tag), attrs) when (String.equal tag "returnType") -> begin
-            let rt = pull_type_str i attrs in
-            let rt_opt = if String.is_empty rt then None else Some(rt) in
+        | `El_start ((_, tag), _) when (String.equal tag "returnType") -> begin
+            let rt = pull_type_use i in
+            let rt_opt = if String.is_empty rt.ty_name then None else Some(rt) in
             let acc = { acc with return_ty = rt_opt } in
             aux i d acc
           end
@@ -326,7 +337,7 @@ module POUNode = struct
             end
             else aux i (d - 1) acc
           end
-        | `El_start ((_,tag),_) -> aux i (d + 1) acc
+        | `El_start _ -> aux i (d + 1) acc
         | _ -> aux i d acc
     in
     aux i 0 pou
@@ -336,7 +347,7 @@ module POUNode = struct
     if Xmlm.eoi i then data else
       match Xmlm.input i with
       | `El_start ((_, tag), _) when (String.equal tag "ST") -> begin
-          let data = pull_data i "" in
+          let data = pull_data i in
           pull_body i (d + 1) data
         end
       | `El_start ((_, tag), _) when (String.equal tag "body") -> begin
@@ -401,7 +412,7 @@ module POUNode = struct
             let pou = { pou with body = pull_body i 0 ""} in
             pull i pou d
           end
-        | `El_start ((_,tag), _) -> begin
+        | `El_start _ -> begin
             xmlm_skip i 0;
             pull i pou d
           end
@@ -439,17 +450,8 @@ let reconstruct_tree (pt : parse_tree) : string =
       ~init:""
       ~f:(fun acc p -> acc ^ "\n" ^ POUNode.extract_source_exn p)
   in
-  (* Printf.printf "%s\n" res; *)
+  Printf.printf "%s\n" res;
   res
-
-(** [extract_source_exn ptree] Extract source code from each node and join
-    them in a single string. *)
-let extract_source_exn pt =
-  List.fold_left
-    pt.pous
-    ~init:[]
-    ~f:(fun acc pou -> acc @ [POUNode.extract_source_exn pou])
-  |> String.concat ~sep:"\n"
 
 let pull_pous i =
   let rec pull_pous_aux i (d : int) (acc : POUNode.t list) : POUNode.t list =
@@ -478,7 +480,7 @@ let rec pull_all i d (acc : parse_tree) =
         acc.pous <- List.append acc.pous (pull_pous i);
         pull_all i d acc
       end
-    |`El_start ((_, tag), _) -> pull_all i (d + 1) acc
+    |`El_start _ -> pull_all i (d + 1) acc
     | `El_end -> if (phys_equal d 1) then acc else pull_all i (d - 1) acc
     | _ -> pull_all i d acc
 
