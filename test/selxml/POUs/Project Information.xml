@@ -1,0 +1,25 @@
+<RTACModule>
+  <LogicEngineObject>
+    <Name>Project Information</Name>
+    <Type>ProjectInformation</Type>
+    <ArchivedContent><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<Single xml:space="preserve" Type="{085afe48-c5d8-4ea5-ab0d-b35701fa6009}" Method="IArchivable">
+  <Dictionary Type="System.Collections.Hashtable" Name="Properties" />
+  <Single Name="GetCompanyGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetTitleGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetVersionGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetTextPropertyGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetTextProperty2GUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetNumberPropertyGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetBooleanPropertyGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Single Name="GetVersionPropertyGUID" Type="System.Guid">00000000-0000-0000-0000-000000000000</Single>
+  <Null Name="GetLibVersionGUID" />
+  <Null Name="GetLibVersionNumberGUID" />
+  <Null Name="IsLibReleasedGUID" />
+</Single>]]></ArchivedContent>
+    <Metadata><![CDATA[<Single xml:space="preserve" Type="{81297157-7ec9-45ce-845e-84cab2b88ade}" Method="IArchivable">
+  <Dictionary Type="{2c41fa04-1834-41c1-816e-303c7aa2c05b}" Name="Properties" />
+  <Single Name="TypeGuid" Type="System.Guid">085afe48-c5d8-4ea5-ab0d-b35701fa6009</Single>
+</Single>]]></Metadata>
+  </LogicEngineObject>
+</RTACModule>

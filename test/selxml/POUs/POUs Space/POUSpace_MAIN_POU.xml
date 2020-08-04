@@ -1,0 +1,233 @@
+<RTACModule>
+  <LogicEngineObject>
+    <Name>POUSpace_MAIN_POU</Name>
+    <Type>FunctionBlock</Type>
+    <Interface><![CDATA[FUNCTION_BLOCK POUSpace_MAIN_POU
+VAR_INPUT
+END_VAR
+
+VAR_OUTPUT
+END_VAR
+
+VAR
+  FB4_Populate_Intermediate_Call_List_call : FB4_Populate_Intermediate_Call_List;
+  FB5_Trigger_FB2_Call_FIFO_call:FB5_Trigger_FB2_Call_FIFO;
+  MC_power_X1 : MC_Power;
+  MC_readAxisPosition_jog:MC_ReadActualPosition;
+  MC_ReadStatus_jog:MC_ReadStatus;
+  MC_jog:MC_Jog;
+  MC_Halt_jog:MC_Halt;
+  MC_Stop_jog:MC_Stop;
+  MC_Reset_jog:MC_Reset;
+  MC_MoveAbsolute_jog:MC_MoveAbsolute;
+  mainMotor:Motor;
+  ton_0 : TON;
+  ton_1 : TON;
+  ton_2 : TON;
+  axisPosition:REAL;
+  nextTargetFloor:INT;
+  nextTargetPosition:REAL;
+  nextIntermediateTargetPosition:REAL;
+  nextIntermediateTargetFloor:INT;
+  nextIntermediateTargetFloorAvailable:bool;
+  lastTargetFloor:INT;
+  currentFloorNumber_:INT;
+  i:INT;
+  state: INT:=0;
+  test_READ:BOOL;
+  test_FORWARD:BOOL;
+END_VAR]]></Interface>
+    <Implementation><![CDATA[// Write values to Global Variables
+gvl.state_POU_1:=state;
+gvl.QW_axisPosition:=axisPosition;
+
+// Read axis position all the time
+MC_readAxisPosition_jog(Axis:=X1,
+  Enable:=TRUE,
+  Position=>axisPosition);
+
+// Motor Halt
+IF mainMotor.IX_Halt THEN
+  MC_jog(Axis:=X1,
+	  JogForward:=FALSE,
+	  JogBackward:=FALSE);
+END_IF
+
+// Main Power
+mainMotor.IX_Power:=TRUE;
+IF mainMotor.IX_Power THEN
+  MC_power_X1(Axis:=X1,
+	  Enable:=TRUE,
+	  bRegulatorOn:=TRUE,
+	  bDriveStart:=TRUE);
+ELSE
+  MC_power_X1(Axis:=X1,
+	  Enable:=FALSE,
+	  bRegulatorOn:=FALSE,
+	  bDriveStart:=FALSE);
+END_IF
+
+// STOP/RESET the motor
+MC_Stop_jog(Axis:=X1,
+  Execute:=mainMotor.IX_Stop,
+  Deceleration:=5);
+MC_Reset_jog(Axis:=X1,
+  Execute:=mainMotor.IX_Reset);
+
+// Drive error ID
+gvl.jogErrorID := MC_jog.ErrorId;
+
+CASE state OF
+  0:  // Power ON
+	  IF MC_power_X1.Status = TRUE THEN
+		  ton_0(IN:=NOT ton_0.Q,PT:=1);
+		  IF ton_0.Q THEN
+			  state := 10;
+		  END_IF
+	  END_IF
+
+  10:
+	  IF nextIntermediateTargetFloorAvailable=FALSE THEN
+		  FB5_Trigger_FB2_Call_FIFO_call(POP:=2);
+		  IF FB5_Trigger_FB2_Call_FIFO_call.done = TRUE THEN
+			  state:=11;
+		  END_IF
+	  ELSE
+		  state:=11;
+	  END_IF
+
+  11:
+	  IF gvl.Dout <>0 THEN
+		  state:=12;
+	  ELSE
+		  state:=10;
+	  END_IF
+
+  12:
+	  gvl.targetPosition := WORD_TO_INT(gvl.Dout-1)*gvl.floor_to_floor_distance;
+	  nextTargetFloor := WORD_TO_INT(gvl.Dout);
+
+	  IF gvl.Dout <> 0 AND gvl.targetPosition <> gvl.QW_axisPosition THEN
+		  IF gvl.QW_axisPosition < gvl.targetPosition THEN
+			  gvl.jogDirection:='GO_UP';
+			  MC_jog(Axis:=X1,
+					  JogForward:=TRUE,
+					  Velocity:=gvl.velocity_high,
+					  Acceleration:=gvl.acceleration_high,
+					  Deceleration:=gvl.deceleration_high);
+		  ELSIF gvl.QW_axisPosition > gvl.targetPosition THEN
+			  gvl.jogDirection:='GO_DOWN';
+			  MC_jog(Axis:=X1,
+					  JogBackward:=TRUE,
+					  Velocity:=gvl.velocity_high,
+					  Acceleration:=gvl.acceleration_high,
+					  Deceleration:=gvl.deceleration_high);
+		  END_IF
+	  ELSE
+		  state:=10;
+	  END_IF
+
+	  FB4_Populate_Intermediate_Call_List_call();
+	  IF gvl.jogDirection='GO_UP' THEN
+		  // If intermediate floor calls available_GO_UP
+		  FOR i:=1 TO gvl.NUM_FLOOR DO
+			   IF gvl.CALL_LIST_INTERMEDIATE_GO_UP[i]= TRUE AND gvl.QW_axisPosition > (i-1)*gvl.floor_to_floor_distance-200 THEN
+				  MC_jog(Axis:=X1,
+					  JogForward:=FALSE,
+					  JogBackward:=FALSE);
+				  nextIntermediateTargetFloor:=i;
+				  gvl.nextIntermediateTargetPosition:=(i-1)*gvl.floor_to_floor_distance;
+				  state:=100;
+			  END_IF
+		  END_FOR
+		  // If NO intermediate floor calls available
+		  IF gvl.QW_axisPosition > gvl.targetPosition-400 THEN
+			  MC_jog(Axis:=X1,
+			  JogForward:=FALSE,
+			  JogBackward:=FALSE);
+		  END_IF
+		  IF MC_jog.Busy=FALSE THEN
+			  state:=102;
+		  END_IF
+	  END_IF
+
+	  IF gvl.jogDirection='GO_DOWN' THEN
+		  // If intermediate floor calls available_GO_DOWN
+		  FOR i:=1 TO gvl.NUM_FLOOR DO
+			   IF gvl.CALL_LIST_INTERMEDIATE_GO_DOWN[i]= TRUE AND gvl.QW_axisPosition < (i-1)*gvl.floor_to_floor_distance+200 THEN
+				  MC_jog(Axis:=X1,
+					  JogForward:=FALSE,
+					  JogBackward:=FALSE);
+				  nextIntermediateTargetFloor:=i;
+				  gvl.nextIntermediateTargetPosition:=(i-1)*gvl.floor_to_floor_distance;
+				  state:=100;
+			  END_IF
+		  END_FOR
+		  // If NO intermediate floor calls available
+		  IF gvl.QW_axisPosition < gvl.targetPosition+400 THEN
+			  MC_jog(Axis:=X1,
+			  JogForward:=FALSE,
+			  JogBackward:=FALSE);
+		  END_IF
+		  IF MC_jog.Busy=FALSE THEN
+			  state:=102;
+		  END_IF
+	  END_IF
+
+
+  100: // If YES intermediate floor calls available
+	  MC_MoveAbsolute_jog(Axis:=X1,
+		  Execute:=TRUE,
+		  Position:=gvl.nextIntermediateTargetPosition,
+		  Velocity:=gvl.velocity_low,
+		  Acceleration:=gvl.acceleration_low,
+		  Deceleration:=gvl.deceleration_low);
+
+	  IF MC_MoveAbsolute_jog.Done THEN
+		  MC_MoveAbsolute_jog(Axis:=X1,
+			  Execute:=FALSE);
+		  nextIntermediateTargetFloorAvailable:=TRUE;
+		  state:=400;
+	  END_IF;
+
+  102: // If NO intermediate floor calls available
+	  MC_MoveAbsolute_jog(Axis:=X1,
+		  Execute:=TRUE,
+		  Position:=gvl.targetPosition,
+		  Velocity:=gvl.velocity_low,
+		  Acceleration:=gvl.acceleration_low,
+		  Deceleration:=gvl.deceleration_low);
+
+	  IF MC_MoveAbsolute_jog.Done THEN
+		  MC_MoveAbsolute_jog(Axis:=X1,
+			  Execute:=FALSE);
+		  nextIntermediateTargetFloorAvailable:=FALSE;
+		  state:=400;
+	  END_IF
+
+  400: // Door closed and all safety OK.
+	  currentFloorNumber_:=FC1_currentFloorNumber(axisPosition:=axisPosition);
+	  gvl.Din_toRemove := INT_TO_WORD(currentFloorNumber_);
+
+	  gvl.CALL_LIST[currentFloorNumber_]:=FALSE;
+	  gvl.CALL_LIST_INTERMEDIATE_GO_DOWN[currentFloorNumber_]:=FALSE;
+	  gvl.CALL_LIST_INTERMEDIATE_GO_UP[currentFloorNumber_]:=FALSE;
+
+
+	  FB5_Trigger_FB2_Call_FIFO_call(POP:=3);
+	  IF FB5_Trigger_FB2_Call_FIFO_call.done = TRUE THEN
+		  state:=402;
+	  END_IF
+
+  402:
+	  IF GVL.IX_DoorClosedAndAllSafetyOk THEN
+		  state:=10;
+	  END_IF
+
+END_CASE]]></Implementation>
+    <Metadata><![CDATA[<Single xml:space="preserve" Type="{81297157-7ec9-45ce-845e-84cab2b88ade}" Method="IArchivable">
+  <Dictionary Type="{2c41fa04-1834-41c1-816e-303c7aa2c05b}" Name="Properties" />
+  <Single Name="TypeGuid" Type="System.Guid">6f9dac99-8de1-4efc-8465-68ac443b7d08</Single>
+</Single>]]></Metadata>
+  </LogicEngineObject>
+</RTACModule>

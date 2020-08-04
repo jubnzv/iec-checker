@@ -1,0 +1,1727 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <SystemTimeControl>
+    <ExportSource>
+      <Schema>32</Schema>
+      <DeviceMOT>3530</DeviceMOT>
+    </ExportSource>
+    <SettingPages>
+      <SettingPage>
+        <Name>SystemTime</Name>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Demodulated_IRIG_B_Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Enable_Global_UTC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_UTC_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>0</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Enable_System_Time_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>60</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Start_WeekOfMonth</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>Second</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Start_DayOfWeek</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>Sunday</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Start_Month</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>March</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Start_Time</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>02:00</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Stop_WeekOfMonth</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>First</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Stop_DayOfWeek</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>Sunday</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Stop_Month</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>November</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_System_Time_DST_Stop_Time</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>02:00</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_DNP_Failure_Timeout</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>10800</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_i870_Failure_Timeout</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>10800</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Enable_PTP_Power_Profile</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_PTP_Transport</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>UDP</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_PTP_Domain</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>0</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_PTP_Path_Delay_Mechanism</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>P2P</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_PTP_Interface_1</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>None</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Set_PTP_Interface_2</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>None</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Setting</Column>
+            <Value>Apply_System_Time_UTC_Offset_Globally</Value>
+          </Setting>
+          <Setting>
+            <Column>Value</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value />
+          </Setting>
+        </Row>
+      </SettingPage>
+      <SettingPage>
+        <Name>POU Pin Settings</Name>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>DNP_Time_In_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>DNP_Time_Out_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>EN</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_DNP_Time_In</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_DNP_Time_In_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_DNP_Time_Out</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_DNP_Time_Out_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_i870_Time_In</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_i870_Time_In_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_i870_Time_Out</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_i870_Time_Out_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_IRIG_B_Time_In</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_IRIG_B_Time_In_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_IRIG_B_Time_Out</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_IRIG_B_Time_Out_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_NTP_Time_In</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_NTP_Time_Out</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_PTP_Time_In</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Enable_System_Time_DST_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>TRUE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>ENO</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value>FALSE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Force_System_Time_Source</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeSource_t</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>i870_Time_In_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>i870_Time_Out_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Invalid_Function_Block_Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value>FALSE</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>IRIG_B_Time_In_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>IRIG_B_Time_Out_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>NTP_Time_In_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>NTP_Time_Out_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>PTP_Time_In_Value</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_DNP_Time_In_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>INT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_DNP_Time_In_Source_Priority</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>USINT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>4</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_DNP_Time_Out_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>INT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_i870_Time_In_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>INT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_i870_Time_In_Source_Priority</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>USINT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>5</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_i870_Time_Out_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>INT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_IRIG_B_Time_In_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>INT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_IRIG_B_Time_In_Source_Priority</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>USINT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>1</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_IRIG_B_Time_Out_Offset</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>INT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_NTP_Time_In_Source_Priority</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>USINT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>3</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_NTP_Time_Server_1_IP</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>STRING</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0.0.0.0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_NTP_Time_Server_2_IP</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>STRING</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0.0.0.0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_NTP_Time_Server_3_IP</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>STRING</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>0.0.0.0</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_PTP_Time_In_Source_Priority</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>USINT</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value>2</Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_System_Date</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>DATE</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Set_System_Time</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Input</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>TOD</Value>
+          </Setting>
+          <Setting>
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>System_Time</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>timeStamp_t</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>System_Time_DateAndTime</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>DT</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Visible</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Name</Column>
+            <Value>Time_Sync_Outside_Slew_Threshold</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Type</Column>
+            <Value>Output</Value>
+          </Setting>
+          <Setting>
+            <Column>Pin Point Type</Column>
+            <Value>BOOL</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Default Value</Column>
+            <Value>FALSE</Value>
+          </Setting>
+        </Row>
+      </SettingPage>
+    </SettingPages>
+    <ControllerPOU><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<Single xml:space="preserve" Type="{6f9dac99-8de1-4efc-8465-68ac443b7d08}" Method="IArchivable">
+  <Single Name="SpecialFunc" Type="{0db3d7bb-cde0-4416-9a7b-ce49a0124323}">None</Single>
+  <Single Name="Implementation" Type="{32d3375e-c010-41e2-9e43-b2fbf4f2b374}" Method="IArchivable">
+    <Single Name="Items" Type="{cd57ba20-558b-4b98-96c1-73c6000c3087}" Method="IArchivable">
+      <List2 Name="InnerList">
+        <Single Type="{f5becf35-b1f3-4274-b411-81d4b63a1516}" Method="IArchivable">
+          <Single Name="Inputs" Type="{cd57ba20-558b-4b98-96c1-73c6000c3087}" Method="IArchivable">
+            <List2 Name="InnerList">
+              <Single Type="{c994f6e0-311a-4a1c-bc38-75fe34892406}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="IsExtensiblePin" Type="bool">False</Single>
+                <Single Name="ProcessValue" Type="string"></Single>
+                <Single Name="Access" Type="{88453c7d-d652-4a27-a1b0-a1953be49a5c}">None</Single>
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">11</Single>
+              </Single>
+            </List2>
+          </Single>
+          <Single Name="Outputs" Type="{cd57ba20-558b-4b98-96c1-73c6000c3087}" Method="IArchivable">
+            <List2 Name="InnerList">
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">13</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">15</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">17</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">19</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">21</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">23</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">25</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">27</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">29</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">31</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">33</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">35</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">37</Single>
+              </Single>
+              <Single Type="{65582d84-cf18-4ca0-be59-bf5a3d00b8f8}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Negated" Type="bool">False</Single>
+                <Single Name="SetReset" Type="{24449d48-c96a-49c4-b9d1-a4ea34aedce3}">None</Single>
+                <Single Name="SetResetRef" Type="{233bc97c-69fe-4d29-b40e-a9a9b854044e}">None</Single>
+                <Single Name="PretendsToBeConnected" Type="bool">False</Single>
+                <Single Name="Id" Type="long">39</Single>
+              </Single>
+            </List2>
+          </Single>
+          <Single Name="Texts" Type="{cd57ba20-558b-4b98-96c1-73c6000c3087}" Method="IArchivable">
+            <List2 Name="InnerList">
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">EN</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">12</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">ENO</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">14</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">System_Time_DateAndTime</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">16</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">System_Time</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">18</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">IRIG_B_Time_In_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">20</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">IRIG_B_Time_Out_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">22</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">NTP_Time_In_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">24</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">NTP_Time_Out_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">26</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">DNP_Time_In_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">28</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">DNP_Time_Out_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">30</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">i870_Time_In_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">32</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">i870_Time_Out_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">34</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">PTP_Time_In_Value</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">36</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">Invalid_Function_Block_Input</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">38</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">Time_Sync_Outside_Slew_Threshold</Single>
+                <Single Name="Modifiable" Type="bool">True</Single>
+                <Single Name="Id" Type="long">40</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">System_Time_Control_POU_TYPE</Single>
+                <Single Name="Modifiable" Type="bool">False</Single>
+                <Single Name="Id" Type="long">9</Single>
+              </Single>
+              <Single Type="{72f2b13f-5349-4a8a-bbe6-2bccf3f42179}" Method="IArchivable">
+                <Single Name="Bounds" Type="string">0, 0, 0, 0</Single>
+                <Null Name="ElementGroupId" />
+                <Single Name="Text" Type="string">System_Time_Control_POU</Single>
+                <Single Name="Modifiable" Type="bool">False</Single>
+                <Single Name="Id" Type="long">10</Single>
+              </Single>
+            </List2>
+          </Single>
+          <Single Name="Parameters" Type="{cd57ba20-558b-4b98-96c1-73c6000c3087}" Method="IArchivable">
+            <List2 Name="InnerList" />
+          </Single>
+          <Null Name="PreparedParameters" />
+          <Single Name="PageArea" Type="int">0</Single>
+          <Single Name="Bounds" Type="string">3, 0, 0, 0</Single>
+          <Null Name="ElementGroupId" />
+          <Single Name="EnEno" Type="bool">False</Single>
+          <Single Name="KindOfCall" Type="{77f43dfe-ca6a-4869-828f-7609d8ed6ea6}">FunctionBlock</Single>
+          <Single Name="ContainsExtensibleInputs" Type="bool">False</Single>
+          <Single Name="Forced" Type="bool">False</Single>
+          <Single Name="OwningPageId" Type="long">-1</Single>
+          <Single Name="Id" Type="long">8</Single>
+        </Single>
+      </List2>
+    </Single>
+    <Null Name="ParameterInitializationMethodGenerator" />
+    <Single Name="RoutingPathTable" Type="{4b8bcc79-5980-4868-b49e-005a8148859b}" Method="IArchivable">
+      <Dictionary2 Name="InnerDictionary" />
+    </Single>
+    <Single Name="AutoSizeCanvas" Type="bool">True</Single>
+    <Single Name="CanvasWidth" Type="int">2</Single>
+    <Single Name="CanvasHeight" Type="int">2</Single>
+  </Single>
+  <Single Name="Interface" Type="{a9ed5b7e-75c5-4651-af16-d2c27e98cb94}" Method="IArchivable">
+    <Single Name="TextDocument" Type="{f3878285-8e4f-490b-bb1b-9acbb7eb04db}" Method="IArchivable">
+      <Array Name="TextLines" Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}">
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">2</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string">PROGRAM System_Time_Control_Controller</Single>
+        </Single>
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">3</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string">VAR</Single>
+        </Single>
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">4</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string">END_VAR</Single>
+        </Single>
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">5</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string">VAR_EXTERNAL</Single>
+        </Single>
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">6</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string">	System_Time_Control_POU:System_Time_Control_POU_TYPE;</Single>
+        </Single>
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">7</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string">END_VAR</Single>
+        </Single>
+        <Single Type="{a5de0b0b-1cb5-4913-ac21-9d70293ec00d}" Method="IArchivable">
+          <Single Name="Id" Type="long">1</Single>
+          <Null Name="Tag" />
+          <Single Name="Text" Type="string"></Single>
+        </Single>
+      </Array>
+    </Single>
+  </Single>
+  <Single Name="UniqueIdGenerator" Type="string">40</Single>
+  <Single Name="POULevel" Type="{8e575c5b-1d37-49c6-941b-5c0ec7874787}">Standard</Single>
+  <List Name="ChildObjectGuids" Type="System.Collections.ArrayList" />
+  <Single Name="AddAttributeSubsequent" Type="bool">False</Single>
+</Single>]]></ControllerPOU>
+  </SystemTimeControl>
+</RTACModule>

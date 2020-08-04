@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <ProjectInfo>
+    <ExportSource>
+      <Devices>
+        <Device>
+          <Schema>32</Schema>
+          <DeviceMOT>3530</DeviceMOT>
+          <FolderName>SEL_RTAC</FolderName>
+        </Device>
+      </Devices>
+      <POUs>
+        <FolderName>POUs</FolderName>
+      </POUs>
+    </ExportSource>
+    <Description><![CDATA[]]></Description>
+  </ProjectInfo>
+</RTACModule>

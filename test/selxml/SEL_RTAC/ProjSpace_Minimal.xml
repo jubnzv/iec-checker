@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <POU>
+    <ExportSource>
+      <Schema>32</Schema>
+      <DeviceMOT>3530</DeviceMOT>
+    </ExportSource>
+    <Name>ProjSpace_Minimal</Name>
+    <POUKind>Program</POUKind>
+    <Content>
+      <Interface><![CDATA[PROGRAM ProjSpace_Minimal
+VAR
+	temp : DINT := 0;
+END_VAR
+]]></Interface>
+      <Implementation><![CDATA[temp := 42;]]></Implementation>
+    </Content>
+  </POU>
+</RTACModule>

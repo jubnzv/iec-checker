@@ -40,7 +40,6 @@ def check_program(program: str,
 def run_checker(file_path: str, binary: str = binary_default,
                 *args) -> Tuple[List[Warning], int]:
     """Run iec-checker core for a given file.
-
     This will execute core inspections and generate JSON dump processed with
     plugins."""
     p = subprocess.Popen([binary, "-o", "json", "-q", "-d", *args, file_path],
@@ -50,6 +49,19 @@ def run_checker(file_path: str, binary: str = binary_default,
     out, err = p.communicate()
     warnings = process_output(out)
     return (warnings, p.returncode)
+
+
+def run_checker_full_out(file_path: str, binary: str = binary_default,
+                *args) -> Tuple[int, str]:
+    """Run iec-checker core for a given file and capture the whole output.
+    No extra options will be set by default."""
+    print([binary, *args, file_path])
+    p = subprocess.Popen([binary, *args, file_path],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT)
+    p.wait()
+    out, err = p.communicate()
+    return (p.returncode, '\n'.join([str(out), str(err)]))
 
 
 def filter_warns(warns: List[Warning], warn_id: str) -> List[Warning]:

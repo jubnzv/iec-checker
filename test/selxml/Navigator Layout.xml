@@ -1,0 +1,32 @@
+<RTACModule>
+  <NavigatorLayout Name="IEC Checker">
+    <Items>
+      <Item Name="Extensions" />
+      <Item Name="SEL_RTAC">
+        <Items>
+          <Item Name="Devices" IsFolder="true" />
+          <Item Name="Tag Processor" />
+          <Item Name="Tags" />
+          <Item Name="System" IsFolder="true">
+            <Items>
+              <Item Name="Main Controller" />
+              <Item Name="System_Time_Control" />
+              <Item Name="SystemTags" />
+              <Item Name="Task Configuration" />
+              <Item Name="Contact I/O" />
+            </Items>
+          </Item>
+          <Item Name="Access Points" IsFolder="true" />
+          <Item Name="Access Point Routers" IsFolder="true" />
+          <Item Name="User Logic" IsFolder="true" />
+          <Item Name="Virtual Tag Lists" IsFolder="true" />
+          <Item Name="ProjSpace_Minimal" />
+          <Item Name="ProjSpace_Example" />
+          <Item Name="ProjSpace_GVL1" />
+          <Item Name="ProjSpace_Simple" />
+          <Item Name="ProjSpace_MAIN_POU" />
+        </Items>
+      </Item>
+    </Items>
+  </NavigatorLayout>
+</RTACModule>
