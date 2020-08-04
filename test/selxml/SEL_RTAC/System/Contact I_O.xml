@@ -1,0 +1,2579 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <ContactIO>
+    <ExportSource>
+      <Schema>32</Schema>
+      <DeviceMOT>3530</DeviceMOT>
+    </ExportSource>
+    <SettingPages>
+      <SettingPage>
+        <Name>Contact Inputs</Name>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN101</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Level</Column>
+            <Value>105</Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Level</Column>
+            <Value>75</Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN201</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN202</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN203</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN204</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN205</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN206</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN207</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN208</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN209</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN210</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN211</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN212</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN213</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN214</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN215</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN216</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN217</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN218</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN219</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN220</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN221</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN222</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN223</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.IN224</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Pick Up Delay</Column>
+            <Value>20</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Pick Up Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Drop Out Delay</Column>
+            <Value>50</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Drop Out Level</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+      </SettingPage>
+      <SettingPage>
+        <Name>Contact Outputs</Name>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT101.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT101.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT101.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT101.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT201.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT201.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT201.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT201.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT202.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT202.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT202.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT202.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT203.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT203.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT203.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT203.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT204.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT204.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT204.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT204.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT205.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT205.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT205.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT205.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT206.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT206.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT206.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT206.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT207.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT207.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT207.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT207.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT208.operClear</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT208.operPulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Pulse</Value>
+          </Setting>
+          <Setting>
+            <Column>Number of Pulses</Column>
+            <Value>1</Value>
+          </Setting>
+          <Setting>
+            <Column>On Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting>
+            <Column>Off Pulse Duration</Column>
+            <Value>1000</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting enabled="false">
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT208.operSet</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>operSPC</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Status Value</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value>Persist</Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+        <Row>
+          <Setting>
+            <Column>Enable</Column>
+            <Value>True</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Name</Column>
+            <Value>SystemTags.OUT208.status</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Type</Column>
+            <Value>SPS</Value>
+          </Setting>
+          <Setting>
+            <Column>Tag Alias</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Status Value</Column>
+            <Value>False</Value>
+          </Setting>
+          <Setting>
+            <Column>Control Model</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Number of Pulses</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>On Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting enabled="false">
+            <Column>Off Pulse Duration</Column>
+            <Value></Value>
+          </Setting>
+          <Setting>
+            <Column>Comment</Column>
+            <Value></Value>
+          </Setting>
+        </Row>
+      </SettingPage>
+    </SettingPages>
+  </ContactIO>
+</RTACModule>

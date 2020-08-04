@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <POU>
+    <ExportSource>
+      <Schema>32</Schema>
+      <DeviceMOT>3530</DeviceMOT>
+    </ExportSource>
+    <Name>ProjSpace_Simple</Name>
+    <POUKind>Program</POUKind>
+    <Content>
+      <Interface><![CDATA[PROGRAM ProjSpace_Simple
+VAR_INPUT
+	x : TIME;
+END_VAR
+VAR
+	temp : DINT;
+	i : DINT;
+	arr1: ARRAY [1..2] OF BOOL;
+	unused_var : REAL := 200.0;
+	head : INT;
+END_VAR]]></Interface>
+      <Implementation><![CDATA[WHILE i < 10 DO
+	IF i = 5 THEN
+	  temp := i;
+	  EXIT;
+	  i := 42;
+	END_IF
+	i := i + 1;
+END_WHILE
+
+ARR1[3] := 19;
+ARR1[2,1] := 19;
+IF x = T#100MS THEN
+head := 42;
+END_IF]]></Implementation>
+    </Content>
+  </POU>
+</RTACModule>

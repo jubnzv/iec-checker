@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <POU>
+    <ExportSource>
+      <Schema>32</Schema>
+      <DeviceMOT>3530</DeviceMOT>
+    </ExportSource>
+    <Name>ProjSpace_Example</Name>
+    <POUKind>FunctionBlock</POUKind>
+    <Content>
+      <Interface><![CDATA[FUNCTION_BLOCK ProjSpace_Example
+VAR_EXTERNAL
+	global_var : INT;
+END_VAR
+]]></Interface>
+      <Implementation><![CDATA[global_var := 42;]]></Implementation>
+    </Content>
+  </POU>
+</RTACModule>

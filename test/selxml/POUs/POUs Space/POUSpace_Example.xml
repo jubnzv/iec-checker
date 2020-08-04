@@ -1,0 +1,16 @@
+<RTACModule>
+  <LogicEngineObject>
+    <Name>POUSpace_Example</Name>
+    <Type>FunctionBlock</Type>
+    <Interface><![CDATA[FUNCTION_BLOCK POUSpace_Example
+VAR_EXTERNAL
+	global_var : INT;
+END_VAR
+]]></Interface>
+    <Implementation><![CDATA[global_var := 42;]]></Implementation>
+    <Metadata><![CDATA[<Single xml:space="preserve" Type="{81297157-7ec9-45ce-845e-84cab2b88ade}" Method="IArchivable">
+  <Dictionary Type="{2c41fa04-1834-41c1-816e-303c7aa2c05b}" Name="Properties" />
+  <Single Name="TypeGuid" Type="System.Guid">6f9dac99-8de1-4efc-8465-68ac443b7d08</Single>
+</Single>]]></Metadata>
+  </LogicEngineObject>
+</RTACModule>

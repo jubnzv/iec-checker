@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RTACModule>
+  <MainController>
+    <ExportSource>
+      <Schema>32</Schema>
+      <DeviceMOT>3530</DeviceMOT>
+    </ExportSource>
+    <MainTask>
+      <CycleTime>100</CycleTime>
+      <WatchdogTime>15000</WatchdogTime>
+    </MainTask>
+    <Task>
+      <Name>Automation</Name>
+      <CycleTime>1000</CycleTime>
+      <WatchdogTime>15000</WatchdogTime>
+    </Task>
+  </MainController>
+</RTACModule>

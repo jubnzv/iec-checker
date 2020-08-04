@@ -1,0 +1,13 @@
+<RTACModule>
+  <LogicEngineObject>
+    <Name>POUSpace_GVL</Name>
+    <Type>GVL</Type>
+    <Interface><![CDATA[VAR_GLOBAL
+	global_var : INT;
+END_VAR]]></Interface>
+    <Metadata><![CDATA[<Single xml:space="preserve" Type="{81297157-7ec9-45ce-845e-84cab2b88ade}" Method="IArchivable">
+  <Dictionary Type="{2c41fa04-1834-41c1-816e-303c7aa2c05b}" Name="Properties" />
+  <Single Name="TypeGuid" Type="System.Guid">ffbfa93a-b94d-45fc-a329-229860183b1d</Single>
+</Single>]]></Metadata>
+  </LogicEngineObject>
+</RTACModule>
