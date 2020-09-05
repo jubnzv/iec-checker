@@ -23,7 +23,7 @@ module POUNode = struct
     is_pointer: bool;
   }
 
-  (* See: tc6_xml_v201_technical_doc page 29 *)
+  (* See: tc6_xml_v201_technical_doc page 29. *)
   type pou_var = {
     name: string;
     var_ty: iec_ty_use option;
@@ -78,7 +78,7 @@ module POUNode = struct
     and persistent = false
     and nonpersistent = false
     and vars = [] in
-    {ty; name; constant; retain; nonretain; persistent; nonpersistent; vars }
+    { ty; name; constant; retain; nonretain; persistent; nonpersistent; vars }
 
   type node_type =
     | Program
@@ -371,7 +371,7 @@ module POUNode = struct
       | `El_start _ -> xmlm_skip i 1; pull_body i d data
       | _ -> pull_body i d data
 
-  (** [from_xml_exn xml_object attrs] Create POUNode from a given [xml_object]. *)
+  (** [from_xml_exn xml_object attrs] Create POUNode.t from a given [xml_object]. *)
   let from_xml_exn el (attrs : Xmlm.attribute list) : t =
     let mk_from_attrs_exn (attrs : Xmlm.attribute list) : t =
       let (ty_opt, name_opt) = List.fold_left
@@ -441,13 +441,64 @@ end
 (* module TypeNode = struct *)
 (* end                      *)
 
-(** Representation of instance objects from XML schema parse tree.
-    These nodes are described in <onstances> tags. *)
-(* module InstanceNode = struct *)
-(* end                          *)
+(** Representation of configuraiton objects from XML schema parse tree.
+    These nodes are described in <configurations> tags inside <instances> tag.
+    Reference: tc6_xml_v201_technical_doc part 7. *)
+module ConfigurationNode = struct
+
+  type pou_instance = {
+    name: string;
+    type_name: string;
+    global_id : int option;
+    (* add_data *)
+  }
+
+  type task = {
+    name: string;
+    single: string option;
+    interval : string option;
+    priority: int;
+    global_id : int option;
+    pou_configurations : pou_instance list;
+    (* add_data *)
+  }
+
+  type resource = {
+    name: string;
+    global_id : int option;
+    tasks: task list;
+    (* global_vars  *)
+    pou_configurations : pou_instance list;
+    (* add_data *)
+  }
+
+  type t = {
+    name: string;
+    global_id : int option;
+    resources : resource list;
+    (* global_vars  *)
+    (* access_vars *)
+    (* add_data *)
+  }
+
+  (** [from_xml_exn xml_object attrs] Create ConfigurationNode.t from the given
+      [xml_object]. *)
+  let [@warning "-27"] from_xml_exn el (attrs : Xmlm.attribute list) : t =
+    let mk_from_attrs (attrs : Xmlm.attribute list) : t =
+      let name_opt =
+        List.find ~f:(fun ((_,k),_) -> String.equal "name" k) attrs in
+      let name = match name_opt with
+        | Some (_,v) -> v
+        | None -> raise @@ XMLError "Configuration name is undefined"
+      in
+      { name; global_id = None; resources = []; }
+    in
+    mk_from_attrs attrs
+end
 
 type parse_tree = {
   mutable pous: POUNode.t list;
+  mutable configurations : ConfigurationNode.t list;
 }
 
 (** [reconstruct_tree pt] Create IEC61131-3 listing from the given [pt]. *)
@@ -479,6 +530,24 @@ let pull_pous i =
   in
   pull_pous_aux i 1 []
 
+let pull_configurations i =
+  let rec pull_configurations_aux i d (acc : ConfigurationNode.t list) : ConfigurationNode.t list =
+    let skip () = pull_configurations_aux i d acc in
+    if Xmlm.eoi i then acc else
+      match Xmlm.input i with
+      | `El_start ((_, tag), attrs) when (String.equal tag "configuration") -> begin
+          let conf = ConfigurationNode.from_xml_exn i attrs in
+          conf :: (pull_configurations_aux i (d + 1) acc)
+        end
+      | `El_end -> begin
+          if (phys_equal d 1) then begin
+            acc
+          end else pull_configurations_aux i (d - 1) acc
+        end
+      | `El_start _ | `Dtd _ | `Data _ -> skip ()
+  in
+  pull_configurations_aux i 1 []
+
 (** Iterate over all XML elements in schema to parse their source code. *)
 let rec pull_all i d (acc : parse_tree) =
   if Xmlm.eoi i then acc
@@ -488,12 +557,16 @@ let rec pull_all i d (acc : parse_tree) =
         acc.pous <- List.append acc.pous (pull_pous i);
         pull_all i d acc
       end
+    |`El_start ((_, tag), _) when (String.equal tag "configurations") -> begin
+        acc.configurations <- List.append acc.configurations (pull_configurations i);
+        pull_all i d acc
+      end
     |`El_start _ -> pull_all i (d + 1) acc
     | `El_end -> if (phys_equal d 1) then acc else pull_all i (d - 1) acc
     | _ -> pull_all i d acc
 
 let reconstruct_from_channel ic =
   let i = Xmlm.make_input (`Channel ic) in
-  let parse_tree = { pous = [] } in
+  let parse_tree = { pous = []; configurations = [] } in
   pull_all i 1 parse_tree
   |> reconstruct_tree
