@@ -25,11 +25,9 @@ You can download the latest binary release for Linux x86_64 from [GitHub release
 
 ### Build from sources
 
-If you want to build it from sources, you need to install OCaml compiler with some additional packages.
+Install the latest OCaml compiler and opam. Consider installation instructions at [ocaml.org](https://ocaml.org/docs/install.html) and [opam.ocaml.org](https://opam.ocaml.org/doc/Install.html).
 
-First, get the latest OCaml compiler and opam. Consider installation instructions at [ocaml.org](https://ocaml.org/docs/install.html) and [opam.ocaml.org](https://opam.ocaml.org/doc/Install.html).
-
-Then install create OCaml switch and install the required dependencies:
+Then create OCaml switch and install the required dependencies:
 ```bash
 opam switch create 4.10.0
 opam pin menhir 20200211
