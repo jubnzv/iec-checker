@@ -1,6 +1,7 @@
 # IEC Checker
 
 ![](https://github.com/jubnzv/iec-checker/workflows/Unit%20tests/badge.svg)
+[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
 
 This project aims to implement an open source tool for static code analysis of IEC 61131-3 programs.
 
@@ -45,7 +46,7 @@ dune install --preifx ./output
 ### Python scripts and test suite
 There is also a convenient [checker.py](./checker.py) script that wraps OCaml binary and provide additional options like extended formatting support and running the Python plugins. The test suite is also written in Python and requires a Python interpreter with some additional packages.
 
-Get [Python 3](https://www.python.org/downloads/) and install missing dependencies in [virtual environment](https://docs.python.org/3/library/venv.html):
+Get [Python 3](https://www.python.org/downloads/) and install dependencies in the [virtual environment](https://docs.python.org/3/library/venv.html):
 ```bash
 virtualenv venv --python=/usr/bin/python3
 source venv/bin/activate
