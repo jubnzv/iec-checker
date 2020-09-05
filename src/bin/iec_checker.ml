@@ -9,6 +9,11 @@ module TI = Tok_info
 module W = Warn
 module WO = Warn_output
 
+(** Format of files given to checker *)
+type input_format_ty =
+  | InputST (** StructuredText source code *)
+  | InputXML (** PLCOpen schemas *)
+
 let parse_with_error (lexbuf: Lexing.lexbuf) : (S.iec_library_element list * Warn.t list) =
   let tokinfo lexbuf = TI.create lexbuf in
   let l = Lexer.initial tokinfo in
@@ -20,14 +25,6 @@ let parse_with_error (lexbuf: Lexing.lexbuf) : (S.iec_library_element list * War
   | e ->
     [], [(W.mk_from_lexbuf lexbuf "UnknownError" (Exn.to_string e))]
 
-let parse_file (filename : string) : (S.iec_library_element list * Warn.t list) =
-  let inx = In_channel.create filename in
-  let lexbuf = Lexing.from_channel inx in
-  lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
-  let (elements, warns) = parse_with_error lexbuf in
-  In_channel.close inx;
-  (elements, warns)
-
 let parse_stdin () : (S.iec_library_element list * Warn.t list) =
   match In_channel.input_line stdin with
   | None -> ([], [W.mk_internal ~id:"Cancel" ""])
@@ -37,11 +34,28 @@ let parse_stdin () : (S.iec_library_element list * Warn.t list) =
       let (elements, warns) = parse_with_error lexbuf in
       (elements, warns))
 
-let run_checker filename fmt create_dumps quiet interactive =
+let parse_st_file (filename : string) : (S.iec_library_element list * Warn.t list) =
+  let inx = In_channel.create filename in
+  let lexbuf = Lexing.from_channel inx in
+  lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
+  let (elements, warns) = parse_with_error lexbuf in
+  In_channel.close inx;
+  (elements, warns)
+
+let parse_xml_file (filename : string) : (S.iec_library_element list * Warn.t list) =
+  let inx = In_channel.create filename in
+  let program = Plcopen.reconstruct_from_channel inx in
+  In_channel.close inx;
+  let lexbuf = Lexing.from_string program in
+  lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
+  let (elements, warns) = parse_with_error lexbuf in
+  (elements, warns)
+
+let run_checker filename in_fmt out_fmt create_dumps quiet interactive =
   let (read_stdin : bool) = (String.equal "-" filename) || (String.is_empty filename) in
   if (not (Sys.file_exists filename) && not read_stdin) then
     let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" filename) in
-    WO.print_report [err] fmt;
+    WO.print_report [err] out_fmt;
     exit 127
   else
     let (elements, parser_warns) =
@@ -51,7 +65,9 @@ let run_checker filename fmt create_dumps quiet interactive =
         parse_stdin ()
       end else begin
         if not quiet then Printf.printf "Parsing %s ...\n" filename;
-        parse_file filename
+          match in_fmt with
+          | InputST -> parse_st_file filename
+          | InputXML -> parse_xml_file filename
       end
     in
     let envs = Ast_util.create_envs elements in
@@ -71,7 +87,7 @@ let run_checker filename fmt create_dumps quiet interactive =
       unused_warns @
       ud_warns @
       lib_warns)
-      fmt;
+      out_fmt;
     let rc = if not (List.is_empty parser_warns) then 1 else 0 in
     exit rc
 
@@ -79,6 +95,8 @@ let command =
   Command.basic ~summary:"IEC61131-3 static analysis"
     Command.Let_syntax.(
       let%map_open
+        input_format = flag "-input-format" (optional string) ~doc:"Input format"
+      and
         output_format = flag "-output-format" (optional string) ~doc:"Output format"
       and
         create_dumps = flag "-dump" (optional bool) ~doc:"Generate AST dumps in JSON format"
@@ -90,19 +108,36 @@ let command =
         files = anon (sequence ("filename" %: Core.Filename.arg_type))
       in
       fun () ->
-        let fmt = match output_format with
-          | Some s -> (
+        let in_fmt = match input_format with
+          | Some s -> begin
+              if String.equal s "st" then
+                  InputST
+              else if String.equal s "xml" then
+                InputXML
+              else begin
+                Printf.eprintf "Unknown input format '%s'!\n\n" s;
+                Printf.eprintf "Supported formats:\n" ;
+                Printf.eprintf "  st\n" ;
+                Printf.eprintf "  xml\n" ;
+                exit 22
+              end
+            end
+          | None -> InputST
+        in
+        let out_fmt = match output_format with
+          | Some s -> begin
               if String.equal s "json" then
                 WO.Json
               else if String.equal s "plain" then
                 WO.Plain
-              else (
+              else begin
                 Printf.eprintf "Unknown output format '%s'!\n\n" s;
                 Printf.eprintf "Supported formats:\n" ;
                 Printf.eprintf "  plain\n" ;
                 Printf.eprintf "  json\n" ;
                 exit 22
-              ))
+              end
+            end
           | None -> WO.Plain
         in
         let create_dumps = match create_dumps with
@@ -121,7 +156,7 @@ let command =
         | [] -> (
             Printf.eprintf "No input files\n";
             exit 1)
-        | _ -> List.iter files ~f:(fun f -> run_checker f fmt create_dumps quiet interactive)
+        | _ -> List.iter files ~f:(fun f -> run_checker f in_fmt out_fmt create_dumps quiet interactive)
     )
 
 let () =

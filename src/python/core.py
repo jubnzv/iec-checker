@@ -38,7 +38,7 @@ def check_program(program: str) -> Tuple[List[Warning], int]:
     return (warnings, p.returncode)
 
 
-def run_checker(file_path: str) -> Tuple[List[Warning], int]:
+def run_checker(file_path: str, *args) -> Tuple[List[Warning], int]:
     """Run iec-checker core for a given file.
 
     This will execute core inspections and generate JSON dump processed with
@@ -47,6 +47,7 @@ def run_checker(file_path: str) -> Tuple[List[Warning], int]:
                           "-output-format", "json",
                           "-quiet", "true",
                           "-dump", "true",
+                          *args,
                           file_path],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
