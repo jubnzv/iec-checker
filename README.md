@@ -18,33 +18,47 @@ The following features are currently implemented:
 
 ## Installation
 
-For development you need to install [ocaml](https://ocaml.org/docs/install.html) environment and [dune](https://dune.readthedocs.io/en/stable/quick-start.html) build system:
+You can download the latest binary release for Linux x86_64 from [GitHub releases](https://github.com/jubnzv/iec-checker/releases).
+
+### Build from sources
+
+If you want to build it from sources, you need to install OCaml compiler with some additional packages.
+
+First, get the latest OCaml compiler and opam. Consider installation instructions at [ocaml.org](https://ocaml.org/docs/install.html) and [opam.ocaml.org](https://opam.ocaml.org/doc/Install.html).
+
+Then install create OCaml switch and install the required dependencies:
 ```bash
 opam switch create 4.10.0
-opam install dune
+opam pin menhir 20200211
+opam install -y dune core menhir menhirLib ppx_deriving ppx_deriving_yojson \
+                ppx_fields_conv ppx_jane ppx_variants_conv ppxlib re yojson xmlm
+eval $(opam env)
 ```
 
-Building and installing OCaml package to the current directory:
+Build and install iec_checker binary to the `output` directory:
 ```bash
 dune build @install
+mkdir output
 dune install --preifx ./output
 ```
 
-You will also need a Python interpreter with some additional packages:
+### Python scripts and test suite
+There is also a convenient [checker.py](./checker.py) script that wraps OCaml binary and provide additional options like extended formatting support and running the Python plugins. The test suite is also written in Python and requires a Python interpreter with some additional packages.
+
+Get [Python 3](https://www.python.org/downloads/) and install missing dependencies in [virtual environment](https://docs.python.org/3/library/venv.html):
 ```bash
-apt-get install python3 python3-virtualenv
 virtualenv venv --python=/usr/bin/python3
 source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-Running unit tests:
+Then run unit tests:
 ```bash
 pip3 install -r requirements-dev.txt
 pytest
 ```
 
-## Usage
+## Usage example
 
 Check some demo programs written in Structured Text:
 ```bash
