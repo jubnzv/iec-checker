@@ -5,12 +5,15 @@
 This project aims to implement an open source tool for static code analysis of IEC 61131-3 programs.
 
 The following features are currently implemented:
-+ IEC 61131-3 3 ed. parser for [Structured Text](https://en.wikipedia.org/wiki/Structured_text) written using modern [menhir](http://gallium.inria.fr/~fpottier/menhir/) syntax. All syntactic constructions from third edition are supported, excluding OOP features (classes, namespaces).
-+ Some checks for [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines);
-+ Declaration analysis for derived types;
-+ Intraprocedural control flow analysis: searching for unreachable code blocks inside the [POUs](https://en.wikipedia.org/wiki/IEC_61131-3#Program_organization_unit_(POU));
-+ Found unused variables;
-+ Ability to integrate with other tools. Checker can dump IR of a program into a JSON file (`-dump true` argument) and produce warnings in JSON format (`-output-format json`);
++ [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines) checks:
+  - CP13: POUs shall not call themselves directly or indirectly
+  - CP9: Limit the complexity of POU code
+  - L17: Each IF instruction should have an ELSE clause
+  - N3: Define the names to avoid
++ Declaration analysis for derived types
++ Intraprocedural control flow analysis: detection of unreachable code blocks inside the [POUs](https://en.wikipedia.org/wiki/IEC_61131-3#Program_organization_unit_(POU))
++ Detection of unused variables
++ Ability to integrate with other tools. Checker can dump its IR into JSON file (`-dump true` argument) and produce warnings in JSON format (`-output-format json`);
 + Can be extended with plugins written in Python. See demo plugin that plots control flow graph: [cfg_plotter.py](./src/python/plugins/cfg_plotter.py).
 
 ## Installation
