@@ -5,6 +5,8 @@
 
 This project aims to implement an open source tool for static code analysis of IEC 61131-3 programs.
 
+You can try [Online Demo](https://idie.ru/bin/iec-checker).
+
 The following features are currently implemented:
 + [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines) checks:
   - CP13: POUs shall not call themselves directly or indirectly
@@ -59,7 +61,7 @@ pip3 install -r requirements-dev.txt
 pytest
 ```
 
-## Usage example
+## Usage
 
 Check some demo programs written in Structured Text:
 ```bash
