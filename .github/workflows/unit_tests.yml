@@ -28,7 +28,7 @@ jobs:
     - name: Build OCaml core
       run: |
         opam pin menhir 20200211 # FIXME: Regression workaround
-        opam install -y dune core menhir menhirLib ppx_deriving ppx_deriving_yojson ppx_fields_conv ppx_jane ppx_variants_conv ppxlib re yojson
+        opam install -y dune core menhir menhirLib ppx_deriving ppx_deriving_yojson ppx_fields_conv ppx_jane ppx_variants_conv ppxlib re yojson xmlm
         eval $(opam env)
         dune build @install
         mkdir -p output
