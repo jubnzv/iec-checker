@@ -2,7 +2,6 @@
   open Core_kernel
   open IECCheckerCore
 
-  module S = Syntax
   module TI = Tok_info
 
   exception SyntaxError of string
@@ -19,39 +18,39 @@
 
   let creal_mk t =
     let (v, ti) = t in
-    S.CReal(ti, v)
+    Syntax.CReal(ti, v)
 
   let ctime_mk fn t =
     let (v, ti) = t in
     let tv = (fn v) in
-    S.CTimeValue(ti, tv)
+    Syntax.CTimeValue(ti, tv)
 
   let c_get_int = function
-    | S.CInteger (_,v) -> Some(v)
+    | Syntax.CInteger (_,v) -> Some(v)
     | _ -> None
 
   let c_get_int_exn = function
-    | S.CInteger (_, v) -> v
+    | Syntax.CInteger (_, v) -> v
     | _ -> assert false
 
-  let mk_global_decl (sym_var : S.SymVar.t) =
-    let var = S.VarUse.create_sym sym_var S.VarUse.Elementary in
-    let attr = S.VarDecl.VarGlobal(None) in
-    let var_decl = S.VarDecl.create var None in
-    let var_decl = S.VarDecl.set_attr var_decl attr in
+  let mk_global_decl (sym_var : Syntax.SymVar.t) =
+    let var = Syntax.VarUse.create_sym sym_var Syntax.VarUse.Elementary in
+    let attr = Syntax.VarDecl.VarGlobal(None) in
+    let var_decl = Syntax.VarDecl.create var None in
+    let var_decl = Syntax.VarDecl.set_attr var_decl attr in
     var_decl
 
   let mk_var_use name ti =
-    let sv = S.SymVar.create name ti in
-    let var_use = S.VarUse.create_sym sv S.VarUse.Elementary in
+    let sv = Syntax.SymVar.create name ti in
+    let var_use = Syntax.VarUse.create_sym sv Syntax.VarUse.Elementary in
     var_use
 
   let mk_var_use_sym sv =
-    let var_use = S.VarUse.create_sym sv S.VarUse.Elementary in
+    let var_use = Syntax.VarUse.create_sym sv Syntax.VarUse.Elementary in
     var_use
 
   let mk_var_use_dir dv =
-    let var_use = S.VarUse.create_dir dv S.VarUse.Elementary in
+    let var_use = Syntax.VarUse.create_dir dv Syntax.VarUse.Elementary in
     var_use
 %}
 
@@ -242,25 +241,25 @@ let library_element_declarations :=
   {
     let type_defs =
       List.map dl
-      ~f:(fun t -> S.mk_pou (`Type t))
+      ~f:(fun t -> Syntax.mk_pou (`Type t))
     in
     ll @ type_defs
   }
   | dl = data_type_decl;
   {
     List.map dl
-    ~f:(fun t -> S.mk_pou (`Type t))
+    ~f:(fun t -> Syntax.mk_pou (`Type t))
   }
 
 let library_element_declaration :=
   | d = prog_decl;
-  { S.mk_pou (`Program d) }
+  { Syntax.mk_pou (`Program d) }
   | d = func_decl;
-  { S.mk_pou (`Function d) }
+  { Syntax.mk_pou (`Function d) }
   | d = fb_decl;
-  { S.mk_pou (`FunctionBlock d) }
+  { Syntax.mk_pou (`FunctionBlock d) }
   | d = config_decl;
-  { S.mk_pou (`Configuration d) }
+  { Syntax.mk_pou (`Configuration d) }
 (* }}} *)
 
 (* {{{ Table 1 -- Symbols / Table 2 -- Identifiers *)
@@ -277,24 +276,24 @@ let library_element_declaration :=
 let constant :=
   | c = numeric_literal;
   {
-    let ti = S.c_get_ti c in
-    S.ExprConstant(ti, c)
+    let ti = Syntax.c_get_ti c in
+    Syntax.ExprConstant(ti, c)
   }
   | c = char_literal;
   {
-    let ti = S.c_get_ti c in
-    S.ExprConstant(ti, c)
+    let ti = Syntax.c_get_ti c in
+    Syntax.ExprConstant(ti, c)
   }
   | c = time_literal;
   {
-    let ti = S.c_get_ti c in
-    S.ExprConstant(ti, c)
+    let ti = Syntax.c_get_ti c in
+    Syntax.ExprConstant(ti, c)
   }
-  (* | ~ = bit_str_literal <S.ExprConstant> *)
+  (* | ~ = bit_str_literal <Syntax.ExprConstant> *)
   | c = bool_literal;
   {
-    let ti = S.c_get_ti c in
-    S.ExprConstant(ti, c)
+    let ti = Syntax.c_get_ti c in
+    Syntax.ExprConstant(ti, c)
   }
 
 let numeric_literal :=
@@ -315,7 +314,7 @@ let unsigned_int :=
   | vi = T_INTEGER;
   {
     let (v, ti) = vi in
-    S.CInteger(ti, v)
+    Syntax.CInteger(ti, v)
   }
 
 let signed_int :=
@@ -324,28 +323,28 @@ let signed_int :=
   | T_MINUS; res = T_INTEGER;
   {
     let (v, ti) = res in
-    S.CInteger(ti, -v)
+    Syntax.CInteger(ti, -v)
   }
 
 let binary_int :=
   | vi = T_BINARY_INTEGER;
   {
     let (v, ti) = vi in
-    S.CInteger(ti, v)
+    Syntax.CInteger(ti, v)
   }
 
 let octal_int :=
   | vi = T_OCTAL_INTEGER;
   {
     let (v, ti) = vi in
-    S.CInteger(ti, v)
+    Syntax.CInteger(ti, v)
   }
 
 let hex_int :=
   | vi = T_HEX_INTEGER;
   {
     let (v, ti) = vi in
-    S.CInteger(ti, v)
+    Syntax.CInteger(ti, v)
   }
 
 real_literal:
@@ -383,7 +382,7 @@ let bool_literal :=
   | vb = T_BOOL_VALUE;
   {
     let (v, ti) = vb in
-    S.CBool(ti, v)
+    Syntax.CBool(ti, v)
   }
 
 (* }}} *)
@@ -400,14 +399,14 @@ s_byte_char_str:
   | str = T_SSTRING_LITERAL
   {
     let(v, ti) = str in
-    S.CString(ti, v)
+    Syntax.CString(ti, v)
   }
 
 d_byte_char_str:
   | str = T_DSTRING_LITERAL
   {
     let(v, ti) = str in
-    S.CString(ti, v)
+    Syntax.CString(ti, v)
   }
 
 (* Implemented in lexer *)
@@ -431,8 +430,8 @@ duration:
   | time_type_helper T_MINUS v = interval
   {
     match v with
-    | S.CTimeValue(ti, tv) ->
-        S.CTimeValue(ti, (S.TimeValue.inv tv))
+    | Syntax.CTimeValue(ti, tv) ->
+        Syntax.CTimeValue(ti, (Syntax.TimeValue.inv tv))
     | _ -> assert false
   }
 
@@ -441,9 +440,9 @@ time_type_helper:
   | v = time_type_name T_SHARP
   { v }
   | v = T_TSHARP
-  { S.TIME }
+  { Syntax.TIME }
   | v = T_LTSHARP
-  { S.LTIME }
+  { Syntax.LTIME }
 
 (* Return string * TI.t *)
 fix_point:
@@ -467,43 +466,43 @@ let interval :=
 
 days:
   | vt = T_TIME_INTERVAL_D
-  { ctime_mk (fun v -> S.TimeValue.mk ~d:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~d:v ()) vt }
   | vt = T_TIME_INTERVAL_D; v = hours
-  { ctime_mk (fun v -> S.TimeValue.mk ~d:v ()) vt |> S.c_add v }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~d:v ()) vt |> Syntax.c_add v }
 
 hours:
   | vt = T_TIME_INTERVAL_H
-  { ctime_mk (fun v -> S.TimeValue.mk ~h:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~h:v ()) vt }
   | vt = T_TIME_INTERVAL_H; v = minutes
-  { ctime_mk (fun v -> S.TimeValue.mk ~h:v ()) vt |> S.c_add v }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~h:v ()) vt |> Syntax.c_add v }
 
 minutes:
   | vt = T_TIME_INTERVAL_M
-  { ctime_mk (fun v -> S.TimeValue.mk ~m:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~m:v ()) vt }
   | vt = T_TIME_INTERVAL_M; v = seconds
-  { ctime_mk (fun v -> S.TimeValue.mk ~m:v ()) vt |> S.c_add v }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~m:v ()) vt |> Syntax.c_add v }
 
 seconds:
   | vt = T_TIME_INTERVAL_S
-  { ctime_mk (fun v -> S.TimeValue.mk ~s:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~s:v ()) vt }
   | vt = T_TIME_INTERVAL_S; v = miliseconds
-  { ctime_mk (fun v -> S.TimeValue.mk ~s:v ()) vt |> S.c_add v }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~s:v ()) vt |> Syntax.c_add v }
 
 miliseconds:
   | vt = T_TIME_INTERVAL_MS
-  { ctime_mk (fun v -> S.TimeValue.mk ~ms:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~ms:v ()) vt }
   | vt = T_TIME_INTERVAL_MS; v = microseconds
-  { ctime_mk (fun v -> S.TimeValue.mk ~ms:v ()) vt |> S.c_add v }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~ms:v ()) vt |> Syntax.c_add v }
 
 microseconds:
   | vt = T_TIME_INTERVAL_US
-  { ctime_mk (fun v -> S.TimeValue.mk ~us:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~us:v ()) vt }
   | vt = T_TIME_INTERVAL_US; v = nanoseconds;
-  { ctime_mk (fun v -> S.TimeValue.mk ~us:v ()) vt |> S.c_add v }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~us:v ()) vt |> Syntax.c_add v }
 
 nanoseconds:
   | vt = T_TIME_INTERVAL_NS
-  { ctime_mk (fun v -> S.TimeValue.mk ~ns:v ()) vt }
+  { ctime_mk (fun v -> Syntax.TimeValue.mk ~ns:v ()) vt }
 
 time_of_day:
   | tod_type_name; T_SHARP vt = daytime
@@ -515,12 +514,12 @@ daytime:
   | hi = day_hour T_COLON mi = day_minute T_COLON ss = day_second
   {
     let ctime_of_timevals ch cm ss =
-      let ti = S.c_get_ti ch in
+      let ti = Syntax.c_get_ti ch in
       let hf = float_of_int (c_get_int_exn ch) in
       let mf = float_of_int (c_get_int_exn cm) in
       let sf = float_of_string ss in
-      let tv = S.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
-      S.CTimeValue(ti, tv)
+      let tv = Syntax.TimeValue.mk ~h:hf ~m:mf ~s:sf () in
+      Syntax.CTimeValue(ti, tv)
     in
     ctime_of_timevals hi mi ss
   }
@@ -547,12 +546,12 @@ date_literal:
   | cy = year T_MINUS cmo = month T_MINUS cd = day
   {
     let cdate_of_timevals cy cmo cd =
-      let ti = S.c_get_ti cy in
+      let ti = Syntax.c_get_ti cy in
       let yi = (c_get_int_exn cy) in
       let moi = (c_get_int_exn cmo) in
       let df = float_of_int (c_get_int_exn cd) in
-      let tv = S.TimeValue.mk ~y:yi ~mo:moi ~d:df () in
-      S.CTimeValue(ti, tv)
+      let tv = Syntax.TimeValue.mk ~y:yi ~mo:moi ~d:df () in
+      Syntax.CTimeValue(ti, tv)
     in
     cdate_of_timevals cy cmo cd
   }
@@ -568,21 +567,21 @@ let day :=
 
 date_and_time:
   | dt_type_name; T_SHARP; d = date_literal; T_MINUS dt = daytime
-  { S.c_add d dt }
+  { Syntax.c_add d dt }
   | T_LDATE_AND_TIME T_SHARP; d = date_literal; T_MINUS dt = daytime
-  { S.c_add d dt }
+  { Syntax.c_add d dt }
 (* }}} *)
 
 (* {{{ Table 10 -- Elementary data types *)
 (* Note: *_name rules will return an actual Syntax AST type representation.
   This simplifies a processing of derived types specifications. *)
 let data_type_access :=
-  | ~ = elem_type_name; <S.TyElementary>
-  | ~ = derived_type_access; <S.TyDerived>
+  | ~ = elem_type_name; <Syntax.TyElementary>
+  | ~ = derived_type_access; <Syntax.TyDerived>
   (* NOTE:
      This is not represtned in the IEC 61131-3 3rd ed. grammar. But there are no generic types at all!
      I believe it should work like in 2nd edition of the Standard. *)
-  | ~ = generic_type_name; <S.TyGeneric>
+  | ~ = generic_type_name; <Syntax.TyGeneric>
 
 let elem_type_name :=
   | ~ = numeric_type_name; <>
@@ -606,37 +605,37 @@ let int_type_name :=
 
 sign_int_type_name:
   | T_SINT
-  { S.SINT }
+  { Syntax.SINT }
   | T_INT
-  { S.INT }
+  { Syntax.INT }
   | T_DINT
-  { S.DINT }
+  { Syntax.DINT }
   | T_LINT
-  { S.LINT }
+  { Syntax.LINT }
 
 unsign_int_type_name:
   | T_USINT
-  { S.USINT }
+  { Syntax.USINT }
   | T_UINT
-  { S.UINT }
+  { Syntax.UINT }
   | T_UDINT
-  { S.UDINT }
+  { Syntax.UDINT }
   | T_ULINT
-  { S.ULINT }
+  { Syntax.ULINT }
 
 real_type_name:
   | T_REAL
-  { S.REAL }
+  { Syntax.REAL }
   | T_LREAL
-  { S.LREAL }
+  { Syntax.LREAL }
 
 let string_type_name :=
-  | T_STRING; l = string_type_length; { S.STRING(l) }
-  | T_WSTRING; l = string_type_length; { S.WSTRING(l) }
-  | T_STRING; { S.STRING(Config.max_string_len) }
-  | T_WSTRING; { S.WSTRING(Config.max_string_len) }
-  | T_CHAR; { S.CHAR(1) }
-  | T_WCHAR; { S.WCHAR(1) }
+  | T_STRING; l = string_type_length; { Syntax.STRING(l) }
+  | T_WSTRING; l = string_type_length; { Syntax.WSTRING(l) }
+  | T_STRING; { Syntax.STRING(Config.max_string_len) }
+  | T_WSTRING; { Syntax.WSTRING(Config.max_string_len) }
+  | T_CHAR; { Syntax.CHAR(1) }
+  | T_WCHAR; { Syntax.WCHAR(1) }
 
 (* Helper rule for [string_type_name] *)
 let string_type_length :=
@@ -645,33 +644,33 @@ let string_type_length :=
 
 time_type_name:
   | T_TIME
-  { S.TIME }
+  { Syntax.TIME }
   | T_LTIME
-  { S.LTIME }
+  { Syntax.LTIME }
 
 date_type_name:
   | T_DATE
-  { S.DATE }
+  { Syntax.DATE }
   | T_LDATE
-  { S.LDATE }
+  { Syntax.LDATE }
 
 tod_type_name:
   | T_TIME_OF_DAY
-  { S.TIME_OF_DAY }
+  { Syntax.TIME_OF_DAY }
   | T_TOD
-  { S.TOD }
+  { Syntax.TOD }
   | T_LTOD
-  { S.LTOD }
+  { Syntax.LTOD }
 
 dt_type_name:
   | T_DATE_AND_TIME
-  { S.DATE_AND_TIME }
+  { Syntax.DATE_AND_TIME }
   | T_LDATE_AND_TIME
-  { S.LDATE_AND_TIME }
+  { Syntax.LDATE_AND_TIME }
   | T_DT
-  { S.DT }
+  { Syntax.DT }
   | T_LDT
-  { S.LDT }
+  { Syntax.LDT }
 
 let bit_str_type_name :=
   | ~ = bool_type_name; <>
@@ -679,25 +678,25 @@ let bit_str_type_name :=
 
 bool_type_name:
   | T_BOOL
-  { S.BOOL }
+  { Syntax.BOOL }
 
 multibits_type_name:
   | T_BYTE
-  { S.BYTE }
+  { Syntax.BYTE }
   | T_WORD
-  { S.WORD }
+  { Syntax.WORD }
   | T_DWORD
-  { S.DWORD }
+  { Syntax.DWORD }
   | T_LWORD
-  { S.LWORD }
+  { Syntax.LWORD }
 (* }}} *)
 
 (* {{{ Table 11 -- Derived data types *)
 let derived_type_access :=
-  | ~ = single_elem_type_access; <S.DTyUseSingleElement>
+  | ~ = single_elem_type_access; <Syntax.DTyUseSingleElement>
   (* | ~ = array_type_access; <> *)
-  | ~ = struct_type_access; <S.DTyUseStructType>
-  | ~ = string_type_access; <S.DTyUseStringType>
+  | ~ = struct_type_access; <Syntax.DTyUseStructType>
+  | ~ = string_type_access; <Syntax.DTyUseStringType>
   (* | ~ = class_type_access; <> *)
   (* | ~ = ref_type_access; <> *)
   (* | ~ = interface_type_access; <> *)
@@ -706,9 +705,9 @@ let string_type_access :=
   | ~ = string_type_name; <>
 
 let single_elem_type_access :=
-  | ~ = simple_type_access; <S.DTySpecSimple>
+  | ~ = simple_type_access; <Syntax.DTySpecSimple>
   (* | ~ = subrange_type_access; <> *)
-  | ~ = enum_type_access; <S.DTySpecEnum>
+  | ~ = enum_type_access; <Syntax.DTySpecEnum>
 
 let simple_type_access :=
   | ~ = simple_type_name; <>
@@ -792,14 +791,14 @@ let simple_type_decl :=
     | Some(v) -> v
     | None -> raise (SyntaxError "Missing type name declaration")
     in
-    let ty_spec = S.DTySpecElementary(ty_decl) in
-    ty_name, S.DTyDeclSingleElement(ty_spec, ci)
+    let ty_spec = Syntax.DTySpecElementary(ty_decl) in
+    ty_name, Syntax.DTyDeclSingleElement(ty_spec, ci)
   }
   | ty_name_id = T_IDENTIFIER; T_COLON; ty_decl = simple_type_access; ci = optional_assign(constant_expr);
   {
     let ty_name, _ = ty_name_id in
-    let ty_spec = S.DTySpecSimple(ty_decl) in
-    ty_name, S.DTyDeclSingleElement(ty_spec, ci)
+    let ty_spec = Syntax.DTySpecSimple(ty_decl) in
+    ty_name, Syntax.DTyDeclSingleElement(ty_spec, ci)
   }
 
 let simple_spec_init :=
@@ -807,11 +806,11 @@ let simple_spec_init :=
   { (ty, const_expr) }
 
 let simple_spec :=
-  | ~ = elem_type_name; <S.DTySpecElementary>
-  | ~ = simple_type_access; <S.DTySpecSimple>
+  | ~ = elem_type_name; <Syntax.DTySpecElementary>
+  | ~ = simple_type_access; <Syntax.DTySpecSimple>
   (* NOTE: This is not presented in 3rd edition, search my comment
      for generic_type_name bellow. *)
-  | ~ = generic_type_name; <S.DTySpecGeneric>
+  | ~ = generic_type_name; <Syntax.DTySpecGeneric>
 
 (* Implementation is modified to avoid shift/reduce conflicts *)
 let subrange_type_decl :=
@@ -821,8 +820,8 @@ let subrange_spec_init :=
   | s = subrange_spec; T_ASSIGN; ic = signed_int;
   {
     match s with
-    | ty_name, S.DTyDeclSubrange(ty_spec, _) ->
-      ty_name, S.DTyDeclSubrange(ty_spec, (c_get_int_exn ic))
+    | ty_name, Syntax.DTyDeclSubrange(ty_spec, _) ->
+      ty_name, Syntax.DTyDeclSubrange(ty_spec, (c_get_int_exn ic))
     | _ -> assert false
   }
   | ~ = subrange_spec; <>
@@ -835,12 +834,12 @@ let subrange_spec :=
     | Some(v) -> v
     | None -> raise (SyntaxError "Missing subrange type declaration")
     in
-    if not (S.ety_is_integer ty_decl) then
+    if not (Syntax.ety_is_integer ty_decl) then
         raise (SemanticError "Subrange types must be integer")
     else
       let (_, lb, ub) = s in
       (* According the Standard, the initial value is assigned to lower bound by default. *)
-      ty_name, S.DTyDeclSubrange((ty_decl, lb, ub), lb)
+      ty_name, Syntax.DTyDeclSubrange((ty_decl, lb, ub), lb)
   }
   (* | tn = subrange_type_access;
   { } *)
@@ -854,7 +853,7 @@ let subrange_spec :=
 *)
 let subrange :=
   | lbc = signed_int; T_RANGE; ubc = signed_int;
-  { (S.c_get_ti lbc), (c_get_int_exn lbc), (c_get_int_exn ubc) }
+  { (Syntax.c_get_ti lbc), (c_get_int_exn lbc), (c_get_int_exn ubc) }
 
 (* Implementation is modifiet to avoid shift/reduce conflicts with
    declaration of other types. *)
@@ -863,12 +862,12 @@ let enum_type_decl :=
   {
     let (enum_name, elem_type_name) = type_opts
     and (element_specs, default_value) = specs in
-    enum_name, S.DTyDeclEnumType(elem_type_name, element_specs, default_value)
+    enum_name, Syntax.DTyDeclEnumType(elem_type_name, element_specs, default_value)
   }
   | enum_name = enum_type_name; T_COLON; specs = enum_spec_init;
   {
     let (element_specs, default_value) = specs in
-    enum_name, S.DTyDeclEnumType(None, element_specs, default_value)
+    enum_name, Syntax.DTyDeclEnumType(None, element_specs, default_value)
   }
 
 let named_spec_init :=
@@ -881,7 +880,7 @@ let enum_spec_init :=
     let specs = List.fold_left
       values
       ~init:[]
-      ~f:(fun acc (name, _) -> acc @ [{ S.enum_type_name = None; S.elem_name = name; S.initial_value = None }])
+      ~f:(fun acc (name, _) -> acc @ [{ Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = None }])
     in
     (specs, default_value_opt)
   }
@@ -894,25 +893,25 @@ let enum_value_spec :=
   | id = T_IDENTIFIER;
   {
     let name, _ = id in
-    { S.enum_type_name = None; S.elem_name = name; S.initial_value = None; }
+    { Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = None; }
   }
   | id = T_IDENTIFIER; T_ASSIGN; initial_value = int_literal;
   {
     let name, _ = id in
-    { S.enum_type_name = None; S.elem_name = name; S.initial_value = Some(initial_value); }
+    { Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = Some(initial_value); }
   }
   | id = T_IDENTIFIER; T_ASSIGN; initial_value = constant_expr;
   {
     let name, _ = id in
-    let initial_const = match initial_value with S.ExprConstant (_, c) -> c | _ -> assert false in
-    { S.enum_type_name = None; S.elem_name = name; S.initial_value = Some(initial_const); }
+    let initial_const = match initial_value with Syntax.ExprConstant (_, c) -> c | _ -> assert false in
+    { Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = Some(initial_const); }
   }
 
 let enum_value :=
   | ty_opt = option(enum_value_opt); id = T_IDENTIFIER;
   {
     let name, _ = id in
-    { S.enum_type_name = ty_opt; S.elem_name = name; S.initial_value = None; }
+    { Syntax.enum_type_name = ty_opt; Syntax.elem_name = name; Syntax.initial_value = None; }
   }
 
 (* Helper rule for enum_value and enum_value_use  *)
@@ -924,7 +923,7 @@ let array_type_decl :=
   {
     let (name, _) = name_type
     and (subranges, ty, initializer_list) = specs in
-    name, S.DTyDeclArrayType(subranges, ty, initializer_list)
+    name, Syntax.DTyDeclArrayType(subranges, ty, initializer_list)
   }
 
 let array_spec_init :=
@@ -940,7 +939,7 @@ let array_spec :=
   let subranges = List.fold_left
     ranges
     ~init:[]
-    ~f:(fun acc (_,l,u) -> acc @ [{S.arr_lower = l; S.arr_upper = u; }])
+    ~f:(fun acc (_,l,u) -> acc @ [{Syntax.arr_lower = l; Syntax.arr_upper = u; }])
   in
   (subranges, ty)
   }
@@ -966,18 +965,18 @@ let array_elem_init :=
   | mul_c = unsigned_int; T_LBRACE; inval = option(array_elem_init_value); T_RBRACE;
   {
     let mk_int_const (i: int) =
-      S.CInteger((TI.create_dummy ()), i)
+      Syntax.CInteger((TI.create_dummy ()), i)
     in
     let (inval_list : 'a list) = match inval with
       | Some v -> [v]
       | None -> [mk_int_const 0]
     in
     let (mul : int) = match mul_c with
-      | S.CInteger(_, v) -> v
+      | Syntax.CInteger(_, v) -> v
       | _ -> assert false
     in
     let build_list i n =
-      let get_next (pos : int) : S.constant =
+      let get_next (pos : int) : Syntax.constant =
         let inval_opt = (List.nth inval_list pos) in
         match inval_opt with Some v -> v | None -> mk_int_const 0
       in
@@ -994,7 +993,7 @@ let array_elem_init :=
 let array_elem_init_value :=
   | expr = constant_expr;
   {
-    let c = match expr with S.ExprConstant(_, c) -> c | _ -> assert false in
+    let c = match expr with Syntax.ExprConstant(_, c) -> c | _ -> assert false in
     c
   }
   (* | ~ = enum_value; <>  *)
@@ -1006,7 +1005,7 @@ let struct_type_decl :=
   {
     let (name, _) = name_type
     and (is_overlap, elem_specs) = spec in
-    name, S.DTyDeclStructType(is_overlap, elem_specs)
+    name, Syntax.DTyDeclStructType(is_overlap, elem_specs)
   }
 
 let struct_spec :=
@@ -1029,10 +1028,10 @@ let struct_elem_decl :=
       | Some (_, v) -> Some(v)
       | None -> None
     in
-    { S.struct_elem_name = name;
-      S.struct_elem_loc = loc;
-      S.struct_elem_ty = ty;
-      S.struct_elem_init_value = opt_inval; }
+    { Syntax.struct_elem_name = name;
+      Syntax.struct_elem_loc = loc;
+      Syntax.struct_elem_ty = ty;
+      Syntax.struct_elem_init_value = opt_inval; }
   }
 
 (* Helper rule for [struct_elem_decl] *)
@@ -1055,18 +1054,18 @@ let struct_elem_init :=
   | value = constant_expr;
   {
     let c = match value with
-      | S.ExprConstant (_, c) -> c
+      | Syntax.ExprConstant (_, c) -> c
       | _ -> assert false
     in
-    ("" (* name *), S.StructElemInvalConstant(c))
+    ("" (* name *), Syntax.StructElemInvalConstant(c))
   }
   | name = struct_elem_name; T_ASSIGN; value = enum_value;
-  { (name, S.StructElemInvalEnum(value)) }
+  { (name, Syntax.StructElemInvalEnum(value)) }
   (* | name = struct_elem_name; T_ASSIGN; value = array_init; {} *)
   (* | name = struct_elem_name; T_ASSIGN; value = struct_spec_init; *)
   (* {                                                              *)
   (*   let (inval, _) = value in                                    *)
-  (*   (name, S.StructElemInvalStruct(inval))                       *)
+  (*   (name, Syntax.StructElemInvalStruct(inval))                       *)
   (* }                                                              *)
 
 (* NOTE: This rule contains a typo in the IEC61131-3 standard.
@@ -1086,26 +1085,26 @@ let str_type_decl :=
     | Some(v) -> v
     | None -> raise (SyntaxError "Missing string type name declaration")
     in
-    if not (S.ety_is_string ty_decl) then
+    if not (Syntax.ety_is_string ty_decl) then
         raise (SemanticError "Expected string type")
     else
-      let ty_spec = S.DTySpecElementary(ty_decl) in
+      let ty_spec = Syntax.DTySpecElementary(ty_decl) in
       (* Check optional initial value *)
       let initial_value =
         match init_expr with
           | Some(expr) ->
             begin
               match expr with
-              | S.ExprConstant(_,c) -> begin
+              | Syntax.ExprConstant(_,c) -> begin
                 match c with
-                  | S.CString _ -> init_expr
+                  | Syntax.CString _ -> init_expr
                   | _ -> assert false
               end
               | _ -> assert false
             end
           | None -> None
       in
-      ty_name, S.DTyDeclSingleElement(ty_spec, initial_value)
+      ty_name, Syntax.DTyDeclSingleElement(ty_spec, initial_value)
   }
 (* }}} *)
 
@@ -1121,7 +1120,7 @@ let ref_type_decl :=
   {
     let (ref_name, _) = name_type
     and (num_of_refs, ty, inval_opt) = spec in
-    ref_name, S.DTyDeclRefType(num_of_refs, ty, inval_opt)
+    ref_name, Syntax.DTyDeclRefType(num_of_refs, ty, inval_opt)
   }
 
 (* There is typo in Standard. I believe that '; =' means ':=' *)
@@ -1142,7 +1141,7 @@ let ref_name :=
   { let name, ti = id in (name, ti) }
 
 let ref_value :=
-  | T_NULL; { S.RefNull }
+  | T_NULL; { Syntax.RefNull }
   | ~ = ref_addr; <>
 
 (* NOTE: They just forgot to add ref_assign rule to the BNF grammar. ¯\_(ツ)_/¯
@@ -1153,8 +1152,8 @@ let ref_addr :=
 
 (* Helper symbol for [ref_addr] *)
 let ref_addr_value :=
-  | ~ = symbolic_variable; <S.RefSymVar>
-  (* | ~ = fb_instance_name; <S.RefFBInstance> *)
+  | ~ = symbolic_variable; <Syntax.RefSymVar>
+  (* | ~ = fb_instance_name; <Syntax.RefFBInstance> *)
   (* | ~ = class_instance_name; <> *)
 
 let ref_deref :=
@@ -1162,11 +1161,11 @@ let ref_deref :=
   {
     let name, ti = name_ti in
     let var = mk_var_use name ti in
-    let var_expr = S.ExprVariable(ti, var) in
+    let var_expr = Syntax.ExprVariable(ti, var) in
     List.fold_left
       derefs
       ~init:var_expr
-      ~f:(fun prev_expr _ -> S.ExprUn(ti, S.DEREF, prev_expr))
+      ~f:(fun prev_expr _ -> Syntax.ExprUn(ti, Syntax.DEREF, prev_expr))
   }
 (* }}} *)
 
@@ -1179,7 +1178,7 @@ let variable :=
 
 let symbolic_variable :=
   | out = variable_name;
-  { let (name, ti) = out in S.SymVar.create name ti }
+  { let (name, ti) = out in Syntax.SymVar.create name ti }
   | ~ = multi_elem_var; <>
 
 let var_access :=
@@ -1194,20 +1193,20 @@ let multi_elem_var :=
   | name_ti = var_access; T_LBRACK; sub_list = subscript_list; T_RBRACK;
   {
    let (name, ti) = name_ti in
-   let sv = S.SymVar.create name ti in
+   let sv = Syntax.SymVar.create name ti in
    (* Add array indexes to variable. *)
    List.fold_left
      sub_list
      ~init:sv
      ~f:(fun acc_sv e -> begin
          match e with
-         | S.ExprConstant (_,c) -> begin
+         | Syntax.ExprConstant (_,c) -> begin
            let val_opt = c_get_int c in
            match val_opt with
-           | Some v -> S.SymVar.add_array_index acc_sv v
-           | None -> S.SymVar.add_array_index_opaque acc_sv
+           | Some v -> Syntax.SymVar.add_array_index acc_sv v
+           | None -> Syntax.SymVar.add_array_index_opaque acc_sv
          end
-         | _ -> S.SymVar.add_array_index_opaque acc_sv
+         | _ -> Syntax.SymVar.add_array_index_opaque acc_sv
      end)
   }
   (* | ~ = var_access; sub_list = nonempty_list(struct_variable); *)
@@ -1231,12 +1230,12 @@ let input_decls :=
   | T_VAR_INPUT; T_RETAIN; vds = input_decl; T_END_VAR;
   {
     let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QRetain)) vdsr
+    List.map ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QRetain)) vdsr
   }
   | T_VAR_INPUT; T_NON_RETAIN; vds = input_decl; T_END_VAR;
   {
     let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QNonRetain)) vdsr
+    List.map ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QNonRetain)) vdsr
   }
 
 let input_decl :=
@@ -1244,8 +1243,8 @@ let input_decl :=
   {
     List.rev vs
     |> List.map ~f:(fun var_decl -> begin
-      let attr = S.VarDecl.VarIn(None) in
-      S.VarDecl.set_attr var_decl attr
+      let attr = Syntax.VarDecl.VarIn(None) in
+      Syntax.VarDecl.set_attr var_decl attr
     end)
   }
 
@@ -1255,24 +1254,24 @@ let var_decl_init :=
   | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = simple_spec_init;
   {
     let (ty, inval_opt) = ty_specs in
-    let spec = S.DTyDeclSingleElement(ty, inval_opt) in
+    let spec = Syntax.DTyDeclSingleElement(ty, inval_opt) in
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        S.VarDecl.create var (Some(spec))
+        Syntax.VarDecl.create var (Some(spec))
       end)
   }
   (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; <> *)
   | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = ref_spec_init;
   {
     let (ref_level, ref_ty, inval_opt) = ty_specs in
-    let spec = S.DTyDeclRefType(ref_level, ref_ty, inval_opt) in
+    let spec = Syntax.DTyDeclRefType(ref_level, ref_ty, inval_opt) in
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        S.VarDecl.create var (Some(spec))
+        Syntax.VarDecl.create var (Some(spec))
       end)
   }
   (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl_init; <> *)
@@ -1286,12 +1285,12 @@ let ref_var_decl :=
   | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = ref_spec;
   {
     let (ref_level, ref_ty) = ty_specs in
-    let spec = S.DTyDeclRefType(ref_level, ref_ty, None) in
+    let spec = Syntax.DTyDeclRefType(ref_level, ref_ty, None) in
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        S.VarDecl.create var (Some(spec))
+        Syntax.VarDecl.create var (Some(spec))
       end)
   }
 
@@ -1301,12 +1300,12 @@ let array_var_decl_init :=
   | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = array_spec_init;
   {
     let (subranges, ty, initializer_list) = ty_specs in
-    let spec = S.DTyDeclArrayType(subranges, ty, initializer_list) in
+    let spec = Syntax.DTyDeclArrayType(subranges, ty, initializer_list) in
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        S.VarDecl.create var (Some(spec))
+        Syntax.VarDecl.create var (Some(spec))
       end)
   }
 
@@ -1324,7 +1323,7 @@ let array_var_decl_init :=
 (*   | id = T_IDENTIFIER;             *)
 (*   {                                *)
 (*     let (name, ti) = id in         *)
-(*     S.FunctionBlock.create name ti *)
+(*     Syntax.FunctionBlock.create name ti *)
 (*   }                                *)
 
 let fb_instance_name :=
@@ -1337,8 +1336,8 @@ let output_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.VarOut(None) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.VarOut(None) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
   | T_VAR_OUTPUT; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
@@ -1346,8 +1345,8 @@ let output_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.VarOut(Some S.VarDecl.QRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.VarOut(Some Syntax.VarDecl.QRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
   | T_VAR_OUTPUT; T_NON_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
@@ -1355,8 +1354,8 @@ let output_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.VarOut(Some S.VarDecl.QNonRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.VarOut(Some Syntax.VarDecl.QNonRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
 
@@ -1365,15 +1364,15 @@ let output_decls :=
 let in_out_decls :=
   | T_VAR_IN_OUT; ~ = in_out_var_decl; T_END_VAR; <>
 
-(* Return list of S.VarDecl.t *)
+(* Return list of Syntax.VarDecl.t *)
 let in_out_var_decl :=
   | vs = variables_decl_nonempty_list(var_decl);
   {
     List.map
       vs
       ~f:(fun v -> begin
-        let attr = S.VarDecl.VarInOut in
-        S.VarDecl.set_attr v attr
+        let attr = Syntax.VarDecl.VarInOut in
+        Syntax.VarDecl.set_attr v attr
       end)
   }
   (* | vs = array_conform_decl
@@ -1388,7 +1387,7 @@ let var_decl :=
       vars
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        S.VarDecl.create var None
+        Syntax.VarDecl.create var None
       end)
   }
   (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; *)
@@ -1405,8 +1404,8 @@ let var_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.Var(None) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.Var(None) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
   | T_VAR; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
@@ -1414,8 +1413,8 @@ let var_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.Var(Some S.VarDecl.QRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.Var(Some Syntax.VarDecl.QRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
 
@@ -1425,8 +1424,8 @@ let retain_var_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.Var(Some S.VarDecl.QRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.Var(Some Syntax.VarDecl.QRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
 
@@ -1434,22 +1433,22 @@ let loc_var_decls :=
   | T_VAR; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
-    |> List.map ~f:(fun v -> S.VarDecl.set_attr v S.VarDecl.VarLocated)
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
   }
   | T_VAR; T_CONSTANT; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
-    |> List.map ~f:(fun v -> S.VarDecl.set_attr v S.VarDecl.VarLocated)
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
   }
   | T_VAR; T_RETAIN; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
-    |> List.map ~f:(fun v -> S.VarDecl.set_attr v S.VarDecl.VarLocated)
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
   }
   | T_VAR; T_NON_RETAIN; vs = nonempty_list(loc_var_decl); T_END_VAR;
   {
     List.rev vs
-    |> List.map ~f:(fun v -> S.VarDecl.set_attr v S.VarDecl.VarLocated)
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
   }
 
 let loc_var_decl :=
@@ -1457,19 +1456,19 @@ let loc_var_decl :=
   {
     let (n, ti) = name_ti in
     let var = mk_var_use n ti in
-    S.VarDecl.create var None
+    Syntax.VarDecl.create var None
   }
 
 let temp_var_decls :=
   | T_VAR_TEMP; vs = variables_decl_nonempty_list(var_decl); T_END_VAR;
   {
     List.rev vs
-    |> List.map ~f:(fun v -> S.VarDecl.set_attr v S.VarDecl.VarTemp)
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp)
   }
   | T_VAR_TEMP; vs = variables_decl_nonempty_list(ref_var_decl); T_END_VAR;
   {
     List.rev vs
-    |> List.map ~f:(fun v -> S.VarDecl.set_attr v S.VarDecl.VarTemp)
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp)
   }
   (* | interface_var_decl *)
 
@@ -1479,8 +1478,8 @@ let external_var_decls :=
     List.map
       var_decls
       ~f:(fun v -> begin
-        let attr = S.VarDecl.VarExternal(None) in
-        S.VarDecl.set_attr v attr
+        let attr = Syntax.VarDecl.VarExternal(None) in
+        Syntax.VarDecl.set_attr v attr
       end)
   }
   | T_VAR_EXTERNAL; T_RETAIN; var_decls = list(external_decl); T_END_VAR;
@@ -1488,8 +1487,8 @@ let external_var_decls :=
     List.map
       var_decls
       ~f:(fun v -> begin
-        let attr = S.VarDecl.VarExternal(Some S.VarDecl.QRetain) in
-        S.VarDecl.set_attr v attr
+        let attr = Syntax.VarDecl.VarExternal(Some Syntax.VarDecl.QRetain) in
+        Syntax.VarDecl.set_attr v attr
       end)
   }
 
@@ -1498,14 +1497,14 @@ let external_decl :=
   {
     let (n, ti) = out in
     let var = mk_var_use n ti in
-    S.VarDecl.create var None
+    Syntax.VarDecl.create var None
   }
 
 let global_var_name :=
   | id = T_IDENTIFIER;
   {
     let (n, ti) = id in
-    S.SymVar.create n ti
+    Syntax.SymVar.create n ti
   }
 
 (* Helper rule for global_var_name *)
@@ -1525,13 +1524,13 @@ let global_var_decls :=
   {
     List.rev vds
     |> List.map
-      ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QNonRetain))
+      ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QNonRetain))
   }
   | T_VAR_GLOBAL; T_CONSTANT; vds = global_var_decl_list; T_END_VAR;
   {
     List.rev vds
     |> List.map
-      ~f:(fun v -> (S.VarDecl.set_qualifier_exn v S.VarDecl.QConstant))
+      ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QConstant))
   }
 
 let global_var_decl :=
@@ -1548,9 +1547,9 @@ let global_var_spec :=
   | sv = global_var_name; l = located_at;
   {
     let var = mk_var_use_sym sv in
-    let var_decl = S.VarDecl.create var None in
-    let attr = S.VarDecl.VarGlobal(None) in
-    [(S.VarDecl.set_attr var_decl attr)]
+    let var_decl = Syntax.VarDecl.create var None in
+    let attr = Syntax.VarDecl.VarGlobal(None) in
+    [(Syntax.VarDecl.set_attr var_decl attr)]
   }
 
 let loc_var_spec_init :=
@@ -1575,8 +1574,8 @@ let loc_partly_var_decl :=
     List.map
       var_decls
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.VarDirect(None) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.VarDirect(None) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
   | T_VAR; T_RETAIN; var_decls = list(loc_partly_var); T_END_VAR;
@@ -1584,8 +1583,8 @@ let loc_partly_var_decl :=
     List.map
       var_decls
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.VarDirect(Some S.VarDecl.QRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.VarDirect(Some Syntax.VarDecl.QRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
   | T_VAR; T_NON_RETAIN; var_decls = list(loc_partly_var); T_END_VAR;
@@ -1593,8 +1592,8 @@ let loc_partly_var_decl :=
     List.map
       var_decls
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.VarDirect(Some S.VarDecl.QNonRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.VarDirect(Some Syntax.VarDecl.QNonRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
 
@@ -1603,7 +1602,7 @@ let loc_partly_var :=
   {
     let (n, ti) = out in
     let var = mk_var_use n ti in
-    S.VarDecl.create var None
+    Syntax.VarDecl.create var None
   }
 
 let var_spec :=
@@ -1623,7 +1622,7 @@ let func_name :=
   | id = T_IDENTIFIER;
   {
     let (name, ti) = id in
-    S.Function.create name ti
+    Syntax.Function.create name ti
   }
 
 let func_access :=
@@ -1638,33 +1637,33 @@ let func_access :=
   | id = T_IDENTIFIER
   {
     let (name, ti) = id in
-    S.Function.create name ti
+    Syntax.Function.create name ti
   } *)
 
 let func_decl :=
   | T_FUNCTION; id = func_name; T_COLON; ret_ty = function_ty; vs = function_vars; body = func_body; T_END_FUNCTION;
   {
     {
-      S.id = id;
-      S.return_ty = ret_ty;
-      S.variables = vs;
-      S.statements = body;
+      Syntax.id = id;
+      Syntax.return_ty = ret_ty;
+      Syntax.variables = vs;
+      Syntax.statements = body;
     }
   }
   | T_FUNCTION; id = func_name; T_COLON; ret_ty = function_ty; body = func_body; T_END_FUNCTION;
   {
     {
-      S.id = id;
-      S.return_ty = ret_ty;
-      S.variables = [];
-      S.statements = body;
+      Syntax.id = id;
+      Syntax.return_ty = ret_ty;
+      Syntax.variables = [];
+      Syntax.statements = body;
     }
   }
 
 (* Helper rule for func_decl *)
 let function_ty :=
-  | ~ = elem_type_name; <S.TyElementary>
-  | ~ = derived_type_access; <S.TyDerived>
+  | ~ = elem_type_name; <Syntax.TyElementary>
+  | ~ = derived_type_access; <Syntax.TyDerived>
 
 (* Helper rule for func_decl *)
 let function_vars :=
@@ -1706,18 +1705,18 @@ let derived_fb_name :=
   | id = T_IDENTIFIER;
   {
     let (name, ti) = id in
-    S.FunctionBlock.create name ti
+    Syntax.FunctionBlock.create name ti
   }
 
 let fb_decl :=
   | T_FUNCTION_BLOCK; id = derived_fb_name; T_END_FUNCTION_BLOCK;
-  { { S.id = id; S.variables = []; S.statements = [] } }
+  { { Syntax.id = id; Syntax.variables = []; Syntax.statements = [] } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; vds = fb_var_decls_list; T_END_FUNCTION_BLOCK;
-  { { S.id = id; S.variables = vds; S.statements = [] } }
+  { { Syntax.id = id; Syntax.variables = vds; Syntax.statements = [] } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; ss = fb_body; T_END_FUNCTION_BLOCK;
-  { { S.id = id; S.variables = []; S.statements = ss } }
+  { { Syntax.id = id; Syntax.variables = []; Syntax.statements = ss } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; vds = fb_var_decls_list; ss = fb_body; T_END_FUNCTION_BLOCK;
-  { { S.id = id; S.variables = vds; S.statements = ss } }
+  { { Syntax.id = id; Syntax.variables = vds; Syntax.statements = ss } }
 
 (* Helper rule for fb_decl *)
 let fb_var_decls_list :=
@@ -1758,8 +1757,8 @@ let no_retain_var_decls :=
     List.map
       vs
       ~f:(fun var_decl -> begin
-        let attr = S.VarDecl.Var(Some S.VarDecl.QNonRetain) in
-        S.VarDecl.set_attr var_decl attr
+        let attr = Syntax.VarDecl.Var(Some Syntax.VarDecl.QNonRetain) in
+        Syntax.VarDecl.set_attr var_decl attr
       end)
   }
 
@@ -1811,10 +1810,10 @@ let prog_decl :=
       | Some v -> v
       | None -> []
     in
-    { S.is_retain = false;
-      S.name = n;
-      S.variables = var_decls;
-      S.statements = ss }
+    { Syntax.is_retain = false;
+      Syntax.name = n;
+      Syntax.variables = var_decls;
+      Syntax.statements = ss }
   }
 
 (* Helper for prog_decl *)
@@ -1852,9 +1851,9 @@ let prog_access_decl :=
   | an = access_name; T_COLON; sv = symbolic_variable; T_COLON; data_type_access; T_SEMICOLON;
   {
     let var = mk_var_use_sym sv in
-    let var_decl = S.VarDecl.create var None in
-    let attr = S.VarDecl.VarAccess(an) in
-    S.VarDecl.set_attr var_decl attr
+    let var_decl = Syntax.VarDecl.create var None in
+    let attr = Syntax.VarDecl.VarAccess(an) in
+    Syntax.VarDecl.set_attr var_decl attr
   }
 (* }}} *)
 
@@ -1873,35 +1872,35 @@ let resource_type_name :=
 let config_decl :=
   (* Without global variables *)
   | T_CONFIGURATION; name = config_name; rd = resource_decls; T_END_CONFIGURATION;
-  { { S.name = name; S.resources = rd; S.variables = []; S.access_paths = [] } }
+  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = []; Syntax.access_paths = [] } }
   (* With global variables *)
   | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; T_END_CONFIGURATION;
-  { { S.name = name; S.resources = rd; S.variables = vds; S.access_paths = [] } }
+  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
   | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; config_init; T_END_CONFIGURATION;
-  { { S.name = name; S.resources = rd; S.variables = vds; S.access_paths = [] } }
+  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
   | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; access_decls; T_END_CONFIGURATION;
-  { { S.name = name; S.resources = rd; S.variables = vds; S.access_paths = [] } }
+  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
   | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; access_decls; config_init; T_END_CONFIGURATION;
-  { { S.name = name; S.resources = rd; S.variables = vds; S.access_paths = [] } }
+  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
 
 (* Helper rule for config_decl *)
 let resource_decls :=
   | r = single_resource_decl; {[r]}
   | ~ = list(resource_decl); <>
 
-(* Return S.resource_decl *)
+(* Return Syntax.resource_decl *)
 let resource_decl :=
   | T_RESOURCE; n = resource_name; T_ON; resource_type_name; rc = single_resource_decl; T_END_RESOURCE;
-  { { S.name = Some n; S.tasks = rc.tasks; S.variables = []; S.programs = rc.programs } }
+  { { Syntax.name = Some n; Syntax.tasks = rc.tasks; Syntax.variables = []; Syntax.programs = rc.programs } }
   | T_RESOURCE; n = resource_name; T_ON; resource_type_name; vs = global_var_decls; rc = single_resource_decl; T_END_RESOURCE;
-  { { S.name = Some n; S.tasks = rc.tasks; S.variables = vs; S.programs = rc.programs } }
+  { { Syntax.name = Some n; Syntax.tasks = rc.tasks; Syntax.variables = vs; Syntax.programs = rc.programs } }
 
-(* Return S.resource_decl *)
+(* Return Syntax.resource_decl *)
 let single_resource_decl :=
   | ts = list(task_config); pis = prog_config_list;
-  { { S.name = None; S.tasks = ts; S.variables = []; S.programs = pis } }
+  { { Syntax.name = None; Syntax.tasks = ts; Syntax.variables = []; Syntax.programs = pis } }
   | pis = prog_config_list;
-  { { S.name = None; S.tasks = []; S.variables = []; S.programs = pis } }
+  { { Syntax.name = None; Syntax.tasks = []; Syntax.variables = []; Syntax.programs = pis } }
 
 let resource_name :=
   | id = T_IDENTIFIER;
@@ -1936,9 +1935,9 @@ let global_var_access :=
     | separated_list(T_DOT, resource_name); sv = global_var_name;
     { mk_var_use_sym sv }
     (* | out = global_var_name; list(struct_elem_name); *)
-    (* { S.SymVar(out) }                                *)
+    (* { Syntax.SymVar(out) }                                *)
     (* | separated_list(T_DOT, resource_name); out = global_var_name; list(struct_elem_name); *)
-    (* { S.SymVar(out) }                                                                      *)
+    (* { Syntax.SymVar(out) }                                                                      *)
 
 let access_name :=
   | id = T_IDENTIFIER;
@@ -1948,21 +1947,21 @@ let prog_output_access :=
   | p = prog_name; T_DOT; sv = symbolic_variable;
   {
     let var_use = mk_var_use_sym sv in
-    let config_name = S.ProgramConfig.get_name p in
+    let config_name = Syntax.ProgramConfig.get_name p in
     (config_name, var_use)
   }
 
 let prog_name :=
   | id = T_IDENTIFIER;
-  { let (name, ti) = id in S.ProgramConfig.create name ti }
+  { let (name, ti) = id in Syntax.ProgramConfig.create name ti }
 
 (* Helper rule for prog_name *)
 let prog_name_qual :=
   | ~ = prog_name; <>
   | p = prog_name; T_RETAIN;
-  { S.ProgramConfig.set_qualifier p S.ProgramConfig.QRetain }
+  { Syntax.ProgramConfig.set_qualifier p Syntax.ProgramConfig.QRetain }
   | p = prog_name; T_NON_RETAIN;
-  { S.ProgramConfig.set_qualifier p S.ProgramConfig.QNonRetain }
+  { Syntax.ProgramConfig.set_qualifier p Syntax.ProgramConfig.QNonRetain }
 
 let access_direction :=
   | T_READ_WRITE;
@@ -1975,7 +1974,7 @@ let task_config :=
 
 let task_name :=
   | id = T_IDENTIFIER;
-  { let (name, ti) = id in S.Task.create name ti }
+  { let (name, ti) = id in Syntax.Task.create name ti }
 
 let task_init :=
   | T_LPAREN; T_SINGLE; s = data_source; T_COMMA; T_INTERVAL; i = data_source; T_COMMA; T_PRIORITY; T_ASSIGN; p = unsigned_int; T_RPAREN;
@@ -1990,32 +1989,32 @@ let task_init :=
 let data_source :=
   | v = constant;
   {
-    let c = S.c_from_expr_exn v in
-    S.Task.DSConstant(c)
+    let c = Syntax.c_from_expr_exn v in
+    Syntax.Task.DSConstant(c)
   }
-  | ~ = global_var_access; <S.Task.DSGlobalVar>
+  | ~ = global_var_access; <Syntax.Task.DSGlobalVar>
   | out = prog_output_access;
   {
     let (prog_name, var) = out in
-    S.Task.DSProgOutput(prog_name, var)
+    Syntax.Task.DSProgOutput(prog_name, var)
   }
   | dv = direct_variable;
   {
     let var_use = mk_var_use_dir dv in
-    S.Task.DSGlobalVar(var_use)
+    Syntax.Task.DSGlobalVar(var_use)
   }
 
 let prog_config :=
   | T_PROGRAM; ~ = prog_name_qual; T_COLON; prog_type_access; <>
   | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; prog_type_name;
-  { (S.ProgramConfig.set_task pc t) }
+  { (Syntax.ProgramConfig.set_task pc t) }
   | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; prog_type_name; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
   {
-    let pc = S.ProgramConfig.set_conn_vars pc cvs in
-    (S.ProgramConfig.set_task pc t)
+    let pc = Syntax.ProgramConfig.set_conn_vars pc cvs in
+    (Syntax.ProgramConfig.set_task pc t)
   }
   | T_PROGRAM; pc = prog_name_qual; T_COLON; prog_type_access; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
-  { (S.ProgramConfig.set_conn_vars pc cvs) }
+  { (Syntax.ProgramConfig.set_conn_vars pc cvs) }
 
 (* Helper rule for prog_config *)
 let prog_config_list :=
@@ -2085,8 +2084,8 @@ let expression :=
   | ~ = xor_expr; <>
   | e1 = expression; T_OR; e2 = xor_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, S.OR, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, Syntax.OR, e2)
   }
 
 (* According IEC61131-3 constant expression should be evaluated at compile-time.
@@ -2101,68 +2100,68 @@ let xor_expr :=
   | ~ = and_expr; <>
   | e1 = xor_expr; T_XOR; e2 = and_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, S.XOR, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, Syntax.XOR, e2)
   }
 
 let and_expr :=
   | ~ = compare_expr; <>
   | e1 = and_expr; T_AND; e2 = compare_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, S.AND, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, Syntax.AND, e2)
   }
 
 let compare_expr :=
   | ~ = equ_expr; <>
   | e1 = compare_expr; T_EQ; e2 = equ_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, S.EQ, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, Syntax.EQ, e2)
   }
   | e1 = compare_expr; T_NEQ; e2= equ_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, S.NEQ, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, Syntax.NEQ, e2)
   }
 
 let equ_expr :=
   | ~ = add_expr; <>
   | e1 = equ_expr; op = compare_expr_operator; e2 = add_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, op, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, op, e2)
   }
 
 let add_expr :=
   | ~ = term; <>
   | e1 = add_expr; op = add_operator; e2 = term;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, op, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, op, e2)
   }
 
 let term :=
   | ~ = power_expr; <>
   | e1 = term; op = multiply_operator; e2 = power_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, op, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, op, e2)
   }
 
 let power_expr :=
   | ~ = unary_expr; <>
   | e1 = power_expr; T_POW; e2 = unary_expr;
   {
-    let ti = S.expr_get_ti e1 in
-    S.ExprBin(ti, e1, S.POW, e2)
+    let ti = Syntax.expr_get_ti e1 in
+    Syntax.ExprBin(ti, e1, Syntax.POW, e2)
   }
 
 let unary_expr :=
   | op = unary_operator; e = primary_expr;
   {
-    let ti = S.expr_get_ti e in
-    S.ExprUn(ti, op, e)
+    let ti = Syntax.expr_get_ti e in
+    Syntax.ExprUn(ti, op, e)
   }
   | ~ = primary_expr; <>
 
@@ -2171,17 +2170,17 @@ let primary_expr :=
   | values = enum_value_use;
   {
     let (name, ti) = values in
-    S.ExprConstant(ti, S.CEnumValue(ti, name))
+    Syntax.ExprConstant(ti, Syntax.CEnumValue(ti, name))
   }
   | v = variable_access;
   {
-    let ti = S.VarUse.get_ti v in
-    S.ExprVariable(ti, v)
+    let ti = Syntax.VarUse.get_ti v in
+    Syntax.ExprVariable(ti, v)
   }
   | fc = func_call;
   {
-    let ti = S.stmt_get_ti fc in
-    S.ExprFuncCall(ti, fc)
+    let ti = Syntax.stmt_get_ti fc in
+    Syntax.ExprFuncCall(ti, fc)
   }
   (* | ref_value {  } *)
   | T_LPAREN; ~ = expression; T_RPAREN; <>
@@ -2217,8 +2216,8 @@ let multibit_part_access :=
 let func_call :=
   | f = func_access; T_LPAREN; stmts = separated_list(T_COMMA, param_assign); T_RPAREN;
   {
-    let ti = S.Function.get_ti f in
-    S.StmFuncCall(ti, f, stmts)
+    let ti = Syntax.Function.get_ti f in
+    Syntax.StmFuncCall(ti, f, stmts)
   }
 
 let stmt_list :=
@@ -2236,9 +2235,9 @@ let stmt :=
 let assign_stmt :=
   | v = variable; T_ASSIGN; e = expression;
   {
-    let vti = S.VarUse.get_ti v in
-    let eti = S.expr_get_ti e in
-    S.StmExpr(vti, S.ExprBin(eti, S.ExprVariable(vti, v), S.ASSIGN, e))
+    let vti = Syntax.VarUse.get_ti v in
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmExpr(vti, Syntax.ExprBin(eti, Syntax.ExprVariable(vti, v), Syntax.ASSIGN, e))
   }
   | ~ = assignment_attempt; <>
   (* | ~ = ref_assign; <> *)
@@ -2248,7 +2247,7 @@ let assignment_attempt :=
   {
     let name, ti = name_ti in
     let var = mk_var_use name ti in
-    S.StmExpr(ti, S.ExprBin(ti, S.ExprVariable(ti, var), S.ASSIGN_REF, rhs_expr))
+    Syntax.StmExpr(ti, Syntax.ExprBin(ti, Syntax.ExprVariable(ti, var), Syntax.ASSIGN_REF, rhs_expr))
   }
 
 (* Helper rule for [assignment_attempt] *)
@@ -2257,16 +2256,16 @@ let assignment_attempt_rhs :=
   {
     let name, ti = name_ti in
     let var = mk_var_use name ti in
-    S.ExprVariable(ti, var)
+    Syntax.ExprVariable(ti, var)
   }
   | ~ = ref_deref; <>
   | ref_val = ref_value;
   {
     let ti = match ref_val with
-      | S.RefNull | S.RefFBInstance _ -> TI.create_dummy ()
-      | S.RefSymVar sv -> S.SymVar.get_ti sv
+      | Syntax.RefNull | Syntax.RefFBInstance _ -> TI.create_dummy ()
+      | Syntax.RefSymVar sv -> Syntax.SymVar.get_ti sv
     in
-    S.ExprConstant(ti, S.CPointer(ti, ref_val))
+    Syntax.ExprConstant(ti, Syntax.CPointer(ti, ref_val))
   }
 
 (* invocation: *)
@@ -2277,7 +2276,7 @@ let subprog_ctrl_stmt :=
   {  } *)
   (* | T_SUPER T_LPAREN T_RPAREN
   {  } *)
-  | ~ = T_RETURN; <S.StmReturn>
+  | ~ = T_RETURN; <Syntax.StmReturn>
 
 let param_assign :=
   | vn = variable_name; T_ASSIGN; expr = expression;
@@ -2285,15 +2284,15 @@ let param_assign :=
     (* Source *)
     let (name, ti) = vn in
     let src_var = mk_var_use name ti in
-    let expr_var_src = S.ExprVariable(ti, src_var) in
+    let expr_var_src = Syntax.ExprVariable(ti, src_var) in
 
-    let assign_expr = S.ExprBin(ti, expr_var_src, S.ASSIGN, expr) in
-    { S.name = Some(name); S.stmt = S.StmExpr(ti, assign_expr); S.inverted = false }
+    let assign_expr = Syntax.ExprBin(ti, expr_var_src, Syntax.ASSIGN, expr) in
+    { Syntax.name = Some(name); Syntax.stmt = Syntax.StmExpr(ti, assign_expr); Syntax.inverted = false }
   }
   | expr = expression;
   {
-    let eti = S.expr_get_ti expr in
-    { S.name = None; S.stmt = S.StmExpr(eti, expr); S.inverted = false }
+    let eti = Syntax.expr_get_ti expr in
+    { Syntax.name = None; Syntax.stmt = Syntax.StmExpr(eti, expr); Syntax.inverted = false }
   }
   (* | ref_assign
   {  } *)
@@ -2304,28 +2303,28 @@ let param_assign :=
     (* Source *)
     let (name, ti) = vn in
     let src_var = mk_var_use name ti in
-    let expr_var_src = S.ExprVariable(ti, v) in
+    let expr_var_src = Syntax.ExprVariable(ti, v) in
 
     (* Destination *)
-    let ti_dest = S.VarUse.get_ti v in
-    let expr_var_dest = S.ExprVariable(ti_dest, v) in
+    let ti_dest = Syntax.VarUse.get_ti v in
+    let expr_var_dest = Syntax.ExprVariable(ti_dest, v) in
 
-    let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
-    { S.name = Some(name); S.stmt = S.StmExpr(ti, sendto_expr); S.inverted = true }
+    let sendto_expr = Syntax.ExprBin(ti, expr_var_src, Syntax.SENDTO, expr_var_dest) in
+    { Syntax.name = Some(name); Syntax.stmt = Syntax.StmExpr(ti, sendto_expr); Syntax.inverted = true }
   }
   | vn = variable_name; T_SENDTO; v = variable;
   {
     (* Source *)
     let (name, ti) = vn in
     let src_var = mk_var_use name ti in
-    let expr_var_src = S.ExprVariable(ti, v) in
+    let expr_var_src = Syntax.ExprVariable(ti, v) in
 
     (* Destination *)
-    let ti_dest = S.VarUse.get_ti v in
-    let expr_var_dest = S.ExprVariable(ti_dest, v) in
+    let ti_dest = Syntax.VarUse.get_ti v in
+    let expr_var_dest = Syntax.ExprVariable(ti_dest, v) in
 
-    let sendto_expr = S.ExprBin(ti, expr_var_src, S.SENDTO, expr_var_dest) in
-    { S.name = Some(name); S.stmt = S.StmExpr(ti, sendto_expr); S.inverted = false }
+    let sendto_expr = Syntax.ExprBin(ti, expr_var_src, Syntax.SENDTO, expr_var_dest) in
+    { Syntax.name = Some(name); Syntax.stmt = Syntax.StmExpr(ti, sendto_expr); Syntax.inverted = false }
   }
 
 let selection_stmt :=
@@ -2335,54 +2334,54 @@ let selection_stmt :=
 let if_stmt :=
   | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; T_END_IF;
   {
-    let eti = S.expr_get_ti e in
-    S.StmIf(ti, S.StmExpr(eti, e), ifs, [], [])
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmIf(ti, Syntax.StmExpr(eti, e), ifs, [], [])
   }
   | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; T_ELSE; elses = stmt_list; T_END_IF;
   {
-    let eti = S.expr_get_ti e in
-    S.StmIf(ti, S.StmExpr(eti, e), ifs, [], elses)
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmIf(ti, Syntax.StmExpr(eti, e), ifs, [], elses)
   }
   | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; elsifs = if_stmt_elsif_list; T_END_IF;
   {
-    let eti = S.expr_get_ti e in
-    S.StmIf(ti, S.StmExpr(eti, e), ifs, elsifs, [])
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmIf(ti, Syntax.StmExpr(eti, e), ifs, elsifs, [])
   }
   | ti = T_IF; e = expression; T_THEN; ifs = stmt_list; elsifs = if_stmt_elsif_list; T_ELSE; elses = stmt_list; T_END_IF;
   {
-    let eti = S.expr_get_ti e in
-    S.StmIf(ti, S.StmExpr(eti, e), ifs, elsifs, elses)
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmIf(ti, Syntax.StmExpr(eti, e), ifs, elsifs, elses)
   }
 
 (* Helper rule for if_stmt *)
 let if_stmt_elsif_list :=
   | ti = T_ELSIF; cond_e = expression; T_THEN; stmts = stmt_list;
   {
-    let eti = S.expr_get_ti cond_e in
-    [S.StmElsif(ti, S.StmExpr(eti, cond_e), stmts)]
+    let eti = Syntax.expr_get_ti cond_e in
+    [Syntax.StmElsif(ti, Syntax.StmExpr(eti, cond_e), stmts)]
   }
   | elsifs = if_stmt_elsif_list; ti = T_ELSIF; cond_e = expression; T_THEN; stmts = stmt_list;
   {
-    let eti = S.expr_get_ti cond_e in
-    let elsif = S.StmElsif(ti, S.StmExpr(eti, cond_e), stmts) in
+    let eti = Syntax.expr_get_ti cond_e in
+    let elsif = Syntax.StmElsif(ti, Syntax.StmExpr(eti, cond_e), stmts) in
     elsifs @ [elsif]
   }
 
 let case_stmt :=
   | ti = T_CASE; e = expression; T_OF; css = list(case_selection); T_ELSE; sl = stmt_list; T_END_CASE;
   {
-    let eti = S.expr_get_ti e in
-    S.StmCase(ti, S.StmExpr(eti, e), css, sl)
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmCase(ti, Syntax.StmExpr(eti, e), css, sl)
   }
   | ti = T_CASE; e = expression; T_OF; css = list(case_selection); T_END_CASE;
   {
-    let eti = S.expr_get_ti e in
-    S.StmCase(ti, S.StmExpr(eti, e), css, [])
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmCase(ti, Syntax.StmExpr(eti, e), css, [])
   }
 
 let case_selection :=
   | cl = case_list; T_COLON; sl = stmt_list;
-  { { S.case = cl; S.body = sl } }
+  { { Syntax.case = cl; Syntax.body = sl } }
 
 let case_list :=
   | ~ = separated_list(T_COMMA, case_list_elem); <>
@@ -2391,44 +2390,44 @@ let case_list_elem :=
   | specs = subrange;
   {
     let (ti, lb, ub) = specs in
-    S.StmExpr(ti, S.ExprConstant(ti, S.CRange(ti, lb, ub)))
+    Syntax.StmExpr(ti, Syntax.ExprConstant(ti, Syntax.CRange(ti, lb, ub)))
   }
   | e = constant_expr;
   {
-    let eti = S.expr_get_ti e in
-    S.StmExpr(eti, e)
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmExpr(eti, e)
   }
 
 let iteration_stmt :=
   | ~ = for_stmt; <>
   | ~ = while_stmt; <>
   | ~ = repeat_stmt; <>
-  | ~ = T_EXIT; <S.StmExit>
-  | ~ = T_CONTINUE; <S.StmContinue>
+  | ~ = T_EXIT; <Syntax.StmExit>
+  | ~ = T_CONTINUE; <Syntax.StmContinue>
 
 let for_stmt :=
   | ti = T_FOR; cv = control_variable; T_ASSIGN; fl = for_list; T_DO; sl = stmt_list; T_END_FOR;
   {
     let (e_start, e_end, e_step) = fl in
     let ctrl_assign_stmt =
-      let vti = S.SymVar.get_ti cv in
+      let vti = Syntax.SymVar.get_ti cv in
       let var = mk_var_use_sym cv in
-      let assign_expr = S.ExprBin(vti, S.ExprVariable(vti, var), S.ASSIGN, e_start) in
-      S.StmExpr(ti, assign_expr)
+      let assign_expr = Syntax.ExprBin(vti, Syntax.ExprVariable(vti, var), Syntax.ASSIGN, e_start) in
+      Syntax.StmExpr(ti, assign_expr)
     in
     let ctrl = {
-      S.assign = ctrl_assign_stmt;
-      S.range_end = e_end;
-      S.range_step = e_step }
+      Syntax.assign = ctrl_assign_stmt;
+      Syntax.range_end = e_end;
+      Syntax.range_step = e_step }
     in
-    S.StmFor(ti, ctrl, sl)
+    Syntax.StmFor(ti, ctrl, sl)
   }
 
 let control_variable :=
   | id = T_IDENTIFIER;
   {
     let (n, ti) = id in
-    S.SymVar.create n ti
+    Syntax.SymVar.create n ti
   }
 
 let for_list :=
@@ -2438,21 +2437,21 @@ let for_list :=
   {
     (* According 7.3.3.4.2 default STEP value is 1. *)
     let dti = TI.create_dummy () in
-    (e1, e2, S.ExprConstant(dti, S.CInteger(dti, 1)))
+    (e1, e2, Syntax.ExprConstant(dti, Syntax.CInteger(dti, 1)))
   }
 
 let while_stmt :=
   | ti = T_WHILE; e = expression; T_DO; sl = stmt_list; T_END_WHILE;
   {
-    let eti = S.expr_get_ti e in
-    S.StmWhile(ti, S.StmExpr(eti, e), sl)
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmWhile(ti, Syntax.StmExpr(eti, e), sl)
   }
 
 let repeat_stmt :=
   | ti = T_REPEAT; sl = stmt_list; T_UNTIL; e = expression; T_END_REPEAT;
   {
-    let eti = S.expr_get_ti e in
-    S.StmRepeat(ti, sl, S.StmExpr(eti, e))
+    let eti = Syntax.expr_get_ti e in
+    Syntax.StmRepeat(ti, sl, Syntax.StmExpr(eti, e))
   }
 (* }}} *)
 
@@ -2465,25 +2464,25 @@ let repeat_stmt :=
 (* Generic data types *)
 let generic_type_name :=
   | T_ANY;
-  { S.ANY }
+  { Syntax.ANY }
   | T_ANY_DERIVED;
-  { S.ANY_DERIVED }
+  { Syntax.ANY_DERIVED }
   | T_ANY_ELEMENTARY;
-  { S.ANY_ELEMENTARY }
+  { Syntax.ANY_ELEMENTARY }
   | T_ANY_MAGNITUDE;
-  { S.ANY_MAGNITUDE }
+  { Syntax.ANY_MAGNITUDE }
   | T_ANY_NUM;
-  { S.ANY_NUM }
+  { Syntax.ANY_NUM }
   | T_ANY_REAL;
-  { S.ANY_REAL }
+  { Syntax.ANY_REAL }
   | T_ANY_INT;
-  { S.ANY_INT }
+  { Syntax.ANY_INT }
   | T_ANY_BIT;
-  { S.ANY_BIT }
+  { Syntax.ANY_BIT }
   | T_ANY_STRING;
-  { S.ANY_STRING }
+  { Syntax.ANY_STRING }
   | T_ANY_DATE;
-  { S.ANY_DATE }
+  { Syntax.ANY_DATE }
 
 (* let dir_var_location_prefix := *)
 (*   | id = T_IDENTIFIER;         *)
@@ -2501,33 +2500,33 @@ let generic_type_name :=
 
 let compare_expr_operator :=
   | T_GT;
-  { S.GT }
+  { Syntax.GT }
   | T_LT;
-  { S.LT }
+  { Syntax.LT }
   | T_GE;
-  { S.GE }
+  { Syntax.GE }
   | T_LE;
-  { S.LE }
+  { Syntax.LE }
 
 let add_operator :=
   | T_PLUS;
-  { S.ADD }
+  { Syntax.ADD }
   | T_MINUS;
-  { S.SUB }
+  { Syntax.SUB }
 
 let multiply_operator :=
   | T_MUL;
-  { S.MUL }
+  { Syntax.MUL }
   | T_DIV;
-  { S.DIV }
+  { Syntax.DIV }
   | T_MOD;
-  { S.MOD }
+  { Syntax.MOD }
 
 let unary_operator :=
   | T_MINUS;
-  { S.NEG }
+  { Syntax.NEG }
   | T_NOT;
-  { S.NEG }
+  { Syntax.NEG }
 
 optional_assign(X):
   | { None }

@@ -30,7 +30,6 @@ Install the latest OCaml compiler and opam. Consider installation instructions a
 Then create OCaml switch and install the required dependencies:
 ```bash
 opam switch create 4.10.0
-opam pin menhir 20200211
 opam install -y dune core menhir menhirLib ppx_deriving ppx_deriving_yojson \
                 ppx_fields_conv ppx_jane ppx_variants_conv ppxlib re yojson xmlm
 eval $(opam env)
