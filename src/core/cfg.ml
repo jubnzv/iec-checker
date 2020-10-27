@@ -139,7 +139,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         TODO: Unique constraint check.
         Need to figure out how to use sets instead lists for keeping links.
     *)
-    (* Stack that keeps IDs of basic blocks for control statments (FOR, WHILE,
+    (* Stack that keeps IDs of basic blocks for control statements (FOR, WHILE,
        REPEAT) to link them with corresponding CONTNUE statements in the loop
        body. *)
     let loop_ctrl_stack = IntStack.create () in
@@ -177,7 +177,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
         basic block to link it with next consecutive statement on top-level. *)
     let rec mk_nested_bbs (stmt : S.statement) (created_bb : bb) (bbs_pred_ids : int list) : (int list * int option) =
       (** [mk_body_bbs stmts ] Create a list of the basic blocks for the
-          body of control statement starting from first elemenet of [stmts].
+          body of control statement starting from first element of [stmts].
 
           @param bbs_pred_ids List of identifiers for basic blocks that will be
           linked with a BB created for the first statement.
@@ -481,7 +481,7 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
 
           (* Create basic blocks for function parameters statements. *)
           let func_param_assign_last_ids = mk_body_bbs func_params_stmts bbs_pred_ids in
-          (* Link assigment BB for the last parameter with a function call BB. *)
+          (* Link assignment BB for the last parameter with a function call BB. *)
           link_preds_by_id funccall_bb_id func_param_assign_last_ids;
 
           (bbs_pred_ids, None)

@@ -460,7 +460,7 @@ let interval :=
   | ~ = hours; <>
   | ~ = minutes; <>
   | ~ = seconds; <>
-  | ~ = miliseconds; <>
+  | ~ = milliseconds; <>
   | ~ = microseconds; <>
   | ~ = nanoseconds; <>
 
@@ -485,10 +485,10 @@ minutes:
 seconds:
   | vt = T_TIME_INTERVAL_S
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~s:v ()) vt }
-  | vt = T_TIME_INTERVAL_S; v = miliseconds
+  | vt = T_TIME_INTERVAL_S; v = milliseconds
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~s:v ()) vt |> Syntax.c_add v }
 
-miliseconds:
+milliseconds:
   | vt = T_TIME_INTERVAL_MS
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~ms:v ()) vt }
   | vt = T_TIME_INTERVAL_MS; v = microseconds
@@ -591,7 +591,7 @@ let elem_type_name :=
   | ~ = time_type_name; <>
   (* NOTE: TOD and DT types are not defined as part of elem_type_name in 3rd edition of IEC61131-3
      standard. This seems like a typo because 2nd edition includes these types in date_type which
-     has been splitted to few rules in new standard after introducing long types. *)
+     has been split to few rules in new standard after introducing long types. *)
   | ~ = tod_type_name; <>
   | ~ = dt_type_name; <>
 

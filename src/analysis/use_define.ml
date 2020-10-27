@@ -22,7 +22,7 @@ module VarDeclMap = struct
 end
 
 (** Map that bounds variable name of variable with S.variable objects ("use"
-    occurence). *)
+    occurrence). *)
 module VarUseMap = struct
   [@@@warning "-34"]
   [@@@warning "-32"]

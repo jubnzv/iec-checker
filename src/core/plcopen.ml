@@ -441,7 +441,7 @@ end
 (* module TypeNode = struct *)
 (* end                      *)
 
-(** Representation of configuraiton objects from XML schema parse tree.
+(** Representation of configuration objects from XML schema parse tree.
     These nodes are described in <configurations> tags inside <instances> tag.
     Reference: tc6_xml_v201_technical_doc part 7. *)
 module ConfigurationNode = struct

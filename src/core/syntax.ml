@@ -359,7 +359,7 @@ and generic_ty =
   | ANY_DATE
 [@@deriving to_yojson]
 
-(** "Use" occurence of the derived type. *)
+(** "Use" occurrence of the derived type. *)
 and derived_ty =
   | DTyUseSingleElement of single_element_ty_spec [@name "UseSingleElement"]
   | DTyUseStructType of string                    [@name "UseStructElement"]

@@ -64,7 +64,7 @@ type operator =
 
 (* {{{ Variables and identifiers *)
 
-(** Description of use -- nondefining occurence of an identifier *)
+(** Description of use -- nondefining occurrence of an identifier. *)
 module type ID = sig
   type t
   val create : string -> TI.t -> t
@@ -435,7 +435,7 @@ val ety_is_string : elementary_ty -> bool
 module Task : sig
   type t
 
-  (** Data sources used in task configruation *)
+  (** Data sources used in task configuration *)
   type data_source =
     | DSConstant of constant
     | DSGlobalVar of VarUse.t
