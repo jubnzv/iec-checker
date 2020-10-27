@@ -1,5 +1,5 @@
 (library
  (name IECCheckerLib)
  (public_name iec_checker.lib)
- (synopsis "Implementation of static analysis rules")
- (libraries core iec_checker.core iec_checker.analysis))
+ (synopsis "Implementation of the static analysis rules")
+ (libraries core_kernel iec_checker.core iec_checker.analysis))

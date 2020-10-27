@@ -51,12 +51,13 @@ let parse_xml_file (filename : string) : (S.iec_library_element list * Warn.t li
   let (elements, warns) = parse_with_error lexbuf in
   (elements, warns)
 
-let run_checker filename in_fmt out_fmt create_dumps quiet interactive =
+(** Run the checker and return the error code. *)
+let run_checker filename in_fmt out_fmt create_dumps verbose interactive =
   let (read_stdin : bool) = (String.equal "-" filename) || (String.is_empty filename) in
   if (not (Sys.file_exists filename) && not read_stdin) then
     let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" filename) in
     WO.print_report [err] out_fmt;
-    exit 127
+    127
   else
     let (elements, parser_warns) =
       if read_stdin then begin
@@ -64,10 +65,10 @@ let run_checker filename in_fmt out_fmt create_dumps quiet interactive =
         flush stdout;
         parse_stdin ()
       end else begin
-        if not quiet then Printf.printf "Parsing %s ...\n" filename;
-          match in_fmt with
-          | InputST -> parse_st_file filename
-          | InputXML -> parse_xml_file filename
+        if verbose then Printf.printf "Parsing %s ...\n" filename;
+        match in_fmt with
+        | InputST -> parse_st_file filename
+        | InputXML -> parse_xml_file filename
       end
     in
     let envs = Ast_util.create_envs elements in
@@ -79,7 +80,7 @@ let run_checker filename in_fmt out_fmt create_dumps quiet interactive =
     let cfa_warns = Control_flow_analysis.run cfgs in
     let unused_warns = Unused_variable.run elements in
     let ud_warns = Use_define.run elements in
-    let lib_warns = Lib.run_all_checks elements envs cfgs quiet in
+    let lib_warns = Lib.run_all_checks elements envs cfgs (not verbose) in
     WO.print_report (
       parser_warns @
       decl_warns @
@@ -88,76 +89,100 @@ let run_checker filename in_fmt out_fmt create_dumps quiet interactive =
       ud_warns @
       lib_warns)
       out_fmt;
-    let rc = if not (List.is_empty parser_warns) then 1 else 0 in
-    exit rc
 
-let command =
-  Command.basic ~summary:"IEC61131-3 static analysis"
-    Command.Let_syntax.(
-      let%map_open
-        input_format = flag "-input-format" (optional string) ~doc:"Input format"
-      and
-        output_format = flag "-output-format" (optional string) ~doc:"Output format"
-      and
-        create_dumps = flag "-dump" (optional bool) ~doc:"Generate AST dumps in JSON format"
-      and
-        quiet = flag "-quiet" (optional bool) ~doc:"Print only error messages."
-      and
-        interactive = flag "-interactive" (optional bool) ~doc:"Show prompt."
-      and
-        files = anon (sequence ("filename" %: Core.Filename.arg_type))
-      in
-      fun () ->
-        let in_fmt = match input_format with
-          | Some s -> begin
-              if String.equal s "st" then
-                  InputST
-              else if String.equal s "xml" then
-                InputXML
-              else begin
-                Printf.eprintf "Unknown input format '%s'!\n\n" s;
-                Printf.eprintf "Supported formats:\n" ;
-                Printf.eprintf "  st\n" ;
-                Printf.eprintf "  xml\n" ;
-                exit 22
-              end
-            end
-          | None -> InputST
-        in
-        let out_fmt = match output_format with
-          | Some s -> begin
-              if String.equal s "json" then
-                WO.Json
-              else if String.equal s "plain" then
-                WO.Plain
-              else begin
-                Printf.eprintf "Unknown output format '%s'!\n\n" s;
-                Printf.eprintf "Supported formats:\n" ;
-                Printf.eprintf "  plain\n" ;
-                Printf.eprintf "  json\n" ;
-                exit 22
-              end
-            end
-          | None -> WO.Plain
-        in
-        let create_dumps = match create_dumps with
-          | Some v -> v
-          | None -> false
-        in
-        let quiet = match quiet with
-          | Some v -> v
-          | None -> false
-        in
-        let interactive = match interactive with
-          | Some v -> v
-          | None -> false
-        in
-        match files with
-        | [] -> (
-            Printf.eprintf "No input files\n";
-            exit 1)
-        | _ -> List.iter files ~f:(fun f -> run_checker f in_fmt out_fmt create_dumps quiet interactive)
-    )
+    if not (List.is_empty parser_warns) then 1 else 0
 
 let () =
-  Core.Command.run command
+  Clap.description "Static analysis of IEC 61131-3 programs ";
+
+  let in_str =
+    Clap.default_string
+      ~short: 'i'
+      ~long: "input-format"
+      ~description:
+        "Format of the input files. Supported formats: 'st' and 'xml'."
+      ~placeholder: "INPUT_FORMAT"
+      "st"
+  in
+  let input_format = match in_str with
+    | s when String.equal "st" s -> InputST
+    | s when String.equal "xml" s -> InputXML
+    | s -> begin
+        Printf.eprintf "Unknown input format '%s'. Supported: 'st and 'xml.\n" s;
+        exit 1
+      end
+  in
+
+  let of_str =
+    Clap.default_string
+      ~short: 'o'
+      ~long: "output-format"
+      ~description:
+        "Output format for the checker messages. Supported formats: 'plain' and 'json'."
+      ~placeholder: "OUTPUT_FORMAT"
+      "plain"
+  in
+  let output_format = match of_str with
+    | s when String.equal "plain" s -> WO.Plain
+    | s when String.equal "json" s -> WO.Json
+    | s -> begin
+        Printf.eprintf "Unknown output format '%s'. Supported: 'plain' and 'json'.\n" s;
+        exit 1
+      end
+  in
+
+  let d =
+    Clap.flag
+      ~set_short: 'd'
+      ~set_long: "dump"
+      ~description:
+        "Create dump files of the processed files in json format.\
+         These files will contain the structure of the processed source files and \
+         can be used from plugins and external tools."
+      false
+  in
+
+  let v =
+    Clap.flag
+      ~set_short: 'v'
+      ~set_long: "verbose"
+      ~unset_short: 'q'
+      ~unset_long: "quiet"
+      ~description: "Show additional messages from the checker."
+      false
+  in
+
+  let i =
+    Clap.flag
+      ~set_short: 'I'
+      ~set_long: "interactive"
+      ~unset_long: "non-interactive"
+      ~description: "Accept input from stdin."
+      false
+  in
+
+  let files =
+    Clap.list_string
+      ~description:
+        "List of source files to check."
+      ~placeholder: "FILE"
+      ()
+  in
+
+  Clap.close ();
+
+  if List.is_empty files then begin
+    Printf.eprintf "No input files!\n\n";
+    Clap.help ();
+    exit 1
+  end
+
+  else if phys_equal 0
+      begin
+        List.fold_left files
+          ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
+          ~init:[]
+        |> List.filter ~f:(fun rc -> not (phys_equal rc 0))
+        |> List.length
+      end
+  then exit 0 else exit 1

@@ -2,4 +2,4 @@
  (name IECCheckerAnalysis)
  (public_name iec_checker.analysis)
  (synopsis "Common semantic checks")
- (libraries core iec_checker.core))
+ (libraries core_kernel iec_checker.core))

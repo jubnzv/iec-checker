@@ -1,7 +1,7 @@
 (executable
  (public_name iec_checker)
- (libraries core re iec_checker.lib iec_checker.parser iec_checker.core
-   iec_checker.analysis)
+ (libraries core_kernel clap re iec_checker.lib iec_checker.parser
+   iec_checker.core iec_checker.analysis)
  ; Enable for debugging:
  ; (modes byte)
  (preprocess

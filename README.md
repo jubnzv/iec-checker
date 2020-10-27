@@ -21,28 +21,35 @@ The following features are currently implemented:
 
 ## Installation
 
-You can download the latest binary release for Linux x86_64 from [GitHub releases](https://github.com/jubnzv/iec-checker/releases).
+You can download the latest binary release for Linux and Windows x86_64 from [GitHub releases](https://github.com/jubnzv/iec-checker/releases).
 
 ### Build from sources
 
+#### Linux
+
 Install the latest OCaml compiler and opam. Consider installation instructions at [ocaml.org](https://ocaml.org/docs/install.html) and [opam.ocaml.org](https://opam.ocaml.org/doc/Install.html).
 
-Then create OCaml switch and install the required dependencies:
+Then install the required dependencies:
+
 ```bash
-opam switch create 4.10.0
-opam install -y dune core menhir menhirLib ppx_deriving ppx_deriving_yojson \
-                ppx_fields_conv ppx_jane ppx_variants_conv ppxlib re yojson xmlm
-eval $(opam env)
+opam install --deps-only .    # first time only
 ```
 
-Build and install iec_checker binary to the `output` directory:
+Build and install `iec_checker` binary to the `output` directory:
+
 ```bash
 dune build @install
 mkdir output
-dune install --preifx ./output
+dune install --prefix ./output
 ```
 
-### Python scripts and test suite
+#### Windows
+
+Install [OCaml for Windows](https://fdopen.github.io/opam-repository-mingw/) according to the [installation guide](https://fdopen.github.io/opam-repository-mingw/installation/). The graphic installer works well "out of the box".
+
+Then open installed Cygwin shell, clone the repository and use the installation instructions from the "Linux" section.
+
+### Optional: Python scripts and test suite
 There is also a convenient [checker.py](./checker.py) script that wraps OCaml binary and provide additional options like extended formatting support and running the Python plugins. The test suite is also written in Python and requires a Python interpreter with some additional packages.
 
 Get [Python 3](https://www.python.org/downloads/) and install dependencies in the [virtual environment](https://docs.python.org/3/library/venv.html):
@@ -55,44 +62,53 @@ pip3 install -r requirements.txt
 Then run unit tests:
 ```bash
 pip3 install -r requirements-dev.txt
+cd test
 pytest
 ```
 
 ## Usage
 
 Check some demo programs written in Structured Text:
+
 ```bash
-python3 checker.py test/st/*.st
+output/bin/iec_checker test/st/*.st
 ```
 
 This will gives you the following output:
+
 ```
-Report for test/st/dead-code.st:
-[PLCOPEN-L17] 17:6 Each IF instruction should have an ELSE clause
-[UnusedVariable] 15:5 Found unused local variable: A
-[UnreachableCode] 9:10 Code block will never be reached
-[UnreachableCode] 25:7 Code block will never be reached
-[UnreachableCode] 20:7 Code block will never be reached
-Report for test/st/declaration-analysis.st:
-[OutOfBounds] Initial subrange value -4096 does not fit the specified range (-4095 .. 4095)
-[OutOfBounds] Initial subrange value 4099 does not fit the specified range (-4095 .. 4095)
-[OutOfBounds] Length of initialization string literal exceeds string length (6 > 5)
-Report for test/st/plcopen-cp13.st:
-[PLCOPEN-CP13] 8:30 POUs shall not call themselves directly or indirectly
-Report for test/st/plcopen-cp9.st:
-[PLCOPEN-L17] 44:10 Each IF instruction should have an ELSE clause
-[PLCOPEN-L17] 39:10 Each IF instruction should have an ELSE clause
-[PLCOPEN-CP9] Code is too complex (16)
-Report for test/st/plcopen-l17.st:
-[PLCOPEN-L17] 10:4 Each IF instruction should have an ELSE clause
-Report for test/st/plcopen-n3.st:
-[PLCOPEN-N3] 6:7 IEC data types and standard library objects must be avoided
-[UnusedVariable] 6:7 Found unused local variable: TOF
-[UnusedVariable] 7:14 Found unused local variable: OK_ALLOWED
-[UnusedVariable] 4:21 Found unused local variable: NO_FALSE_POSITIVE
-Report for test/st/unused-variable.st:
-[UnreachableCode] 10:10 Code block will never be reached
-Report for test/st/zero-division.st:
-[ZeroDivision] 7:12 Constant 19 is divided by zero!
-[ZeroDivision] 9:14 Variable VAR2 is divided by zero!
+Running check for function DEAD_CODE_AFTER_RETURN
+Running check for program DEAD_CODE_IN_THE_LOOPS
+20:7 UnreachableCode: Code block will never be reached
+25:7 UnreachableCode: Code block will never be reached
+9:10 UnreachableCode: Code block will never be reached
+15:5 UnusedVariable: Found unused local variable: A
+17:6 PLCOPEN-L17: Each IF instruction should have an ELSE clause
+Parsing test/st/declaration-analysis.st ...
+Running check for derived type
+0:0 OutOfBounds: Length of initialization string literal exceeds string length (6 > 5)
+0:0 OutOfBounds: Initial subrange value 4099 does not fit the specified range (-4095 .. 4095)
+0:0 OutOfBounds: Initial subrange value -4096 does not fit the specified range (-4095 .. 4095)
+Parsing test/st/plcopen-cp13.st ...
+Running check for function FACTORIAL
+Running check for function FACTORIAL_GOOD
+8:30 PLCOPEN-CP13: POUs shall not call themselves directly or indirectly
+Parsing test/st/plcopen-cp9.st ...
+Running check for function block CHARCURVE
+0:0 PLCOPEN-CP9: Code is too complex (16 McCabe complexity)
+44:10 PLCOPEN-L17: Each IF instruction should have an ELSE clause
+49:10 PLCOPEN-L17: Each IF instruction should have an ELSE clause
+Parsing test/st/plcopen-l17.st ...
+Running check for program PROGRAM0
+10:4 PLCOPEN-L17: Each IF instruction should have an ELSE clause
+Parsing test/st/plcopen-n3.st ...
+Running check for program PROGRAM0
+4:21 UnusedVariable: Found unused local variable: NO_FALSE_POSITIVE
+7:14 UnusedVariable: Found unused local variable: OK_ALLOWED
+6:7 UnusedVariable: Found unused local variable: TOF
+6:7 PLCOPEN-N3: IEC data types and standard library objects must be avoided
+Parsing test/st/zero-division.st ...
+Running check for program PROGRAM0
+9:14 ZeroDivision: Variable VAR2 is divided by zero!
+7:12 ZeroDivision: Constant 19 is divided by zero!
 ```
