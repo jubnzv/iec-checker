@@ -165,7 +165,7 @@ let fix_point_ms = (integer | (integer '.' integer)) "ms"
 let fix_point_us = (integer | (integer '.' integer)) "us"
 let fix_point_ns = (integer | (integer '.' integer)) "ns"
 
-let label = letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*
+let label = '_'? (letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_']*)
 
 rule initial tokinfo =
   parse

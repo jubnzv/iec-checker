@@ -16,7 +16,7 @@ def test_lexing_error():
     assert len(checker_warnings) == 1
     cv = checker_warnings[0]
     assert cv.id == 'LexingError'
-    assert cv.linenr == 9
+    assert cv.linenr == 10
     assert cv.column == 6
     with DumpManager(fdump):
         pass
