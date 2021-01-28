@@ -9,7 +9,7 @@ from python.dump import DumpManager  # noqa
 
 
 def test_cp13():
-    f = './test/st/plcopen-cp13.st'
+    f = 'st/plcopen-cp13.st'
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0
@@ -23,7 +23,7 @@ def test_cp13():
 
 
 def test_l17():
-    f = './test/st/plcopen-l17.st'
+    f = 'st/plcopen-l17.st'
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0
@@ -37,7 +37,7 @@ def test_l17():
 
 
 def test_n3():
-    f = './test/st/plcopen-n3.st'
+    f = 'st/plcopen-n3.st'
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0
@@ -51,7 +51,7 @@ def test_n3():
 
 
 def test_cp9():
-    f = './test/st/plcopen-cp9.st'
+    f = 'st/plcopen-cp9.st'
     fdump = f'{f}.dump.json'
     warns, rc = run_checker(f)
     assert rc == 0

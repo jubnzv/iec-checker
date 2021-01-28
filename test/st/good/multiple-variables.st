@@ -39,6 +39,10 @@ PROGRAM program0
     vinc2 AT %I* : INT;
     vinc3 AT %M* : INT;
   END_VAR
+  VAR
+    v1 : DINT;
+    v2 AT %M* : INT;
+  END_VAR
 
   vi1 := vi1 / 1;
 END_PROGRAM

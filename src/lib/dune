@@ -2,4 +2,4 @@
  (name IECCheckerLib)
  (public_name iec_checker.lib)
  (synopsis "Implementation of the static analysis rules")
- (libraries core_kernel iec_checker.core iec_checker.analysis))
+ (libraries core_kernel z3 iec_checker.core iec_checker.analysis))

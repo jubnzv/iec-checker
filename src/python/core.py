@@ -23,7 +23,7 @@ def check_program(program: str) -> Tuple[List[Warning], int]:
     """Run iec-checker core and send given program source in stdin.
     This will create 'stdin.dump.json' dump file in a current directory.
     """
-    p = subprocess.Popen(["output/bin/iec_checker",
+    p = subprocess.Popen(["../output/bin/iec_checker",
                           "-o", "json", "-q", "-d", "-"],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
@@ -40,7 +40,7 @@ def run_checker(file_path: str, *args) -> Tuple[List[Warning], int]:
 
     This will execute core inspections and generate JSON dump processed with
     plugins."""
-    p = subprocess.Popen(["output/bin/iec_checker", "-o", "json", "-q", "-d",
+    p = subprocess.Popen(["../output/bin/iec_checker", "-o", "json", "-q", "-d",
                           *args,
                           file_path],
                          stdout=subprocess.PIPE,

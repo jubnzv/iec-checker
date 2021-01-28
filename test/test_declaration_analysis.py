@@ -8,7 +8,7 @@ from python.dump import DumpManager  # noqa
 
 
 def test_initialization_literal():
-    f = './test/st/declaration-analysis.st'
+    f = 'st/declaration-analysis.st'
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0

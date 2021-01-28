@@ -8,7 +8,7 @@ from python.core import run_checker  # noqa
 
 
 def test_missing_file():
-    f = 'test/st/foo.bar'
+    f = 'st/foo.bar'
     checker_warnings, rc = run_checker(f)
     assert rc == 1
     assert len(checker_warnings) == 1
@@ -18,7 +18,7 @@ def test_missing_file():
 
 def test_large_file():
     """Make sure that there are no stack overflows on large programs."""
-    fname = 'test/st/_TEMP_large.st'
+    fname = 'st/_TEMP_large.st'
     with open(fname, 'w') as f:
         f.write(f"""
         PROGRAM test_for

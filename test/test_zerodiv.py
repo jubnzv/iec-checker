@@ -8,7 +8,7 @@ from python.dump import DumpManager  # noqa
 
 
 def test_zerodiv():
-    f = './test/st/zero-division.st'
+    f = 'st/zero-division.st'
     fdump = f'{f}.dump.json'
     cvs, rc = run_checker(f)
     assert rc == 0

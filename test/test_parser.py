@@ -9,7 +9,7 @@ from python.dump import DumpManager  # noqa
 
 
 def test_lexing_error():
-    f = './test/st/bad/lexing-error.st'
+    f = 'st/bad/lexing-error.st'
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 1
@@ -23,8 +23,8 @@ def test_lexing_error():
 
 
 def test_parser_errors():
-    for fname in os.listdir('./test/st/bad/'):
-        f = os.path.join('./test/st/bad/', fname)
+    for fname in os.listdir('st/bad/'):
+        f = os.path.join('st/bad/', fname)
         fdump = f'{f}.dump.json'
         checker_warnings, rc = run_checker(f)
         assert rc == 1, f"Incorrect exit code for {f}"
@@ -34,10 +34,10 @@ def test_parser_errors():
 
 
 def test_no_parser_errors():
-    for fname in os.listdir('./test/st/good/'):
+    for fname in os.listdir('st/good/'):
         if not fname.endswith('.st'):
             continue
-        f = os.path.join('./test/st/good/', fname)
+        f = os.path.join('st/good/', fname)
         fdump = f'{f}.dump.json'
         checker_warnings, rc = run_checker(f)
         assert rc == 0, f"Incorrect exit code for {f}"
@@ -46,7 +46,7 @@ def test_no_parser_errors():
 
 
 def test_direct_variables():
-    f = './test/st/good/direct-variables.st'
+    f = 'st/good/direct-variables.st'
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0

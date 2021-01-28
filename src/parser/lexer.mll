@@ -370,6 +370,7 @@ rule initial tokinfo =
 
   (* {{{ Misc. *)
   | "(*"             { comment tokinfo 1 lexbuf }
+  | "//"             { singleline_comment tokinfo lexbuf }
   | "%"              { let ti = tokinfo lexbuf in direct_variable (Syntax.DirVar.create ti) ti lexbuf }
   | "STRING#" '\''   { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
   | '\''             { let ti = tokinfo lexbuf in sstring_literal (Buffer.create 19) ti lexbuf }
@@ -483,6 +484,10 @@ and comment tokinfo depth = parse
   | '\n' {let () = new_line lexbuf in comment tokinfo depth lexbuf}
   | _ {comment tokinfo depth lexbuf}
   | eof { raise (LexingError ("Comment is not terminated")) }
+and singleline_comment tokinfo = parse
+  | '\n'   { incr_linenum lexbuf; initial tokinfo lexbuf }
+  | eof    { T_EOF }
+  | _      { singleline_comment tokinfo lexbuf }
   (* }}} *)
 
 {

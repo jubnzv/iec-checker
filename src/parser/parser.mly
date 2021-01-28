@@ -8,6 +8,11 @@
   (* Raised when parser found simple semnatics errors while constructing AST. *)
   exception SemanticError of string
 
+  let rec list_flatten = function
+    | [] -> []
+    | [] :: t -> list_flatten t
+    | (x::y) :: t -> x :: (list_flatten (y::t))
+
   let creal_inv (vr, ti) =
     let vv = -1.0 *. vr in
     (vv, ti)
@@ -950,14 +955,7 @@ let array_spec :=
    It will be converted to [3, 2, 4, 4, 4 5]. *)
 let array_init :=
   | T_LBRACK; init_list = separated_nonempty_list(T_COMMA, array_elem_init); T_RBRACK;
-  {
-    let rec flatten = function
-      | [] -> []
-      | [] :: t -> flatten t
-      | (x::y) :: t -> x :: (flatten (y::t))
-    in
-    flatten init_list
-  }
+  { list_flatten init_list }
 
 let array_elem_init :=
   | v = array_elem_init_value;
@@ -1224,90 +1222,7 @@ let subscript :=
 
 (* struct_elem_select: *)
 
-let input_decls :=
-  | T_VAR_INPUT; vds = input_decl; T_END_VAR;
-  { List.rev vds }
-  | T_VAR_INPUT; T_RETAIN; vds = input_decl; T_END_VAR;
-  {
-    let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QRetain)) vdsr
-  }
-  | T_VAR_INPUT; T_NON_RETAIN; vds = input_decl; T_END_VAR;
-  {
-    let vdsr = List.rev vds in
-    List.map ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QNonRetain)) vdsr
-  }
-
-let input_decl :=
-  | vs = variables_decl_list(var_decl_init);
-  {
-    List.rev vs
-    |> List.map ~f:(fun var_decl -> begin
-      let attr = Syntax.VarDecl.VarIn(None) in
-      Syntax.VarDecl.set_attr var_decl attr
-    end)
-  }
-
 (* edge_decl: *)
-
-let var_decl_init :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = simple_spec_init;
-  {
-    let (ty, inval_opt) = ty_specs in
-    let spec = Syntax.DTyDeclSingleElement(ty, inval_opt) in
-    List.map
-      var_names
-      ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
-      end)
-  }
-  (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; <> *)
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = ref_spec_init;
-  {
-    let (ref_level, ref_ty, inval_opt) = ty_specs in
-    let spec = Syntax.DTyDeclRefType(ref_level, ref_ty, inval_opt) in
-    List.map
-      var_names
-      ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
-      end)
-  }
-  (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl_init; <> *)
-  (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; interface_spec_init; <> *)
-  | ~ = array_var_decl_init; <>
-  (* | ~ = struct_var_decl_init; <> *)
-  (* | ~ = fb_decl_init; <> *)
-  (* | ~ = interface_spec_init; <> *)
-
-let ref_var_decl :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = ref_spec;
-  {
-    let (ref_level, ref_ty) = ty_specs in
-    let spec = Syntax.DTyDeclRefType(ref_level, ref_ty, None) in
-    List.map
-      var_names
-      ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
-      end)
-  }
-
-(* interface_var_decl: *)
-
-let array_var_decl_init :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = array_spec_init;
-  {
-    let (subranges, ty, initializer_list) = ty_specs in
-    let spec = Syntax.DTyDeclArrayType(subranges, ty, initializer_list) in
-    List.map
-      var_names
-      ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
-      end)
-  }
 
 (* array_conformand: *)
 
@@ -1330,176 +1245,6 @@ let fb_instance_name :=
   | id = T_IDENTIFIER;
   { let name, _ = id in name }
 
-let output_decls :=
-  | T_VAR_OUTPUT; vs = variables_decl_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.VarOut(None) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-  | T_VAR_OUTPUT; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.VarOut(Some Syntax.VarDecl.QRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-  | T_VAR_OUTPUT; T_NON_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.VarOut(Some Syntax.VarDecl.QNonRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-
-(* output_decl: *)
-
-let in_out_decls :=
-  | T_VAR_IN_OUT; ~ = in_out_var_decl; T_END_VAR; <>
-
-(* Return list of Syntax.VarDecl.t *)
-let in_out_var_decl :=
-  | vs = variables_decl_nonempty_list(var_decl);
-  {
-    List.map
-      vs
-      ~f:(fun v -> begin
-        let attr = Syntax.VarDecl.VarInOut in
-        Syntax.VarDecl.set_attr v attr
-      end)
-  }
-  (* | vs = array_conform_decl
-  {  } *)
-  (* | vs = fb_decl_no_init
-  {  } *)
-
-let var_decl :=
-  | vars = separated_nonempty_list(T_COMMA, variable_name); T_COLON; simple_spec;
-  {
-    List.map
-      vars
-      ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        Syntax.VarDecl.create var None
-      end)
-  }
-  (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; *)
-  (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; array_var_decl; *)
-  (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl; *)
-
-(* array_var_decl: *)
-
-(* struct_var_decl: *)
-
-let var_decls :=
-  | T_VAR; vs = variables_decl_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.Var(None) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-  | T_VAR; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.Var(Some Syntax.VarDecl.QRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-
-let retain_var_decls :=
-  | T_VAR; T_RETAIN; vs = variables_decl_nonempty_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.Var(Some Syntax.VarDecl.QRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-
-let loc_var_decls :=
-  | T_VAR; vs = nonempty_list(loc_var_decl); T_END_VAR;
-  {
-    List.rev vs
-    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
-  }
-  | T_VAR; T_CONSTANT; vs = nonempty_list(loc_var_decl); T_END_VAR;
-  {
-    List.rev vs
-    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
-  }
-  | T_VAR; T_RETAIN; vs = nonempty_list(loc_var_decl); T_END_VAR;
-  {
-    List.rev vs
-    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
-  }
-  | T_VAR; T_NON_RETAIN; vs = nonempty_list(loc_var_decl); T_END_VAR;
-  {
-    List.rev vs
-    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated)
-  }
-
-let loc_var_decl :=
-  | name_ti = T_IDENTIFIER; located_at; T_COLON; loc_var_spec_init; T_SEMICOLON;
-  {
-    let (n, ti) = name_ti in
-    let var = mk_var_use n ti in
-    Syntax.VarDecl.create var None
-  }
-
-let temp_var_decls :=
-  | T_VAR_TEMP; vs = variables_decl_nonempty_list(var_decl); T_END_VAR;
-  {
-    List.rev vs
-    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp)
-  }
-  | T_VAR_TEMP; vs = variables_decl_nonempty_list(ref_var_decl); T_END_VAR;
-  {
-    List.rev vs
-    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp)
-  }
-  (* | interface_var_decl *)
-
-let external_var_decls :=
-  | T_VAR_EXTERNAL; var_decls = list(external_decl); T_END_VAR;
-  {
-    List.map
-      var_decls
-      ~f:(fun v -> begin
-        let attr = Syntax.VarDecl.VarExternal(None) in
-        Syntax.VarDecl.set_attr v attr
-      end)
-  }
-  | T_VAR_EXTERNAL; T_RETAIN; var_decls = list(external_decl); T_END_VAR;
-  {
-    List.map
-      var_decls
-      ~f:(fun v -> begin
-        let attr = Syntax.VarDecl.VarExternal(Some Syntax.VarDecl.QRetain) in
-        Syntax.VarDecl.set_attr v attr
-      end)
-  }
-
-let external_decl :=
-  | out = variable_name; T_COLON; simple_spec; T_SEMICOLON;
-  {
-    let (n, ti) = out in
-    let var = mk_var_use n ti in
-    Syntax.VarDecl.create var None
-  }
-
 let global_var_name :=
   | id = T_IDENTIFIER;
   {
@@ -1515,22 +1260,6 @@ let global_var_list :=
   {
     let vd = mk_global_decl out in
     vd :: vds
-  }
-
-let global_var_decls :=
-  | T_VAR_GLOBAL; vds = global_var_decl_list; T_END_VAR;
-  { List.rev vds }
-  | T_VAR_GLOBAL; T_RETAIN; vds = global_var_decl_list; T_END_VAR;
-  {
-    List.rev vds
-    |> List.map
-      ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QNonRetain))
-  }
-  | T_VAR_GLOBAL; T_CONSTANT; vds = global_var_decl_list; T_END_VAR;
-  {
-    List.rev vds
-    |> List.map
-      ~f:(fun v -> (Syntax.VarDecl.set_qualifier_exn v Syntax.VarDecl.QConstant))
   }
 
 let global_var_decl :=
@@ -1568,43 +1297,6 @@ let located_at :=
 
 (* d_byte_str_spec: *)
 
-let loc_partly_var_decl :=
-  | T_VAR; var_decls = list(loc_partly_var); T_END_VAR;
-  {
-    List.map
-      var_decls
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.VarDirect(None) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-  | T_VAR; T_RETAIN; var_decls = list(loc_partly_var); T_END_VAR;
-  {
-    List.map
-      var_decls
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.VarDirect(Some Syntax.VarDecl.QRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-  | T_VAR; T_NON_RETAIN; var_decls = list(loc_partly_var); T_END_VAR;
-  {
-    List.map
-      var_decls
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.VarDirect(Some Syntax.VarDecl.QNonRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
-
-let loc_partly_var :=
-  | out = variable_name; T_AT; T_DIR_VAR; T_COLON; s = var_spec; T_SEMICOLON;
-  {
-    let (n, ti) = out in
-    let var = mk_var_use n ti in
-    Syntax.VarDecl.create var None
-  }
-
 let var_spec :=
   | ~ = simple_spec; option(var_spec_index); <>
   (* | ~ = array_spec; <> *)
@@ -1641,7 +1333,7 @@ let func_access :=
   } *)
 
 let func_decl :=
-  | T_FUNCTION; id = func_name; T_COLON; ret_ty = function_ty; vs = function_vars; body = func_body; T_END_FUNCTION;
+  | T_FUNCTION; id = func_name; T_COLON; ret_ty = function_ty; vs = var_decls; body = func_body; T_END_FUNCTION;
   {
     {
       Syntax.id = id;
@@ -1664,27 +1356,6 @@ let func_decl :=
 let function_ty :=
   | ~ = elem_type_name; <Syntax.TyElementary>
   | ~ = derived_type_access; <Syntax.TyDerived>
-
-(* Helper rule for func_decl *)
-let function_vars :=
-  | ~ = io_var_decls; <>
-  | ~ = func_var_decls; <>
-  | ~ = temp_var_decls; <>
-  | vss = function_vars; vs = io_var_decls;
-  { vss @ vs }
-  | vss = function_vars; vs = func_var_decls;
-  { vss @ vs }
-  | vss = function_vars; vs = temp_var_decls;
-  { vss @ vs }
-
-let io_var_decls :=
-  | ~ = input_decls; <>
-  | ~ = output_decls; <>
-  | ~ = in_out_decls; <>
-
-let func_var_decls :=
-  | ~ = external_var_decls; <>
-  | ~ = var_decls; <>
 
 let func_body :=
   | ~ = stmt_list; <>
@@ -1711,56 +1382,12 @@ let derived_fb_name :=
 let fb_decl :=
   | T_FUNCTION_BLOCK; id = derived_fb_name; T_END_FUNCTION_BLOCK;
   { { Syntax.id = id; Syntax.variables = []; Syntax.statements = [] } }
-  | T_FUNCTION_BLOCK; id = derived_fb_name; vds = fb_var_decls_list; T_END_FUNCTION_BLOCK;
+  | T_FUNCTION_BLOCK; id = derived_fb_name; vds = var_decls; T_END_FUNCTION_BLOCK;
   { { Syntax.id = id; Syntax.variables = vds; Syntax.statements = [] } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; ss = fb_body; T_END_FUNCTION_BLOCK;
   { { Syntax.id = id; Syntax.variables = []; Syntax.statements = ss } }
-  | T_FUNCTION_BLOCK; id = derived_fb_name; vds = fb_var_decls_list; ss = fb_body; T_END_FUNCTION_BLOCK;
+  | T_FUNCTION_BLOCK; id = derived_fb_name; vds = var_decls; ss = fb_body; T_END_FUNCTION_BLOCK;
   { { Syntax.id = id; Syntax.variables = vds; Syntax.statements = ss } }
-
-(* Helper rule for fb_decl *)
-let fb_var_decls_list :=
-  | ~ = fb_io_var_decls; <>
-  | ~ = func_var_decls; <>
-  | ~ = temp_var_decls; <>
-  | ~ = other_var_decls; <>
-  | vdss = fb_var_decls_list; vds = fb_io_var_decls;
-  { List.append vdss vds }
-  | vdss = fb_var_decls_list; vds = func_var_decls;
-  { List.append vdss vds }
-  | vdss = fb_var_decls_list; vds = temp_var_decls;
-  { List.append vdss vds }
-  | vdss = fb_var_decls_list; vds = other_var_decls;
-  { List.append vdss vds }
-
-(* Reuse input_decls and output_decls defined in Table 13.
-   These grammar rules are actually the same as fb_input_decls
-   and fb_output_decls. *)
-let fb_io_var_decls :=
-  | ~ = input_decls; <>
-  | ~ = output_decls; <>
-  | ~ = in_out_decls; <>
-
-(* fb_input_decls: *)
-(* fb_input_decl: *)
-(* fb_output_decls: *)
-(* fb_output_decl: *)
-
-let other_var_decls :=
-  | ~ = retain_var_decls; <>
-  | ~ = no_retain_var_decls; <>
-  | ~ = loc_partly_var_decl; <>
-
-let no_retain_var_decls :=
-  | T_VAR; T_NON_RETAIN; vs = variables_decl_list(var_decl_init); T_END_VAR;
-  {
-    List.map
-      vs
-      ~f:(fun var_decl -> begin
-        let attr = Syntax.VarDecl.Var(Some Syntax.VarDecl.QNonRetain) in
-        Syntax.VarDecl.set_attr var_decl attr
-      end)
-  }
 
 let fb_body :=
   | ~ = stmt_list; <>
@@ -1804,38 +1431,17 @@ let fb_body :=
 
 (* {{{ Table 47 -- Program definition *)
 let prog_decl :=
-  | T_PROGRAM; n = prog_type_name; var_decls_opt = option(program_var_decls_list); ss = fb_body; T_END_PROGRAM;
+  | T_PROGRAM; n = prog_type_name; var_decls_opt = option(var_decls); ss = fb_body; T_END_PROGRAM;
   {
-    let var_decls = match var_decls_opt with
+    let vds = match var_decls_opt with
       | Some v -> v
       | None -> []
     in
     { Syntax.is_retain = false;
       Syntax.name = n;
-      Syntax.variables = var_decls;
+      Syntax.variables = vds;
       Syntax.statements = ss }
   }
-
-(* Helper for prog_decl *)
-let program_var_decls_list :=
-  | ~ = io_var_decls; <>
-  | ~ = func_var_decls; <>
-  | ~ = temp_var_decls; <>
-  | ~ = other_var_decls; <>
-  | ~ = loc_var_decls; <>
-  | ~ = prog_access_decls; <>
-  | vdss = program_var_decls_list; vds = io_var_decls;
-  { List.append vdss vds }
-  | vdss = program_var_decls_list; vds = func_var_decls;
-  { List.append vdss vds }
-  | vdss = program_var_decls_list; vds = temp_var_decls;
-  { List.append vdss vds }
-  | vdss = program_var_decls_list; vds = other_var_decls;
-  { List.append vdss vds }
-  | vdss = program_var_decls_list; vds = loc_var_decls;
-  { List.append vdss vds }
-  | vdss = program_var_decls_list; vds = prog_access_decls;
-  { List.append vdss vds }
 
 let prog_type_name :=
   | id = T_IDENTIFIER;
@@ -1843,18 +1449,6 @@ let prog_type_name :=
 
 let prog_type_access :=
   | ~ = prog_type_name; <>
-
-let prog_access_decls :=
-  | T_VAR_ACCESS; ~ = list(prog_access_decl); T_END_VAR; <>
-
-let prog_access_decl :=
-  | an = access_name; T_COLON; sv = symbolic_variable; T_COLON; data_type_access; T_SEMICOLON;
-  {
-    let var = mk_var_use_sym sv in
-    let var_decl = Syntax.VarDecl.create var None in
-    let attr = Syntax.VarDecl.VarAccess(an) in
-    Syntax.VarDecl.set_attr var_decl attr
-  }
 (* }}} *)
 
 (* {{{ Table 54-61 -- SFC *)
@@ -1874,13 +1468,13 @@ let config_decl :=
   | T_CONFIGURATION; name = config_name; rd = resource_decls; T_END_CONFIGURATION;
   { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = []; Syntax.access_paths = [] } }
   (* With global variables *)
-  | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; T_END_CONFIGURATION;
+  | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; T_END_CONFIGURATION;
   { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
-  | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; config_init; T_END_CONFIGURATION;
+  | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; var_decls; T_END_CONFIGURATION;
   { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
-  | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; access_decls; T_END_CONFIGURATION;
+  | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; access_decls; T_END_CONFIGURATION;
   { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
-  | T_CONFIGURATION; name = config_name; vds = global_var_decls; rd = resource_decls; access_decls; config_init; T_END_CONFIGURATION;
+  | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; access_decls; var_decls; T_END_CONFIGURATION;
   { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
 
 (* Helper rule for config_decl *)
@@ -1892,7 +1486,7 @@ let resource_decls :=
 let resource_decl :=
   | T_RESOURCE; n = resource_name; T_ON; resource_type_name; rc = single_resource_decl; T_END_RESOURCE;
   { { Syntax.name = Some n; Syntax.tasks = rc.tasks; Syntax.variables = []; Syntax.programs = rc.programs } }
-  | T_RESOURCE; n = resource_name; T_ON; resource_type_name; vs = global_var_decls; rc = single_resource_decl; T_END_RESOURCE;
+  | T_RESOURCE; n = resource_name; T_ON; resource_type_name; vs = var_global_decl; rc = single_resource_decl; T_END_RESOURCE;
   { { Syntax.name = Some n; Syntax.tasks = rc.tasks; Syntax.variables = vs; Syntax.programs = rc.programs } }
 
 (* Return Syntax.resource_decl *)
@@ -2052,9 +1646,6 @@ let prog_data_source :=
 (* let data_sink :=              *)
 (*   | ~ = global_var_access; <> *)
 (*   | ~ = direct_variable; <>   *)
-
-let config_init :=
-  | T_VAR_CONFIG; ~ = list(config_inst_init); T_END_VAR; <>
 
 (* TODO: This is not complete *)
 let config_inst_init :=
@@ -2458,6 +2049,195 @@ let repeat_stmt :=
 (* {{{ Table 73-76 -- Graphical languages *)
 (* }}} *)
 
+(* {{{ Generic variables declaration. *)
+(** We don't want to handle standard violations in the static analyzer, so, we allow to use any type of variables
+    in any type of POU. For example, Programs can contain global variables, which is forbidden in IEC 61131-3. *)
+let var_decls :=
+  | vds = list(var_decls1);
+  { list_flatten vds }
+
+let var_decls1 :=
+  | T_VAR; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> let attr = Syntax.VarDecl.Var(None) in Syntax.VarDecl.set_attr v attr)
+  }
+  | T_VAR_INPUT; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> let attr = Syntax.VarDecl.VarIn(None) in Syntax.VarDecl.set_attr v attr)
+  }
+  | T_VAR_OUTPUT; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> let attr = Syntax.VarDecl.VarOut(None) in Syntax.VarDecl.set_attr v attr)
+  }
+  | T_VAR_IN_OUT; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarInOut)
+  }
+  | T_VAR_EXTERNAL; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> let attr = Syntax.VarDecl.VarExternal(None) in Syntax.VarDecl.set_attr v attr)
+  }
+  | ~ = var_global_decl; <>
+  | T_VAR_TEMP; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp)
+  }
+  | T_VAR_ACCESS; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    vars
+    (* List.rev vars                                                              *)
+    (* |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp) *)
+  }
+  | T_VAR_CONFIG; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    vars
+    (* List.rev vars                                                              *)
+    (* |> List.map ~f:(fun v -> Syntax.VarDecl.set_attr v Syntax.VarDecl.VarTemp) *)
+  }
+
+let var_global_decl :=
+  | T_VAR_GLOBAL; option(qualifier); vars = var_decls_list; T_END_VAR;
+  {
+    List.rev vars
+    |> List.map ~f:(fun v -> let attr = Syntax.VarDecl.VarGlobal(None) in Syntax.VarDecl.set_attr v attr)
+  }
+
+(** We don't care. *)
+let qualifier :=
+  | T_RETAIN; {}
+  | T_NON_RETAIN; {}
+  | T_CONSTANT; {}
+
+let var_decls_list :=
+  | ~ = var_decl; T_SEMICOLON; <>
+  | ~ = var_ref_decl; T_SEMICOLON; <>
+  | ~ = var_loc_decl; T_SEMICOLON; <>
+  | ~ = var_loc_partly_decl; T_SEMICOLON; <>
+  | ~ = var_access_decl; T_SEMICOLON; <>
+  | vdl = var_decls_list; vl = var_decl; T_SEMICOLON;
+  { List.append vdl vl  }
+  | vdl = var_decls_list; vl = var_ref_decl; T_SEMICOLON;
+  { List.append vdl vl  }
+  | vdl = var_decls_list; vl = var_loc_decl; T_SEMICOLON;
+  { List.append vdl vl  }
+  | vdl = var_decls_list; vl = var_loc_partly_decl; T_SEMICOLON;
+  { List.append vdl vl  }
+  | vdl = var_decls_list; vl = var_access_decl; T_SEMICOLON;
+  { List.append vdl vl  }
+
+let var_decl :=
+  | vars = separated_nonempty_list(T_COMMA, variable_name); T_COLON; simple_spec;
+  {
+    List.map
+      vars
+      ~f:(fun (n, ti) -> let var = mk_var_use n ti in Syntax.VarDecl.create var None)
+  }
+  (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; *)
+  (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; array_var_decl; *)
+  (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl; *)
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = simple_spec_init;
+  {
+    let (ty, inval_opt) = ty_specs in
+    let spec = Syntax.DTyDeclSingleElement(ty, inval_opt) in
+    List.map
+      var_names
+      ~f:(fun (n, ti) -> begin
+        let var = mk_var_use n ti in
+        Syntax.VarDecl.create var (Some(spec))
+      end)
+  }
+  (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; <> *)
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = ref_spec_init;
+  {
+    let (ref_level, ref_ty, inval_opt) = ty_specs in
+    let spec = Syntax.DTyDeclRefType(ref_level, ref_ty, inval_opt) in
+    List.map
+      var_names
+      ~f:(fun (n, ti) -> begin
+        let var = mk_var_use n ti in
+        Syntax.VarDecl.create var (Some(spec))
+      end)
+  }
+  (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl_init; <> *)
+  (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; interface_spec_init; <> *)
+  | ~ = array_var_decl_init; <>
+  (* | ~ = struct_var_decl_init; <> *)
+  (* | ~ = fb_decl_init; <> *)
+  (* | ~ = interface_spec_init; <> *)
+
+let var_loc_partly_decl :=
+  | out = variable_name; T_AT; T_DIR_VAR; T_COLON; s = var_spec;
+  {
+    let (n, ti) = out in
+    let var = mk_var_use n ti in
+    let vd = Syntax.VarDecl.create var None in
+    [vd]
+  }
+
+let var_access_decl :=
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; sv = symbolic_variable; T_COLON; data_type_access;
+  {
+    Printf.printf "VAR_ACC\n";
+    let var = mk_var_use_sym sv in
+    let var_decl = Syntax.VarDecl.create var None in
+    let attr = Syntax.VarDecl.VarAccess("MOCK") in
+    let vd = Syntax.VarDecl.set_attr var_decl attr in
+    [vd]
+  }
+
+let var_ref_decl :=
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = ref_spec;
+  {
+    let (ref_level, ref_ty) = ty_specs in
+    let spec = Syntax.DTyDeclRefType(ref_level, ref_ty, None) in
+    List.map
+      var_names
+      ~f:(fun (n, ti) -> begin
+        let var = mk_var_use n ti in
+        Syntax.VarDecl.create var (Some(spec))
+      end)
+  }
+
+let var_loc_decl :=
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); located_at; T_COLON; loc_var_spec_init;
+  {
+    (* let (n, ti) = name_ti in *)
+    let var = mk_var_use "TEST" @@ Tok_info.create_dummy () in
+    let vd = Syntax.VarDecl.create var None in
+    [vd]
+  }
+
+(* interface_var_decl: *)
+
+let array_var_decl_init :=
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; ty_specs = array_spec_init;
+  {
+    let (subranges, ty, initializer_list) = ty_specs in
+    let spec = Syntax.DTyDeclArrayType(subranges, ty, initializer_list) in
+    List.map
+      var_names
+      ~f:(fun (n, ti) -> begin
+        let var = mk_var_use n ti in
+        Syntax.VarDecl.create var (Some(spec))
+      end)
+  }
+
+(* array_conform_decl *)
+
+(* fb_decl_no_init *)
+
+(* array_var_decl: *)
+
+(* struct_var_decl: *)
+
+(* }}} *)
+
 (* {{{ Other symbols
  * Helper rules and symbols which doesn't defined in standard grammar explicitly *)
 
@@ -2531,15 +2311,6 @@ let unary_operator :=
 optional_assign(X):
   | { None }
   | T_ASSIGN x = X { Some x }
-
-variables_decl_list(VD):
-  | l = option(variables_decl_nonempty_list(VD));
-  { match l with Some v -> v | None -> [] }
-
-variables_decl_nonempty_list(VD):
-  | v = VD; T_SEMICOLON; { v }
-  | vs = variables_decl_nonempty_list(VD); v = VD; T_SEMICOLON;
-  { List.append vs v }
 (* }}} *)
 
 (* vim: set foldmethod=marker foldlevel=0 foldenable tw=2 sw=2 tw=120 wrap : *)

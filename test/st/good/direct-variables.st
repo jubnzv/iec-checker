@@ -14,6 +14,8 @@ PROGRAM simple
     v11 AT %QX7.5 : DINT;
     v12 AT %MW1.7.9 : DINT;
     v13 AT %M* : DINT;
+    v14 AT %MW10.2.4.1 : INT;
+		v15 AT %MW11 : INT;
   END_VAR
 
   v01 := 92;
