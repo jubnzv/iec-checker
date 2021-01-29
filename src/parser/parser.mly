@@ -2115,6 +2115,8 @@ let qualifier :=
   | T_CONSTANT; {}
 
 let var_decls_list :=
+  /* nothing */
+  { [] }
   | ~ = var_decl; T_SEMICOLON; <>
   | ~ = var_ref_decl; T_SEMICOLON; <>
   | ~ = var_loc_decl; T_SEMICOLON; <>
