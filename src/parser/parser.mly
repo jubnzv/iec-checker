@@ -1302,7 +1302,7 @@ let var_spec :=
   (* | ~ = array_spec; <> *)
   (* | ~ = struct_type_access; <> *)
 
-(* Helper rule for [var_spec] *)
+(* Helper rule for var_spec *)
 let var_spec_index :=
   | T_LBRACK; c = unsigned_int; T_RBRACK;
   { c_get_int_exn c }
@@ -2120,15 +2120,12 @@ let var_decls_list :=
   | ~ = var_decl; T_SEMICOLON; <>
   | ~ = var_ref_decl; T_SEMICOLON; <>
   | ~ = var_loc_decl; T_SEMICOLON; <>
-  | ~ = var_loc_partly_decl; T_SEMICOLON; <>
   | ~ = var_access_decl; T_SEMICOLON; <>
   | vdl = var_decls_list; vl = var_decl; T_SEMICOLON;
   { List.append vdl vl  }
   | vdl = var_decls_list; vl = var_ref_decl; T_SEMICOLON;
   { List.append vdl vl  }
   | vdl = var_decls_list; vl = var_loc_decl; T_SEMICOLON;
-  { List.append vdl vl  }
-  | vdl = var_decls_list; vl = var_loc_partly_decl; T_SEMICOLON;
   { List.append vdl vl  }
   | vdl = var_decls_list; vl = var_access_decl; T_SEMICOLON;
   { List.append vdl vl  }
@@ -2173,24 +2170,29 @@ let var_decl :=
   (* | ~ = fb_decl_init; <> *)
   (* | ~ = interface_spec_init; <> *)
 
-let var_loc_partly_decl :=
-  | out = variable_name; T_AT; T_DIR_VAR; T_COLON; s = var_spec;
+(* NOTE: Comma-separated list is incorrect. *)
+let var_loc_decl :=
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; T_DIR_VAR; T_COLON; var_spec; optional_assign(constant_expr);
   {
-    let (n, ti) = out in
-    let var = mk_var_use n ti in
-    let vd = Syntax.VarDecl.create var None in
-    [vd]
+    List.map var_names
+      ~f:(fun (n, ti) -> begin
+        let var = mk_var_use n ti in
+        let v = Syntax.VarDecl.create var None in
+        Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated
+      end)
   }
 
+(* NOTE: Comma-separated list is incorrect. *)
 let var_access_decl :=
   | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; sv = symbolic_variable; T_COLON; data_type_access;
   {
-    Printf.printf "VAR_ACC\n";
-    let var = mk_var_use_sym sv in
-    let var_decl = Syntax.VarDecl.create var None in
-    let attr = Syntax.VarDecl.VarAccess("MOCK") in
-    let vd = Syntax.VarDecl.set_attr var_decl attr in
-    [vd]
+    List.map var_names
+      ~f:(fun (n, ti) -> begin
+        let var = mk_var_use n ti in
+        let v = Syntax.VarDecl.create var None in
+        let attr = Syntax.VarDecl.VarAccess("") in
+        Syntax.VarDecl.set_attr v attr
+      end)
   }
 
 let var_ref_decl :=
@@ -2204,15 +2206,6 @@ let var_ref_decl :=
         let var = mk_var_use n ti in
         Syntax.VarDecl.create var (Some(spec))
       end)
-  }
-
-let var_loc_decl :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); located_at; T_COLON; loc_var_spec_init;
-  {
-    (* let (n, ti) = name_ti in *)
-    let var = mk_var_use "TEST" @@ Tok_info.create_dummy () in
-    let vd = Syntax.VarDecl.create var None in
-    [vd]
   }
 
 (* interface_var_decl: *)

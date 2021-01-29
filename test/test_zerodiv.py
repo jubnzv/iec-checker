@@ -12,7 +12,7 @@ def test_zerodiv():
     fdump = f'{f}.dump.json'
     cvs, rc = run_checker(f)
     assert rc == 0
-    assert len(cvs) == 2
+    assert len(cvs) == 3  # + unused variable
 
     assert cvs[0].id == 'ZeroDivision'
     assert cvs[0].linenr == 7
