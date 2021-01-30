@@ -1812,9 +1812,9 @@ let func_call :=
   }
 
 let stmt_list :=
-  | s = stmt; T_SEMICOLON;
+  | s = stmt; option(T_SEMICOLON);
   { [s] }
-  | sl = stmt_list; s = stmt; T_SEMICOLON;
+  | sl = stmt_list; s = stmt; option(T_SEMICOLON);
   { sl @ [s] }
 
 let stmt :=
