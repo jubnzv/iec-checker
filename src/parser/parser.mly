@@ -1169,8 +1169,8 @@ let ref_deref :=
 
 (* {{{ Table 13 -- Variables declaration / Table 14 -- Variables initialization *)
 let variable :=
-  (* | v = direct_variable; *)
-  (* | {} *)
+  | v = direct_variable;
+  { mk_var_use_dir v }
   | sv = symbolic_variable;
   { mk_var_use_sym sv }
 
