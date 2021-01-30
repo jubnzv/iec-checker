@@ -1785,7 +1785,13 @@ let enum_value_use :=
   | option(enum_value_opt); ~ = T_IDENTIFIER; <>
 
 let variable_access :=
-  | ~ = variable_expr; option(multibit_part_access); <>
+  | ~ = variable_expr; <>
+  | ~ = variable_expr; multibit_part_access; <>
+  (* Non-standard extenstion to handle IF ARR1[i] < 10 THEN *)
+  | ~ = variable_expr; array_access; <>
+
+let array_access :=
+  | T_LBRACK; ~ = expression; T_RBRACK; <>
 
 (* Helper rule for variable_access.
    This is required to avoid shift/reduce conflict with identifier from func_name rule. *)
