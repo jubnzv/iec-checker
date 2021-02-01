@@ -137,7 +137,6 @@ module DirVar = struct
       ~f:(fun s p -> s ^ (Printf.sprintf ".%d" p))
 
   type t = {
-    name: string;
     ti: TI.t;
     loc: location option;
     sz: size option;
@@ -146,22 +145,18 @@ module DirVar = struct
   } [@@deriving to_yojson]
 
   let create ti =
-    let name = "" in
     let loc = None in
     let sz = None in
     let is_partly_located = false in
     let path = [] in
-    { name; ti; loc; sz; is_partly_located; path }
+    { ti; loc; sz; is_partly_located; path }
 
-  let get_name var = var.name
   let get_ti var = var.ti
   let get_loc var = var.loc
   let get_size var = var.sz
   let get_is_partly_located var = var.is_partly_located
   let get_path var = var.path
 
-  let set_name var v =
-    { var with name = v }
   let set_ti var v =
     { var with ti = v }
   let set_loc var v =
@@ -227,7 +222,9 @@ module DirVar = struct
       | None -> ""
     in
     Printf.sprintf "DirVar: %%%s%s%s" sz_str loc_str (path_to_string t.path)
+
   let to_yojson t = to_yojson t
+  let get_name var = to_string var
 end
 
 module FunctionBlock = struct
@@ -717,7 +714,6 @@ module VarDecl = struct
 
   type attribute =
     | Var of qualifier option
-    | VarDirect of qualifier option
     | VarOut of qualifier option
     | VarIn of qualifier option
     | VarInOut
@@ -725,7 +721,6 @@ module VarDecl = struct
     | VarGlobal of qualifier option
     | VarAccess of string (** access name *)
     | VarTemp
-    | VarLocated
     | VarConfig of string (** resource name *) *
                    string (** program name *) *
                    string (** fb name *)
@@ -736,6 +731,7 @@ module VarDecl = struct
     attr : attribute option;
     qual: qualifier option;
     dir: direction option;
+    located_at: DirVar.t option;
     ty_spec: derived_ty_decl_spec option; (** specification of the variable type *)
   }
   [@@deriving to_yojson]
@@ -744,7 +740,8 @@ module VarDecl = struct
     let qual = None in
     let attr = None in
     let dir = None in
-    { var; attr; qual; dir; ty_spec }
+    let located_at = None in
+    { var; attr; qual; dir; located_at; ty_spec }
 
   let get_var dcl = dcl.var
 
@@ -757,7 +754,7 @@ module VarDecl = struct
     | None -> let new_a = Var (Some qa) in { dcl with attr = Some new_a }
     | Some a -> begin
         match a with
-        | Var _ | VarDirect _ | VarOut _ | VarIn _
+        | Var _ | VarOut _ | VarIn _
         | VarExternal _ | VarGlobal _ ->
           let new_a = Var (Some qa) in
           { dcl with attr = Some new_a }
@@ -768,6 +765,8 @@ module VarDecl = struct
   let get_attr dcl = dcl.attr
   let set_direction dcl v = { dcl with dir = Some v }
   let get_direction dcl = dcl.dir
+  let set_located_at var v = { var with located_at = Some v }
+  let get_located_at var = var.located_at
   let set_ty_spec var v = { var with ty_spec = Some v }
   let get_ty_spec var = var.ty_spec
 

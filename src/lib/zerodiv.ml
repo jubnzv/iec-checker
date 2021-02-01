@@ -1,6 +1,7 @@
 (* Demo check: Find division to a zero constant. *)
 
 open Core_kernel
+open IECCheckerCore.Common
 module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info
 module AU = IECCheckerCore.Ast_util
@@ -34,7 +35,6 @@ let rec collect_warnings (e: S.expr) : Warn.t list =
   | _ -> []
 
 let do_check elems =
-  let all_exprs = AU.get_exprs elems in
-  List.fold_left all_exprs
-    ~init:[]
-    ~f:(fun acc ws -> acc @ (collect_warnings ws))
+  List.fold_left elems ~init:[] ~f:(fun acc elem -> acc @ (AU.get_pou_exprs elem))
+  |> List.map ~f:(fun exprs -> collect_warnings exprs)
+  |> list_flatten

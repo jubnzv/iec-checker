@@ -21,8 +21,11 @@ val get_stmts_num : S.iec_library_element -> int
 val get_stmts : S.iec_library_element list -> S.statement list
 (** Collect all statements from each POU *)
 
-val get_exprs : S.iec_library_element list -> S.expr list
-(** Collect expressions from each statement of the POUs *)
+val get_pou_exprs : S.iec_library_element -> S.expr list
+(** Collect the expressions from each statement of the POU *)
+
+val get_var_uses : S.iec_library_element -> S.VarUse.t list
+(** Collect all VarUse from the given POU *)
 
 val filter_exprs : f:(S.expr -> bool) -> S.iec_library_element -> S.expr list
 (** [filter_exprs f elem] Return list of expressions that satisfy the predicate

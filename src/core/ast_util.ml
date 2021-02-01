@@ -1,4 +1,5 @@
 open Core_kernel
+open Common
 module S = Syntax
 module TI = Tok_info
 
@@ -91,7 +92,7 @@ let get_top_stmts = function
   | S.IECType _ -> []
 
 let get_stmts_num elem =
-    List.length (get_pou_stmts elem)
+  List.length (get_pou_stmts elem)
 
 let get_stmts elems =
   List.fold_left elems
@@ -100,53 +101,65 @@ let get_stmts elems =
         x @ es)
     ~init:[]
 
-let get_exprs elems =
-  let all_stmts = get_stmts elems in
-  let rec get_stmt_exprs stmt =
-    let get_nested stmts =
-      List.fold_left stmts ~init:[] ~f:(fun acc es -> acc @ (get_stmt_exprs es))
-    in
-    match stmt with
-    | S.StmExpr (_, e) -> [e]
-    | S.StmElsif (_, cond_s, ss) -> (get_nested [cond_s]) @ (get_nested ss)
-    | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) -> (
-        (get_nested [cond_s]) @
-        (get_nested body_ss) @
-        (get_nested elsif_ss) @
-        (get_nested else_ss)
-      )
-    | S.StmCase (_, cond_s, case_sels, else_ss) ->
-      begin
-        let case_stmts =
-          List.fold_left
-            case_sels
-            ~init:[]
-            ~f:(fun acc case_sel -> acc @ (get_nested case_sel.case) @ (get_nested case_sel.body))
-        in
-        (get_nested [cond_s]) @
-        case_stmts @
-        (get_nested else_ss)
-      end
-    | S.StmFor (_, ctrl, body_stmts) -> (
-        (get_nested [ctrl.assign]) @
-        [ctrl.range_end; ctrl.range_step] @
-        (get_nested body_stmts)
-      )
-    | S.StmWhile (_, cond_stmt, ss) -> (get_nested [cond_stmt]) @ (get_nested ss)
-    | S.StmRepeat (_, body_stmts, cond_stmt) -> (get_nested body_stmts) @ (get_nested [cond_stmt])
-    | S.StmFuncCall (_, _, func_params) -> begin
-        let func_params_stmts = List.fold_left
-            func_params
-            ~init:[]
-            ~f:(fun acc fp -> acc @ [fp.stmt])
-        in
-        (get_nested func_params_stmts)
-      end
-    | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+let rec get_stmt_exprs stmt =
+  let get_nested stmts =
+    List.fold_left stmts ~init:[] ~f:(fun acc es -> acc @ (get_stmt_exprs es))
   in
-  List.fold_left all_stmts
-    ~init:[]
-    ~f:(fun acc stmt -> (get_stmt_exprs stmt) @ acc)
+  match stmt with
+  | S.StmExpr (_, e) -> [e]
+  | S.StmElsif (_, cond_s, ss) -> (get_nested [cond_s]) @ (get_nested ss)
+  | S.StmIf (_, cond_s, body_ss, elsif_ss, else_ss) -> (
+      (get_nested [cond_s]) @
+      (get_nested body_ss) @
+      (get_nested elsif_ss) @
+      (get_nested else_ss)
+    )
+  | S.StmCase (_, cond_s, case_sels, else_ss) ->
+    begin
+      let case_stmts =
+        List.fold_left
+          case_sels
+          ~init:[]
+          ~f:(fun acc case_sel -> acc @ (get_nested case_sel.case) @ (get_nested case_sel.body))
+      in
+      (get_nested [cond_s]) @
+      case_stmts @
+      (get_nested else_ss)
+    end
+  | S.StmFor (_, ctrl, body_stmts) -> (
+      (get_nested [ctrl.assign]) @
+      [ctrl.range_end; ctrl.range_step] @
+      (get_nested body_stmts)
+    )
+  | S.StmWhile (_, cond_stmt, ss) -> (get_nested [cond_stmt]) @ (get_nested ss)
+  | S.StmRepeat (_, body_stmts, cond_stmt) -> (get_nested body_stmts) @ (get_nested [cond_stmt])
+  | S.StmFuncCall (_, _, func_params) -> begin
+      let func_params_stmts = List.fold_left
+          func_params
+          ~init:[]
+          ~f:(fun acc fp -> acc @ [fp.stmt])
+      in
+      (get_nested func_params_stmts)
+    end
+  | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+
+let get_pou_exprs elem =
+  get_pou_stmts elem
+  |> List.fold_left ~init:[] ~f:(fun acc stmt -> acc @ (get_stmt_exprs stmt))
+
+let get_var_uses elem =
+  let rec get_vars = function
+    | S.ExprVariable (_, vu) -> [vu]
+    | S.ExprConstant _ -> []
+    | S.ExprBin (_, lhs, _, rhs) -> (get_vars lhs) @ (get_vars rhs)
+    | S.ExprUn (_, _, e) -> get_vars e
+    | S.ExprFuncCall (_, stmt) -> begin
+        get_stmt_exprs stmt
+        |> List.fold_left ~init:[] ~f:(fun acc e -> acc @ (get_vars e))
+      end
+  in
+  get_pou_exprs elem
+  |> List.fold_left ~init:[] ~f:(fun acc expr -> acc @ (get_vars expr))
 
 let filter_exprs ~f elem =
   let rec aux acc stmt =

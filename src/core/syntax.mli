@@ -109,14 +109,12 @@ module DirVar : sig
   val create : TI.t -> t
   (** Create an empty instance of the direct variable. *)
 
-  val get_name : t -> string
   val get_ti : t -> TI.t
   val get_loc : t -> location option
   val get_size : t -> size option
   val get_is_partly_located : t -> bool
   val get_path : t -> int list
 
-  val set_name : t -> string -> t
   val set_ti : t -> TI.t -> t
   val set_loc : t -> location -> t
   val set_size : t -> size -> t
@@ -495,7 +493,6 @@ module VarDecl : sig
 
   type attribute =
     | Var of qualifier option
-    | VarDirect of qualifier option
     | VarOut of qualifier option
     | VarIn of qualifier option
     | VarInOut
@@ -503,7 +500,6 @@ module VarDecl : sig
     | VarGlobal of qualifier option
     | VarAccess of string (** access name *)
     | VarTemp
-    | VarLocated
     | VarConfig of string (** resource name *) *
                    string (** program name *) *
                    string (** fb name *)
@@ -520,6 +516,8 @@ module VarDecl : sig
   val get_attr : t -> attribute option
   val set_direction : t -> direction -> t
   val get_direction : t -> direction option
+  val set_located_at : t -> DirVar.t -> t
+  val get_located_at : t -> DirVar.t option
   val set_ty_spec : t -> derived_ty_decl_spec -> t
   val get_ty_spec : t -> derived_ty_decl_spec option
 

@@ -8,6 +8,20 @@ from python.core import run_checker, filter_warns  # noqa
 from python.dump import DumpManager  # noqa
 
 
+def test_cp1():
+    f = 'st/plcopen-cp13.st'
+    fdump = f'{f}.dump.json'
+    checker_warnings, rc = run_checker(f)
+    assert rc == 0
+    assert len(checker_warnings) == 2
+    cv = checker_warnings[1]
+    assert cv.id == 'PLCOPEN-CP1'
+    assert cv.linenr == 5
+    assert cv.column == 13
+    with DumpManager(fdump):
+        pass
+
+
 def test_cp13():
     f = 'st/plcopen-cp13.st'
     fdump = f'{f}.dump.json'

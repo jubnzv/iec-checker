@@ -13,6 +13,13 @@
     | [] :: t -> list_flatten t
     | (x::y) :: t -> x :: (list_flatten (y::t))
 
+  let startswith s1 s2 =
+    let len1 = String.length s1 and len2 = String.length s2 in
+    if len1 < len2 then false
+    else
+      let sub = String.sub s1 ~pos:(0) ~len:(len2) in
+      String.equal sub s2
+
   let creal_inv (vr, ti) =
     let vv = -1.0 *. vr in
     (vv, ti)
@@ -2178,13 +2185,13 @@ let var_decl :=
 
 (* NOTE: Comma-separated list is incorrect. *)
 let var_loc_decl :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; T_DIR_VAR; T_COLON; var_spec; optional_assign(constant_expr);
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; dir_var = T_DIR_VAR; T_COLON; var_spec; optional_assign(constant_expr);
   {
     List.map var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
         let v = Syntax.VarDecl.create var None in
-        Syntax.VarDecl.set_attr v Syntax.VarDecl.VarLocated
+        Syntax.VarDecl.set_located_at v dir_var
       end)
   }
 

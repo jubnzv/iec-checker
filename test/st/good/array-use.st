@@ -1,0 +1,12 @@
+FUNCTION_BLOCK MAIN_POU
+
+  VAR
+      i:INT;
+      state: INT:=0;
+  END_VAR
+
+   IF gvl.CALL_LIST_INTERMEDIATE_GO_UP[i]= TRUE THEN
+      state:=100;
+  END_IF
+
+END_FUNCTION_BLOCK

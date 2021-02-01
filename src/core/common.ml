@@ -14,6 +14,11 @@ let next_id =
 let sublist l low high =
   List.filteri l ~f:(fun i _ -> i >= low && i < high)
 
+let rec list_flatten = function
+  | [] -> []
+  | [] :: t -> list_flatten t
+  | (x::y) :: t -> x :: (list_flatten (y::t))
+
 let head_exn = function
   | [] -> raise @@ InternalError "List is empty!\n"
   | x::_ -> x
