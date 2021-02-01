@@ -768,13 +768,13 @@ let data_type_decl :=
   | T_TYPE; ~ = list(type_decl); T_END_TYPE; <>
 
 let type_decl :=
-  | ~ = simple_type_decl; <>
-  | ~ = subrange_type_decl; <>
-  | ~ = enum_type_decl; <>
-  | ~ = array_type_decl; <>
-  | ~ = struct_type_decl; <>
-  | ~ = str_type_decl; <>
-  | ~ = ref_type_decl; <>
+  | ~ = simple_type_decl;   option(T_SEMICOLON); <>
+  | ~ = subrange_type_decl; option(T_SEMICOLON); <>
+  | ~ = enum_type_decl;     option(T_SEMICOLON); <>
+  | ~ = array_type_decl;    option(T_SEMICOLON); <>
+  | ~ = struct_type_decl;   option(T_SEMICOLON); <>
+  | ~ = str_type_decl;      option(T_SEMICOLON); <>
+  | ~ = ref_type_decl;      option(T_SEMICOLON); <>
 
 (* Helper rules to resolve shift/reduce conflicts in types declaration *)
 (* let type_decl_helper :=                                     *)
