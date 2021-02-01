@@ -28,7 +28,7 @@ def test_cfa_dead_code_top_statements():
         """.replace('\n', ''))
     assert rc == 0
     assert len(warns) >= 1
-    assert len(filter_warns(warns, 'UnreachableCode')) == 1
+    assert len(filter_warns(warns, 'PLCOPEN-CP2')) == 1
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme
@@ -59,7 +59,7 @@ def test_cfa_dead_code_in_the_loops():
         END_PROGRAM
         """.replace('\n', ''))
     assert rc == 0
-    assert len(filter_warns(warns, 'UnreachableCode')) == 2
+    assert len(filter_warns(warns, 'PLCOPEN-CP2')) == 2
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme
@@ -82,7 +82,7 @@ def test_cfa_multiple_pous():
         END_FUNCTION
         """.replace('\n', ''))
     assert rc == 0
-    assert len(filter_warns(warns, 'UnreachableCode')) == 2
+    assert len(filter_warns(warns, 'PLCOPEN-CP2')) == 2
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme

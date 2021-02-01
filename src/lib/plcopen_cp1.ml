@@ -5,8 +5,6 @@ open IECCheckerAnalysis
 module S = Syntax
 module AU = IECCheckerCore.Ast_util
 
-[@@@warning "-27"]
-
 let get_located_vars_decls elem =
   AU.get_var_decls elem
   |> List.fold_left

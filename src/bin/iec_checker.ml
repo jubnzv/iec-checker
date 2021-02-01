@@ -77,14 +77,12 @@ let run_checker filename in_fmt out_fmt create_dumps verbose interactive =
       Dump.create_dump elements envs cfgs
         (if read_stdin then "stdin" else filename);
     let decl_warns = Declaration_analysis.run elements envs in
-    let cfa_warns = Control_flow_analysis.run cfgs in
     let unused_warns = Unused_variable.run elements in
     let ud_warns = Use_define.run elements in
     let lib_warns = Lib.run_all_checks elements envs cfgs (not verbose) in
     WO.print_report (
       parser_warns @
       decl_warns @
-      cfa_warns @
       unused_warns @
       ud_warns @
       lib_warns)

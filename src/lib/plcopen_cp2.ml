@@ -6,9 +6,9 @@ module AU = Ast_util
 module S = Syntax
 
 (** Generate warning for a given basic block *)
-let mk_warn ?(title="UnreachableCode") ?(text="Code block will never be reached") (bb : Cfg.bb) : Warn.t =
+let mk_warn (bb : Cfg.bb) : Warn.t =
   let ti = Cfg.bb_get_ti bb in
-  Warn.mk ti.linenr ti.col title text
+  Warn.mk ti.linenr ti.col "PLCOPEN-CP2" "All code shall be used in the application"
 
 (** Find basic blocks inside the loop statements that are unreachable after
     CONTINUE/EXIT blocks. *)
@@ -36,6 +36,6 @@ let find_unreachable_blocks (cfgs : Cfg.t list) : (Warn.t list) =
     ~init:[]
     ~f:(fun warns c -> warns @ (check_cfg c))
 
-let run (cfgs : Cfg.t list) : Warn.t list =
+let do_check (cfgs : Cfg.t list) : Warn.t list =
   (* List.iter cfgs ~f:(fun c -> Printf.printf "%s\n" (Cfg.to_string c)); *)
   (find_unreachable_blocks cfgs)
