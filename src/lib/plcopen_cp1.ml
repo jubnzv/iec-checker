@@ -18,7 +18,7 @@ let get_located_values_uses elem =
   AU.get_pou_exprs elem
   |> List.fold_left ~init:[] ~f:(fun acc expr -> begin
         match expr with
-        | S.ExprBin (_, lhs, operator, rhs) -> begin
+        | S.ExprBin (_, lhs, operator, _) -> begin
             if phys_equal operator S.ASSIGN then
               match lhs with
               | S.ExprVariable (_, v) -> begin

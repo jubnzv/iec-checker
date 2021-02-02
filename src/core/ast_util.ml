@@ -1,5 +1,4 @@
 open Core_kernel
-open Common
 module S = Syntax
 module TI = Tok_info
 
