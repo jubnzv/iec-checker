@@ -733,15 +733,18 @@ module VarDecl = struct
     dir: direction option;
     located_at: DirVar.t option;
     ty_spec: derived_ty_decl_spec option; (** specification of the variable type *)
+    was_init : bool; (** does variable was initialized on declaraction? *)
   }
   [@@deriving to_yojson]
 
   let create var ty_spec =
-    let qual = None in
-    let attr = None in
-    let dir = None in
-    let located_at = None in
-    { var; attr; qual; dir; located_at; ty_spec }
+    let qual = None
+    and attr = None
+    and dir = None
+    and located_at = None
+    and was_init=false
+    in
+    { var; attr; qual; dir; located_at; ty_spec; was_init }
 
   let get_var dcl = dcl.var
 
@@ -769,6 +772,8 @@ module VarDecl = struct
   let get_located_at var = var.located_at
   let set_ty_spec var v = { var with ty_spec = Some v }
   let get_ty_spec var = var.ty_spec
+  let set_was_init var v = { var with was_init = v }
+  let get_was_init var = var.was_init
 
   let to_yojson t = to_yojson t
 end

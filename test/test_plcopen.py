@@ -13,11 +13,17 @@ def test_cp1():
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0
-    assert len(checker_warnings) == 2
-    cv = checker_warnings[0]
-    assert cv.id == 'PLCOPEN-CP1'
-    assert cv.linenr == 5
-    assert cv.column == 13
+    checker_warnings.count('PLCOPEN-CP1') == 1
+    with DumpManager(fdump):
+        pass
+
+
+def test_cp3():
+    f = 'st/plcopen-cp3.st'
+    fdump = f'{f}.dump.json'
+    checker_warnings, rc = run_checker(f)
+    assert rc == 0
+    checker_warnings.count('PLCOPEN-CP3') == 8
     with DumpManager(fdump):
         pass
 
@@ -27,11 +33,7 @@ def test_cp13():
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker(f)
     assert rc == 0
-    assert len(checker_warnings) >= 1
-    cv = checker_warnings[0]
-    assert cv.id == 'PLCOPEN-CP13'
-    assert cv.linenr == 8
-    assert cv.column == 30
+    checker_warnings.count('PLCOPEN-CP13') == 3
     with DumpManager(fdump):
         pass
 

@@ -520,6 +520,8 @@ module VarDecl : sig
   val get_located_at : t -> DirVar.t option
   val set_ty_spec : t -> derived_ty_decl_spec -> t
   val get_ty_spec : t -> derived_ty_decl_spec option
+  val set_was_init : t -> bool -> t
+  val get_was_init : t -> bool
 
   val to_yojson : t -> Yojson.Safe.t
 end

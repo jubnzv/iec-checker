@@ -2161,7 +2161,8 @@ let var_decl :=
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
+        let var = Syntax.VarDecl.create var (Some(spec)) in
+        Syntax.VarDecl.set_was_init var true
       end)
   }
   (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; <> *)
@@ -2173,7 +2174,8 @@ let var_decl :=
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
+        let var = Syntax.VarDecl.create var (Some(spec)) in
+        Syntax.VarDecl.set_was_init var true
       end)
   }
   (* | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; struct_var_decl_init; <> *)
@@ -2185,13 +2187,16 @@ let var_decl :=
 
 (* NOTE: Comma-separated list is incorrect. *)
 let var_loc_decl :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; dir_var = T_DIR_VAR; T_COLON; var_spec; optional_assign(constant_expr);
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; dir_var = T_DIR_VAR; T_COLON; var_spec; init = optional_assign(constant_expr);
   {
     List.map var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
         let v = Syntax.VarDecl.create var None in
-        Syntax.VarDecl.set_located_at v dir_var
+        let var = Syntax.VarDecl.set_located_at v dir_var in
+        match init with
+        | Some _ -> Syntax.VarDecl.set_was_init var true
+        | None -> var
       end)
   }
 
@@ -2232,7 +2237,10 @@ let array_var_decl_init :=
       var_names
       ~f:(fun (n, ti) -> begin
         let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
+        let var = Syntax.VarDecl.create var (Some(spec)) in
+        match initializer_list with
+        | Some _ -> Syntax.VarDecl.set_was_init var true
+        | None _ -> var
       end)
   }
 
