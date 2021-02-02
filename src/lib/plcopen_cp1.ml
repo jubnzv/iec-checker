@@ -1,6 +1,5 @@
 open Core_kernel
 open IECCheckerCore
-open IECCheckerAnalysis
 
 module S = Syntax
 module AU = IECCheckerCore.Ast_util
@@ -56,7 +55,7 @@ let check_elem elem =
                 end)
         end)
 
-let do_check elems cfgs =
+let do_check elems =
   List.fold_left
     elems
     ~init:[]
