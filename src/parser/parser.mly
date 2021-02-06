@@ -2185,22 +2185,23 @@ let var_decl :=
   (* | ~ = fb_decl_init; <> *)
   (* | ~ = interface_spec_init; <> *)
 
-(* NOTE: Comma-separated list is incorrect. *)
 let var_loc_decl :=
-  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; dir_var = T_DIR_VAR; T_COLON; var_spec; init = optional_assign(constant_expr);
+  | var_names = separated_nonempty_list(T_COMMA, variable_name); T_AT; dir_var = T_DIR_VAR; T_COLON; spec = var_spec; init = optional_assign(constant_expr);
   {
     List.map var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        let v = Syntax.VarDecl.create var None in
-        let var = Syntax.VarDecl.set_located_at v dir_var in
+        let v = Syntax.VarDecl.create (mk_var_use n ti) None in
+        (* Set type specification *)
+        let v_spec = Syntax.DTyDeclSingleElement(spec, init) in
+        let v = Syntax.VarDecl.set_ty_spec v v_spec in
+        (* Add information about the location *)
+        let v = Syntax.VarDecl.set_located_at v dir_var in
         match init with
-        | Some _ -> Syntax.VarDecl.set_was_init var true
-        | None -> var
+        | Some _ -> Syntax.VarDecl.set_was_init v true
+        | None -> v
       end)
   }
 
-(* NOTE: Comma-separated list is incorrect. *)
 let var_access_decl :=
   | var_names = separated_nonempty_list(T_COMMA, variable_name); T_COLON; sv = symbolic_variable; T_COLON; data_type_access;
   {
