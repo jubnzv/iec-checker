@@ -26,6 +26,7 @@ let[@warning "-27"] run_all_checks elements envs cfgs quiet =
   |> List.append (Plcopen_cp3.do_check elements)
   |> List.append (Plcopen_cp4.do_check elements)
   |> List.append (Plcopen_cp6.do_check elements)
+  |> List.append (Plcopen_cp8.do_check elements)
   |> List.append (Plcopen_cp9.do_check elements cfgs)
   |> List.append (Plcopen_cp13.do_check elements)
   |> List.append (Zerodiv.do_check elements)
