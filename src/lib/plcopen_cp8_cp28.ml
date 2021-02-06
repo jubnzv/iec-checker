@@ -14,6 +14,15 @@ let is_float = function
   | _ -> false
 
 
+let is_time_or_phys = function
+  | S.ExprConstant (_, c) -> begin
+      match c with
+      | S.CTimeValue _ -> true
+      | _ -> false
+    end
+  | _ -> false
+
+
 let check_elem elem =
   AU.get_pou_exprs elem
   |> List.fold_left ~init:[]
@@ -25,6 +34,10 @@ let check_elem elem =
                   if (is_float lhs) || (is_float rhs) then begin
                     let msg = "Floating point comparison shall not be equality or inequality" in
                     acc @ [(Warn.mk ti.linenr ti.col "PLCOPEN-CP8" msg)]
+                  end
+                  else if (is_time_or_phys lhs) || (is_time_or_phys rhs) then begin
+                    let msg = "Time and physical measures comparissons shall not be equality or inequality" in
+                    acc @ [(Warn.mk ti.linenr ti.col "PLCOPEN-CP28" msg)]
                   end
                   else acc
                 end
