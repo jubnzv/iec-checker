@@ -1,0 +1,21 @@
+FUNCTION demo : INT
+    VAR_EXTERNAL
+        x1 : INT; (* PLCOPEN-CP6 *)
+    END_VAR
+    x1 := 42;
+END_FUNCTION
+
+FUNCTION_BLOCK demo
+    VAR_EXTERNAL
+        x1 : INT; (* PLCOPEN-CP6 *)
+    END_VAR
+    x1 := 42;
+END_FUNCTION_BLOCK
+
+PROGRAM demo
+    VAR_EXTERNAL
+        x1 : INT;
+    END_VAR
+    x1 := 42;
+END_PROGRAM
+
