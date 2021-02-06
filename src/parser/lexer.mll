@@ -157,13 +157,13 @@ let real = integer '.' integer exponent
 let fix_point = integer '.' integer
 
 (* Time literals *)
-let fix_point_d = (integer | (integer '.' integer)) 'd'
-let fix_point_h = (integer | (integer '.' integer)) 'h'
-let fix_point_m = (integer | (integer '.' integer)) 'm'
-let fix_point_s = (integer | (integer '.' integer)) 's'
-let fix_point_ms = (integer | (integer '.' integer)) "ms"
-let fix_point_us = (integer | (integer '.' integer)) "us"
-let fix_point_ns = (integer | (integer '.' integer)) "ns"
+let fix_point_d = (integer | (integer '.' integer)) ('d' | 'D')
+let fix_point_h = (integer | (integer '.' integer)) ('h' | 'H')
+let fix_point_m = (integer | (integer '.' integer)) ('m' | 'M')
+let fix_point_s = (integer | (integer '.' integer)) ('s' | 'S')
+let fix_point_ms = (integer | (integer '.' integer)) ("ms" | "MS")
+let fix_point_us = (integer | (integer '.' integer)) ("us" | "US")
+let fix_point_ns = (integer | (integer '.' integer)) ("ns" | "NS")
 
 let label = '_'? (letter | letter ['A'-'Z' 'a'-'z' '0'-'9' '_' '.']*)
 
