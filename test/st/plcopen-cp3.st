@@ -6,6 +6,7 @@ FUNCTION demo : INT
         x4 : WSTRING[25] := 'spaces_disallowed';
         x5 : ARRAY [1..2, 1..3] OF INT; (* PLCOPEN-CP3 *)
         x6: ARRAY [0..7] OF BOOL := [0,1,1,0,0,1,0,0];
+        x7 AT %B0 : INT;
     END_VAR
     x1 := 42;
 END_FUNCTION
