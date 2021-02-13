@@ -15,6 +15,16 @@
       Lexing.pos_bol = pos.Lexing.pos_cnum;
     }
 
+  (* Hack around ocamllex to emulate the yyless() of flex. The semantic
+     is not exactly the same than yyless(), so I use yyback() instead.
+     http://my.safaribooksonline.com/book/programming/flex/9780596805418/a-reference-for-flex-specifications/yyless *)
+  let yyback n lexbuf =
+    lexbuf.Lexing.lex_curr_pos <- lexbuf.Lexing.lex_curr_pos - n;
+    let currp = lexbuf.Lexing.lex_curr_p in
+    lexbuf.Lexing.lex_curr_p <- { currp with
+      Lexing.pos_cnum = currp.Lexing.pos_cnum - n;
+    }
+
   (* Keyword tables are necessary to get rid of transition table overflow errors.
      See: http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual026.html#toc111 *)
   (* This keyword table is also required to handle case-insensitive syntax of IEC 61131-3. *)
@@ -474,7 +484,12 @@ and direct_variable var ti = parse
       direct_variable var ti lexbuf
   }
   | eof { T_EOF }
-  | _   { (* Printf.printf "DIR_VAR=%s\n" (Syntax.DirVar.to_string var); *) T_DIR_VAR(var) }
+  | _ as c
+  {
+    (* Printf.printf "DIR_VAR=%s\n" (Syntax.DirVar.to_string var); *)
+    yyback (String.length (Lexing.lexeme lexbuf)) lexbuf;
+    T_DIR_VAR(var)
+  }
   (* }}}*)
 
   (* {{{ Comments *)

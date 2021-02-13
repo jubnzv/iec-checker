@@ -16,6 +16,7 @@ PROGRAM simple
     v13 AT %M* : DINT;
     v14 AT %MW10.2.4.1 : INT;
 		v15 AT %MW11 : INT;
+		v16 AT %MW12: INT;
   END_VAR
 
   v01 := 92;
