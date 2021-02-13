@@ -1,6 +1,5 @@
 open Core_kernel
 open IECCheckerCore
-open IECCheckerAnalysis
 
 module S = Syntax
 module AU = IECCheckerCore.Ast_util
