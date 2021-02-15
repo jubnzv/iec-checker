@@ -9,8 +9,15 @@ You can try [Online Demo](https://idie.ru/bin/iec-checker).
 
 The following features are currently implemented:
 + [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines) checks:
-  - CP13: POUs shall not call themselves directly or indirectly
+  - CP1: Access to a member shall be by name
+  - CP2: All code shall be used in the application
+  - CP3: All variables shall be initialized before being used
+  - CP4: Direct addressing should not overlap
+  - CP6: Avoid external variables in functions, function blocks and classes
+  - CP8: Floating point comparison shall not be equality or inequality
   - CP9: Limit the complexity of POU code
+  - CP13: POUs shall not call themselves directly or indirectly
+  - CP28: Time and physical measures comparisons shall not be equality or inequality
   - L17: Each IF instruction should have an ELSE clause
   - N3: Define the names to avoid
 + Declaration analysis for derived types
