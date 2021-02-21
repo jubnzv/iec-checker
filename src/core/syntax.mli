@@ -505,7 +505,7 @@ module VarDecl : sig
                    string (** fb name *)
   [@@deriving to_yojson]
 
-  val create : VarUse.t -> derived_ty_decl_spec option -> t
+  val create : ?ty_spec:(derived_ty_decl_spec option) -> VarUse.t -> t
 
   val get_var : t -> VarUse.t
   val get_var_name : t -> string

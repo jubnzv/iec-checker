@@ -16,7 +16,7 @@ let print_element (e : S.iec_library_element) =
   | S.IECType _ ->
       Printf.printf "Running check for derived type\n"
 
-let[@warning "-27"] run_all_checks elements envs cfgs quiet =
+let run_all_checks elements envs cfgs quiet =
   if not quiet then
       List.iter elements ~f:(fun e -> print_element e);
   Plcopen_n3.do_check elements
@@ -29,4 +29,5 @@ let[@warning "-27"] run_all_checks elements envs cfgs quiet =
   |> List.append (Plcopen_cp8_cp28.do_check elements)
   |> List.append (Plcopen_cp9.do_check elements cfgs)
   |> List.append (Plcopen_cp13.do_check elements)
+  |> List.append (Plcopen_cp25.do_check elements envs)
   |> List.append (Zerodiv.do_check elements)

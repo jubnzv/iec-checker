@@ -68,6 +68,16 @@ def test_cp13():
         pass
 
 
+def test_cp25():
+    f = 'st/plcopen-cp25.st'
+    fdump = f'{f}.dump.json'
+    checker_warnings, rc = run_checker(f)
+    assert rc == 0
+    checker_warnings.count('PLCOPEN-CP25') == 2
+    with DumpManager(fdump):
+        pass
+
+
 def test_l17():
     f = 'st/plcopen-l17.st'
     fdump = f'{f}.dump.json'

@@ -13,13 +13,16 @@ module S = Syntax
 
 type t
 
+val get_id : t -> int
+(** Get the unique ID of the POU that this env belongs to. *)
+
 val empty : t
 (** Create an empty environment *)
 
-val mk_global : t
+val mk_global : unit -> t
 (** Make a new global environment. *)
 
-val mk : t (** parent environment *) -> t
+val mk : t (** parent environment *) -> int (** POU id *) -> t
 (** Add a new child environment *)
 
 val add_vdecl : t -> S.VarDecl.t -> t

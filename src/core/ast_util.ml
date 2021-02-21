@@ -276,23 +276,24 @@ let fill_global_env env = function
   | S.IECConfiguration (_, cfg) ->
     List.fold_left cfg.variables ~f:(fun s v -> Env.add_vdecl s v) ~init:env
 
-(** Bound declaration of local variables to given env. *)
-let fill_pou_env env (elem : S.iec_library_element) =
-  List.fold_left (S.get_pou_vars_decl elem)
-    ~f:(fun s v -> Env.add_vdecl s v)
-    ~init:env
-
 let create_envs elems =
-  let global_env = Env.mk_global in
+  (** Bound declaration of local variables to given env. *)
+  let fill_pou_env (elem : S.iec_library_element) env =
+    let r = List.fold_left (S.get_pou_vars_decl elem)
+        ~init:env
+        ~f:(fun s v -> Env.add_vdecl s v)
+    in [r]
+  in
+  let global_env = Env.mk_global () in
   let global_env =
     List.fold_left elems ~f:(fun gs e -> fill_global_env gs e) ~init:global_env
   in
   List.fold_left elems
     ~f:(fun envs e ->
-        let local_env = Env.mk global_env in
-        let local_env = fill_pou_env local_env e in
-        envs @ [ local_env ])
-    ~init:[ global_env ]
+        Env.mk global_env (S.get_pou_id e)
+        |> fill_pou_env e
+        |> List.append envs)
+    ~init:[global_env]
 
 let eval_array_capacity subranges =
   List.fold_left

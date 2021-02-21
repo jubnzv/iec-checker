@@ -732,12 +732,12 @@ module VarDecl = struct
     qual: qualifier option;
     dir: direction option;
     located_at: DirVar.t option;
-    ty_spec: derived_ty_decl_spec option; (** specification of the variable type. TODO: Do we really need this? *)
+    ty_spec: derived_ty_decl_spec option; (** type of this variable *)
     was_init : bool; (** does variable was initialized on declaraction? *)
   }
   [@@deriving to_yojson]
 
-  let create var ty_spec =
+  let create ?(ty_spec=None) var  =
     let qual = None
     and attr = None
     and dir = None

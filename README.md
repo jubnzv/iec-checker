@@ -17,6 +17,7 @@ The following features are currently implemented:
   - CP8: Floating point comparison shall not be equality or inequality
   - CP9: Limit the complexity of POU code
   - CP13: POUs shall not call themselves directly or indirectly
+  - CP25: Data type conversion should be explicit
   - CP28: Time and physical measures comparisons shall not be equality or inequality
   - L17: Each IF instruction should have an ELSE clause
   - N3: Define the names to avoid

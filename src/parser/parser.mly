@@ -48,7 +48,7 @@
   let mk_global_decl (sym_var : Syntax.SymVar.t) =
     let var = Syntax.VarUse.create_sym sym_var Syntax.VarUse.Elementary in
     let attr = Syntax.VarDecl.VarGlobal(None) in
-    let var_decl = Syntax.VarDecl.create var None in
+    let var_decl = Syntax.VarDecl.create var in
     let var_decl = Syntax.VarDecl.set_attr var_decl attr in
     var_decl
 
@@ -1282,8 +1282,7 @@ let global_var_spec :=
   | ~ = global_var_list; <>
   | sv = global_var_name; l = located_at;
   {
-    let var = mk_var_use_sym sv in
-    let var_decl = Syntax.VarDecl.create var None in
+    let var_decl = Syntax.VarDecl.create (mk_var_use_sym sv) in
     let attr = Syntax.VarDecl.VarGlobal(None) in
     [(Syntax.VarDecl.set_attr var_decl attr)]
   }
@@ -2144,11 +2143,11 @@ let var_decls_list :=
   { List.append vdl vl  }
 
 let var_decl :=
-  | vars = separated_nonempty_list(T_COMMA, variable_name); T_COLON; simple_spec;
+  | vars = separated_nonempty_list(T_COMMA, variable_name); T_COLON; decl_spec = simple_spec;
   {
     List.map
       vars
-      ~f:(fun (n, ti) -> let var = mk_var_use n ti in Syntax.VarDecl.create var None)
+      ~f:(fun (n, ti) -> mk_var_use n ti |> Syntax.VarDecl.create ~ty_spec:(Some(Syntax.DTyDeclSingleElement(decl_spec,None))))
   }
   (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; str_var_decl; *)
   (* | vs = separated_nonempty_list(T_COMMA, variable_name); T_COLON; array_var_decl; *)
@@ -2160,8 +2159,7 @@ let var_decl :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        let var = Syntax.VarDecl.create var (Some(spec)) in
+        let var = Syntax.VarDecl.create ~ty_spec:(Some(spec)) (mk_var_use n ti) in
         Syntax.VarDecl.set_was_init var true
       end)
   }
@@ -2173,8 +2171,7 @@ let var_decl :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        let var = Syntax.VarDecl.create var (Some(spec)) in
+        let var = Syntax.VarDecl.create ~ty_spec:(Some(spec)) (mk_var_use n ti) in
         Syntax.VarDecl.set_was_init var true
       end)
   }
@@ -2190,10 +2187,9 @@ let var_loc_decl :=
   {
     List.map var_names
       ~f:(fun (n, ti) -> begin
-        let v = Syntax.VarDecl.create (mk_var_use n ti) None in
-        (* Set type specification *)
-        let v_spec = Syntax.DTyDeclSingleElement(spec, init) in
-        let v = Syntax.VarDecl.set_ty_spec v v_spec in
+        let v =
+          Syntax.VarDecl.create ~ty_spec:(Some(Syntax.DTyDeclSingleElement(spec, init))) (mk_var_use n ti)
+        in
         (* Add information about the location *)
         let v = Syntax.VarDecl.set_located_at v dir_var in
         match init with
@@ -2207,8 +2203,7 @@ let var_access_decl :=
   {
     List.map var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        let v = Syntax.VarDecl.create var None in
+        let v = Syntax.VarDecl.create (mk_var_use n ti) in
         let attr = Syntax.VarDecl.VarAccess("") in
         Syntax.VarDecl.set_attr v attr
       end)
@@ -2222,8 +2217,8 @@ let var_ref_decl :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        Syntax.VarDecl.create var (Some(spec))
+        mk_var_use n ti
+        |> Syntax.VarDecl.create ~ty_spec:(Some(spec))
       end)
   }
 
@@ -2237,8 +2232,9 @@ let array_var_decl_init :=
     List.map
       var_names
       ~f:(fun (n, ti) -> begin
-        let var = mk_var_use n ti in
-        let var = Syntax.VarDecl.create var (Some(spec)) in
+        let var =
+          Syntax.VarDecl.create ~ty_spec:(Some(spec)) (mk_var_use n ti)
+        in
         match initializer_list with
         | Some _ -> Syntax.VarDecl.set_was_init var true
         | None _ -> var

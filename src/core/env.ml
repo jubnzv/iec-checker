@@ -25,8 +25,11 @@ end
 
 type t = {
   parent : t option;  (** Parent env *)
+  id: int; (** Unique id of the POU. See: [Syntax.get_pou_id]. *)
   var_decls : VarDeclMap.t;  (** Variables declared in this env *)
 }
+
+let get_id t = t.id
 
 let to_yojson env : Yojson.Safe.t =
   let var_decls = env.var_decls in
@@ -34,17 +37,18 @@ let to_yojson env : Yojson.Safe.t =
     "var_decls", VarDeclMap.to_yojson var_decls;
   ]
 
-let empty = { parent = None; var_decls = VarDeclMap.empty }
+let empty = { parent = None; id = -1; var_decls = VarDeclMap.empty }
 
-let mk_global =
+let mk_global () =
   let parent = None in
+  let id = -1 in
   let var_decls = VarDeclMap.empty in
-  { parent; var_decls }
+  { parent; id; var_decls }
 
-let mk p =
+let mk p id =
   let parent = Some p in
   let var_decls = VarDeclMap.empty in
-  { parent; var_decls }
+  { parent; id; var_decls }
 
 let add_vdecl env vd =
   let name = S.VarDecl.get_var_name vd in
