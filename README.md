@@ -33,7 +33,7 @@ The following features are currently implemented:
 + Declaration analysis for derived types
 + Intraprocedural control flow analysis: detection of unreachable code blocks inside the [POUs](https://en.wikipedia.org/wiki/IEC_61131-3#Program_organization_unit_(POU))
 + Detection of unused variables
-+ Ability to integrate with other tools. Checker can dump its IR into a JSON file (`--dump` argument) and produce warnings in JSON format (`-output-format-format json`).
++ Ability to integrate with other tools. Checker can dump its IR into a JSON file (`--dump` argument) and produce warnings in JSON format (`--output-format-format json`).
 + Can be extended with plugins written in Python. See demo plugin that plots the control flow graph: [cfg_plotter.py](./src/python/plugins/cfg_plotter.py).
 
 ## Roadmap
