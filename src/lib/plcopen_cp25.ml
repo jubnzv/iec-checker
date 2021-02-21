@@ -1,6 +1,5 @@
 open Core_kernel
 open IECCheckerCore
-open Common
 
 module TI = Tok_info
 module S = Syntax
