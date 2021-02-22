@@ -49,7 +49,8 @@ let rec stmts_to_list stmt =
     in
     [cond_s] @ case_stmts @ (get_nested else_ss)
   | S.StmFor (_, ctrl, body_stmts) ->
-    [ ctrl.assign ] @ body_stmts
+    [ ctrl.assign ] @
+    List.fold_left body_stmts ~init:[] ~f:(fun acc s -> acc @ stmts_to_list s)
   | S.StmWhile (_, cond_stmt, ns) ->
     [stmt] @ [cond_stmt] @
     List.fold_left ns ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
