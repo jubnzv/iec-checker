@@ -28,6 +28,7 @@ The following features are currently implemented:
   - CP13: POUs shall not call themselves directly or indirectly
   - CP25: Data type conversion should be explicit
   - CP28: Time and physical measures comparisons shall not be equality or inequality
+  - L10: Usage of CONTINUE and EXIT instruction should be avoid
   - L17: Each IF instruction should have an ELSE clause
   - N3: Define the names to avoid
 + Declaration analysis for derived types
@@ -35,8 +36,6 @@ The following features are currently implemented:
 + Detection of unused variables
 + Ability to integrate with other tools. Checker can dump its IR into a JSON file (`--dump` argument) and produce warnings in JSON format (`--output-format-format json`).
 + Can be extended with plugins written in Python. See demo plugin that plots the control flow graph: [cfg_plotter.py](./src/python/plugins/cfg_plotter.py).
-
-## Roadmap
 
 ## Installation
 
