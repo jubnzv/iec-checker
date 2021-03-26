@@ -177,7 +177,7 @@ module POUNode = struct
     | `El_start ((_, tag), _) when (String.equal tag "xhtml") -> begin
         pull_src i (d + 1) acc
       end
-    | `El_end -> if (phys_equal d 1) then acc else pull_src i (d - 1) acc
+    | `El_end -> if (d <= 1) then acc else pull_src i (d - 1) acc
     | `Data v -> pull_src i d v
     | _ -> begin
         let (linenr, col) = Xmlm.pos i in
