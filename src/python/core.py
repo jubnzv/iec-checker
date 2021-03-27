@@ -34,8 +34,8 @@ def check_program(program: str, binary: str) -> Tuple[List[Warning], int]:
     return (warnings, p.returncode)
 
 
-def run_checker(file_path: str, binary: str, *args) -> 
-                Tuple[List[Warning], int]:
+def run_checker(file_path: str, binary: str,
+                *args) -> Tuple[List[Warning], int]:
     """Run iec-checker core for a given file.
 
     This will execute core inspections and generate JSON dump processed with
