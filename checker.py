@@ -10,11 +10,12 @@ from python.dump import DumpManager  # noqa
 from python.plugins.cfg_plotter import CFGPlotter  # noqa
 
 
-def main(files: List[str], draw_cfg: str = ""):
+def main(files: List[str], draw_cfg: str = "",
+         binary: str = "../output/bin/iec_checker"):
     for f in files:
         if not os.path.isfile(f):
             continue
-        checker_warnings, rc = run_checker(f)
+        checker_warnings, rc = run_checker(f, binary)
         if rc != 0:
             print(f'Report for {f}:')
             for w in checker_warnings:
@@ -44,5 +45,7 @@ if __name__ == '__main__':
     parser.add_argument("files", nargs='*', help="Path to IEC source files")
     parser.add_argument("--draw-cfg", type=str,
                         help="Save control flow graph image at the selected path")
+    parser.add_argument("-b","--binary", default="../output/bin/iec_checker",
+                        help="File path to the OCaml binary")
     args = parser.parse_args()
-    sys.exit(main(args.files, args.draw_cfg))
+    sys.exit(main(args.files, args.draw_cfg, args.binary))
