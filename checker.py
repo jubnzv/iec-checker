@@ -41,7 +41,8 @@ def main(files: List[str], draw_cfg: str = "",
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description='Static analysis for IEC 61131-3 programs.')
     parser.add_argument("files", nargs='*', help="Path to IEC source files")
     parser.add_argument("--draw-cfg", type=str,
                         help="Save control flow graph image at the selected path")
