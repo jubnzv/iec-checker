@@ -9,6 +9,8 @@ import ijson
 
 from .om import Warning
 
+binary_default = "../output/bin/iec_checker"
+
 
 def process_output(json_out: bytes) -> List[Warning]:
     warnings = []
@@ -19,7 +21,8 @@ def process_output(json_out: bytes) -> List[Warning]:
     return warnings
 
 
-def check_program(program: str, binary: str) -> Tuple[List[Warning], int]:
+def check_program(program: str,
+                  binary: str = binary_default) -> Tuple[List[Warning], int]:
     """Run iec-checker core and send given program source in stdin.
     This will create 'stdin.dump.json' dump file in a current directory.
     """
@@ -34,7 +37,7 @@ def check_program(program: str, binary: str) -> Tuple[List[Warning], int]:
     return (warnings, p.returncode)
 
 
-def run_checker(file_path: str, binary: str,
+def run_checker(file_path: str, binary: str = binary_default,
                 *args) -> Tuple[List[Warning], int]:
     """Run iec-checker core for a given file.
 
