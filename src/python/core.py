@@ -9,7 +9,7 @@ import ijson
 
 from .om import Warning
 
-binary_default = "../output/bin/iec_checker"
+binary_default = os.path.join("..", "output", "bin", "iec_checker")
 
 
 def process_output(json_out: bytes) -> List[Warning]:
