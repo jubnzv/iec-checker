@@ -46,7 +46,7 @@ if __name__ == '__main__':
     parser.add_argument("files", nargs='*', help="Path to IEC source files")
     parser.add_argument("--draw-cfg", type=str,
                         help="Save control flow graph image at the selected path")
-    parser.add_argument("-b","--binary", default="../output/bin/iec_checker",
+    parser.add_argument("-b","--binary", default=os.path.join("output", "bin", "iec_checker"),
                         help="File path to the OCaml binary")
     args = parser.parse_args()
     sys.exit(main(args.files, args.draw_cfg, args.binary))
