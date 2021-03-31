@@ -4,15 +4,6 @@ open IECCheckerCore
 module S = Syntax
 module AU = IECCheckerCore.Ast_util
 
-let is_float = function
-  | S.ExprConstant (_, c) -> begin
-      match c with
-      | S.CReal _ -> true
-      | _ -> false
-    end
-  | _ -> false
-
-
 let is_time_or_phys = function
   | S.ExprConstant (_, c) -> begin
       match c with
@@ -30,11 +21,7 @@ let check_elem elem =
           | S.ExprBin(ti, lhs, operator, rhs) -> begin
               match operator with
               | NEG | EQ -> begin
-                  if (is_float lhs) || (is_float rhs) then begin
-                    let msg = "Floating point comparison shall not be equality or inequality" in
-                    acc @ [(Warn.mk ti.linenr ti.col "PLCOPEN-CP8" msg)]
-                  end
-                  else if (is_time_or_phys lhs) || (is_time_or_phys rhs) then begin
+                  if (is_time_or_phys lhs) || (is_time_or_phys rhs) then begin
                     let msg = "Time and physical measures comparissons shall not be equality or inequality" in
                     acc @ [(Warn.mk ti.linenr ti.col "PLCOPEN-CP28" msg)]
                   end
