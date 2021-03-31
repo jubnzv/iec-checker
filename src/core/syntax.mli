@@ -62,6 +62,12 @@ type operator =
 [@@deriving to_yojson, show]
 (* }}} *)
 
+type access_specifier = ASPublic | ASProtected | ASPrivate | ASInternal
+[@@deriving to_yojson, show]
+
+type class_specifier = CFinal | CAbstract
+[@@deriving to_yojson, show]
+
 (* {{{ Variables and identifiers *)
 
 (** Description of use -- nondefining occurrence of an identifier. *)
@@ -146,6 +152,15 @@ module Function : sig
   val is_std : t -> bool
   (** Returns true if function declared in standard library. *)
   val to_yojson : t -> Yojson.Safe.t
+end
+
+(** Method prototype *)
+module MethodPrototype : sig
+  type t
+  val create : string -> TI.t -> t
+  val to_yojson : t -> Yojson.Safe.t
+  val get_name : t -> string
+  val get_ti : t -> TI.t
 end
 
 (** "Use" occurrence of the variable *)
@@ -551,6 +566,30 @@ type program_decl = {
 }
 [@@deriving to_yojson]
 
+type class_decl = {
+  specifier : class_specifier option;
+  name : string;
+  parent_name : string option; (** Name of the parent class. *)
+  interfaces : string list; (** Names of the implemented interfaces. *)
+  variables : VarDecl.t list; (** Variables declared in this class. *)
+  methods : method_decl list;
+}
+[@@deriving to_yojson]
+and interface_decl = {
+  name : string;
+  parents : string list; (** Names of the parent interfaces. *)
+  method_prototypes : MethodPrototype.t list; (** Prototypes of the methods provided by this interface. *)
+}
+[@@deriving to_yojson]
+and method_decl = {
+  prototype : MethodPrototype.t;
+  statements : statement list;
+  aspec : access_specifier; (** Access specifier. *)
+  cspec : class_specifier option; (** Class specifier: ABSTRACT or FINAL. *)
+  override : bool; (** True if the method is marked with OVERRIDE keyword. *)
+}
+[@@deriving to_yojson]
+
 type resource_decl = {
   name : string option; (** Resource name. Can be is skipped in case of single resource *)
   tasks : Task.t list;
@@ -575,6 +614,8 @@ type iec_library_element =
   | IECFunction of      int (** id *) * function_decl      [@name "Function"]
   | IECFunctionBlock of int (** id *) * fb_decl            [@name "FunctionBlock"]
   | IECProgram of       int (** id *) * program_decl       [@name "Program"]
+  | IECClass of         int (** id *) * class_decl         [@name "Class"]
+  | IECInterface of     int (** id *) * interface_decl     [@name "Interface"]
   | IECConfiguration of int (** id *) * configuration_decl [@name "Configuration"]
   | IECType of          int (** id *) * derived_ty_decl    [@name "Type"]
 [@@deriving to_yojson]
@@ -582,6 +623,8 @@ type iec_library_element =
 val mk_pou : [< `Function of function_decl
              | `FunctionBlock of fb_decl
              | `Program of program_decl
+             | `Class of class_decl
+             | `Interface of interface_decl
              | `Configuration of configuration_decl
              | `Type of derived_ty_decl ] -> iec_library_element
 

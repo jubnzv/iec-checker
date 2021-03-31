@@ -6,6 +6,8 @@ let get_var_decls = function
   | S.IECFunction (_, f) -> f.variables
   | S.IECFunctionBlock (_, fb) -> fb.variables
   | S.IECProgram (_, p) -> p.variables
+  | S.IECClass (_, c) -> c.variables
+  | S.IECInterface _ -> []
   | S.IECConfiguration (_, c) -> c.variables
   | S.IECType _ -> []
 
@@ -81,6 +83,12 @@ let get_pou_stmts = function
       ~init:[]
   | S.IECProgram (_, p) ->
     List.fold_left p.statements ~f:(fun ss s -> ss @ stmts_to_list s) ~init:[]
+  | S.IECClass (_, c) ->
+      List.fold_left
+        c.methods
+        ~init:[]
+        ~f:(fun acc m -> acc @ List.fold_left m.statements ~init:[] ~f:(fun acc s -> acc @ stmts_to_list s))
+  | S.IECInterface _ -> []
   | S.IECConfiguration _ -> []
   | S.IECType _ -> []
 
@@ -88,6 +96,8 @@ let get_top_stmts = function
   | S.IECFunction (_, f) -> f.statements
   | S.IECFunctionBlock (_, fb) -> fb.statements
   | S.IECProgram (_, p) -> p.statements
+  | S.IECClass (_, c) -> List.fold_left c.methods ~init:[] ~f:(fun acc m -> acc @ m.statements)
+  | S.IECInterface _ -> []
   | S.IECConfiguration _ -> []
   | S.IECType _ -> []
 
@@ -273,7 +283,7 @@ let get_ti_by_name_exn elem var_name =
 
 (** Bound declaration of global variables in global env. *)
 let fill_global_env env = function
-  | S.IECFunction _ | S.IECFunctionBlock _ | S.IECProgram _ | S.IECType _ -> env
+  | S.IECFunction _ | S.IECFunctionBlock _ | S.IECProgram _ | S.IECType _ | S.IECClass _ | S.IECInterface _ -> env
   | S.IECConfiguration (_, cfg) ->
     List.fold_left cfg.variables ~f:(fun s v -> Env.add_vdecl s v) ~init:env
 

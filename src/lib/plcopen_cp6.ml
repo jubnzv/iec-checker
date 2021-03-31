@@ -7,7 +7,7 @@ module AU = IECCheckerCore.Ast_util
 
 let check_elem elem =
   match elem with
-  | S.IECFunction _ | S.IECFunctionBlock _ -> begin
+  | S.IECFunction _ | S.IECFunctionBlock _ | S.IECClass _ -> begin
       AU.get_var_decls elem
       |> List.fold_left
         ~init:[]
@@ -22,7 +22,7 @@ let check_elem elem =
               | _ -> acc
             end)
     end
-  | S.IECProgram _ | S.IECConfiguration _ | S.IECType _ -> []
+  | S.IECProgram _ | S.IECConfiguration _ | S.IECType _ | S.IECInterface _ -> []
 
 let do_check elems =
   List.fold_left elems ~init:[] ~f:(fun acc elem -> acc @ (check_elem elem))

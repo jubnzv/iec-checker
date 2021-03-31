@@ -19,3 +19,13 @@ PROGRAM demo
     x1 := 42;
 END_PROGRAM
 
+CLASS test1
+  VAR_EXTERNAL
+    x1 : INT;
+  END_VAR
+
+  METHOD PRIVATE count
+    x1 := 42;
+  END_METHOD
+
+END_CLASS

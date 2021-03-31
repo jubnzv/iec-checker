@@ -134,6 +134,12 @@
 %token T_FUNCTION T_END_FUNCTION
 %token T_FUNCTION_BLOCK T_END_FUNCTION_BLOCK
 %token T_PROGRAM T_END_PROGRAM
+%token T_CLASS T_END_CLASS
+%token T_FINAL T_ABSTRACT T_EXTENDS T_IMPLEMENTS
+%token T_INTERFACE T_END_INTERFACE
+%token T_METHOD T_END_METHOD
+%token T_PUBLIC T_PROTECTED T_PRIVATE T_INTERNAL
+%token T_OVERRIDE
 (* %token T_METHOD T_END_METHOD *)
 (* %token T_STEP T_END_STEP *)
 (* %token T_TRANSITION T_END_TRANSITION *)
@@ -270,6 +276,10 @@ let library_element_declaration :=
   { Syntax.mk_pou (`Function d) }
   | d = fb_decl;
   { Syntax.mk_pou (`FunctionBlock d) }
+  | d = class_decl;
+  { Syntax.mk_pou (`Class d) }
+  | d = interface_decl;
+  { Syntax.mk_pou (`Interface d) }
   | d = config_decl;
   { Syntax.mk_pou (`Configuration d) }
 (* }}} *)
@@ -1397,42 +1407,113 @@ let fb_decl :=
 
 let fb_body :=
   | ~ = stmt_list; <>
-  (* Allow empty body of function block with {} *)
+  (* Allow an empty body of the function block with {} *)
   | T_LBRACE; T_RBRACE; { [] }
 
-(* method_decl: *)
-
-(* method_name: *)
+let method_decl :=
+  | T_METHOD;
+      aspec = access_spec;
+      cspec_opt = option(class_specifier);
+      o_opt = option(T_OVERRIDE);
+      id = T_IDENTIFIER;
+      ty_access = option(data_type_access_helper);
+      body = func_body;
+    T_END_METHOD;
+  {
+    let (name, ti) = id in
+    (* TODO: Set the return type *)
+    let prototype = Syntax.MethodPrototype.create name ti
+    in
+    {
+      Syntax.prototype = prototype;
+      Syntax.statements = body;
+      Syntax.aspec = aspec;
+      Syntax.cspec = cspec_opt;
+      Syntax.override = (Option.is_some o_opt);
+    }
+  }
+let data_type_access_helper :=
+ | T_COLON; ~ = data_type_access; <>
 (* }}} *)
 
 (* {{{ Table 48 -- Class / Table 50 -- Class method calls *)
-(* class_decl: *)
-
-(* class_type_name: *)
+let class_decl :=
+  | T_CLASS;
+      spec = option(class_specifier); id = T_IDENTIFIER; (* TODO: using_directive *; *)
+      parent_name_opt = option(class_type_access_helper);
+      ilist_opt = option(interface_name_list_helper);
+      variables = var_decls;
+      methods = method_decl *;
+    T_END_CLASS;
+  {
+    let (name, _) = id
+    and inames = match ilist_opt with Some(ilist) -> ilist | None -> []
+    in
+    {
+      Syntax.specifier = spec;
+      Syntax.name = name;
+      Syntax.parent_name = parent_name_opt;
+      Syntax.interfaces = inames;
+      Syntax.variables = variables;
+      Syntax.methods = methods;
+    }
+  }
+let class_specifier :=
+  | T_FINAL; {Syntax.CFinal}
+  | T_ABSTRACT; {Syntax.CAbstract}
+let class_type_access_helper := T_EXTENDS; id = T_IDENTIFIER; { let (name, _) = id in name }
+let interface_name_list_helper := T_IMPLEMENTS; ~ = interface_name_list; <>
 
 (* class_type_access: *)
 
-(* class_name: *)
-
 (* class_instance_name: *)
 
-(* interface_decl: *)
+let interface_name_list :=
+  | ids = separated_list(T_COMMA, T_IDENTIFIER);
+  { List.fold_left ids ~init:[] ~f:(fun acc id -> let (name, _) = id in acc @ [name] ) }
 
-(* method_prototype: *)
+let interface_decl :=
+  | T_INTERFACE;
+      id = T_IDENTIFIER;
+      (* TODO: using_directive * *)
+      parents_opt = option(interface_extends_helper);
+      prototypes = method_prototype *;
+    T_END_INTERFACE;
+  {
+    let (name, _) = id
+    and parent_interfaces = match parents_opt with Some(p) -> p | None -> []
+    in
+    {
+      Syntax.name = name;
+      Syntax.parents = parent_interfaces;
+      Syntax.method_prototypes = prototypes;
+    }
+  }
+let interface_extends_helper := T_EXTENDS; ~ = interface_name_list; <>
+
+let method_prototype :=
+  | T_METHOD;
+      id = T_IDENTIFIER;
+      cspec_opt = option(data_type_access_helper);
+      vars = var_decls;
+    T_END_METHOD;
+  {
+    let (name, ti) = id in
+    (* TODO: Set the return type *)
+    Syntax.MethodPrototype.create name ti
+  }
 
 (* interface_spec_init: *)
 
 (* interface_value: *)
 
-(* interface_name_list: *)
-
-(* interface_type_name: *)
-
 (* interface_type_access: *)
 
-(* interface_name: *)
-
-(* access_spec: *)
+let access_spec :=
+ | T_PUBLIC; {Syntax.ASPublic}
+ | T_PROTECTED; {Syntax.ASProtected}
+ | T_PRIVATE; {Syntax.ASPrivate}
+ | T_INTERNAL; {Syntax.ASInternal}
 (* }}} *)
 
 (* {{{ Table 47 -- Program definition *)

@@ -87,6 +87,12 @@ type operator =
 [@@deriving to_yojson, show]
 (* }}} *)
 
+type access_specifier = ASPublic | ASProtected | ASPrivate | ASInternal
+[@@deriving to_yojson, show]
+
+type class_specifier = CFinal | CAbstract
+[@@deriving to_yojson, show]
+
 (* {{{ Variables and identifiers *)
 module type ID = sig
   type t
@@ -236,9 +242,7 @@ module FunctionBlock = struct
     { name; ti; is_std }
 
   let get_name fb = fb.name
-
   let get_ti fb = fb.ti
-
   let is_std fb = fb.is_std
 
   let to_yojson t = to_yojson t
@@ -253,10 +257,29 @@ module Function = struct
     { name; ti; is_std }
 
   let get_name fn = fn.name
-
   let get_ti fn = fn.ti
-
   let is_std fn = fn.is_std
+
+  let to_yojson t = to_yojson t
+end
+
+(** Method prototype *)
+module MethodPrototype = struct
+  type t = {
+    name : string;
+    ti : TI.t;
+    (*return_type : iec_data_type option; (** Type of return value. *)*)
+  }
+  [@@deriving to_yojson, show]
+
+  (* let create name ti aspec cspec override return_type = *)
+  (*   { name; ti; aspec; cspec; override; return_type }   *)
+
+  let create name ti =
+    { name; ti; }
+
+  let get_name m = m.name
+  let get_ti m = m.ti
 
   let to_yojson t = to_yojson t
 end
@@ -570,7 +593,7 @@ let c_is_zero c =
       match v with
       | RefNull -> true
       | RefSymVar _ | RefFBInstance _ -> false
-  end
+    end
   | CTimeValue (_, tv) -> TimeValue.is_zero tv
   | CRange (_, lb, ub) -> (phys_equal lb 0) && (phys_equal ub 0)
   | CEnumValue _ -> false
@@ -801,6 +824,30 @@ type program_decl = {
 }
 [@@deriving to_yojson]
 
+type class_decl = {
+  specifier : class_specifier option;
+  name : string;
+  parent_name : string option; (** Name of the parent class. *)
+  interfaces : string list; (** Names of the implemented interfaces. *)
+  variables : VarDecl.t list; (** Variables declared in this class. *)
+  methods : method_decl list;
+}
+[@@deriving to_yojson]
+and interface_decl = {
+  name : string;
+  parents : string list; (** Names of the parent interfaces. *)
+  method_prototypes : MethodPrototype.t list; (** Prototypes of the methods provided by this interface. *)
+}
+[@@deriving to_yojson]
+and method_decl = {
+  prototype : MethodPrototype.t;
+  statements : statement list;
+  aspec : access_specifier; (** Access specifier. *)
+  cspec : class_specifier option; (** Class specifier: ABSTRACT or FINAL. *)
+  override : bool; (** True if the method is marked with OVERRIDE keyword. *)
+}
+[@@deriving to_yojson]
+
 type resource_decl = {
   name : string option;
   tasks : Task.t list;
@@ -822,6 +869,8 @@ type iec_library_element =
   | IECFunction of      int (** id *) * function_decl      [@name "Function"]
   | IECFunctionBlock of int (** id *) * fb_decl            [@name "FunctionBlock"]
   | IECProgram of       int (** id *) * program_decl       [@name "Program"]
+  | IECClass of         int (** id *) * class_decl         [@name "Class"]
+  | IECInterface of     int (** id *) * interface_decl     [@name "Interface"]
   | IECConfiguration of int (** id *) * configuration_decl [@name "Configuration"]
   | IECType of          int (** id *) * derived_ty_decl    [@name "Type"]
 [@@deriving to_yojson]
@@ -836,6 +885,8 @@ let mk_pou = function
   | `Function      decl -> let id = next_id () in IECFunction(id, decl)
   | `FunctionBlock decl -> let id = next_id () in IECFunctionBlock(id, decl)
   | `Program       decl -> let id = next_id () in IECProgram(id, decl)
+  | `Class         decl -> let id = next_id () in IECClass(id, decl)
+  | `Interface     decl -> let id = next_id () in IECInterface(id, decl)
   | `Configuration decl -> let id = next_id () in IECConfiguration(id, decl)
   | `Type          decl -> let id = next_id () in IECType(id, decl)
 
@@ -843,6 +894,8 @@ let get_pou_id = function
   | IECFunction (id, _)      -> id
   | IECFunctionBlock (id, _) -> id
   | IECProgram (id, _)       -> id
+  | IECClass (id, _)         -> id
+  | IECInterface (id, _)     -> id
   | IECConfiguration (id, _) -> id
   | IECType (id, _)          -> id
 
@@ -850,6 +903,8 @@ let get_pou_vars_decl = function
   | IECFunction (_, f)       -> f.variables
   | IECFunctionBlock (_, fb) -> fb.variables
   | IECProgram (_, p)        -> p.variables
+  | IECClass (_, p)          -> p.variables
+  | IECInterface (_, p)      -> []
   | IECConfiguration _       -> []
   | IECType _                -> []
 
