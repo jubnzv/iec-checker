@@ -904,7 +904,7 @@ let get_pou_vars_decl = function
   | IECFunctionBlock (_, fb) -> fb.variables
   | IECProgram (_, p)        -> p.variables
   | IECClass (_, p)          -> p.variables
-  | IECInterface (_, p)      -> []
+  | IECInterface _           -> []
   | IECConfiguration _       -> []
   | IECType _                -> []
 
