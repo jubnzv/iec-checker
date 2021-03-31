@@ -1451,7 +1451,7 @@ let class_decl :=
     in
     {
       Syntax.specifier = spec;
-      Syntax.name = name;
+      Syntax.class_name = name;
       Syntax.parent_name = parent_name_opt;
       Syntax.interfaces = inames;
       Syntax.variables = variables;
@@ -1484,7 +1484,7 @@ let interface_decl :=
     and parent_interfaces = match parents_opt with Some(p) -> p | None -> []
     in
     {
-      Syntax.name = name;
+      Syntax.interface_name = name;
       Syntax.parents = parent_interfaces;
       Syntax.method_prototypes = prototypes;
     }

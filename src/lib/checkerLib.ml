@@ -11,8 +11,8 @@ let print_element (e : S.iec_library_element) =
       Printf.printf "Running check for function block %s\n"
         (S.FunctionBlock.get_name fb.id)
   | S.IECProgram (_, p) -> Printf.printf "Running check for program %s\n" p.name
-  | S.IECClass (_, c) -> Printf.printf "Running check for class %s\n" c.name
-  | S.IECInterface (_, i) -> Printf.printf "Running check for interafece %s\n" i.name
+  | S.IECClass (_, c) -> Printf.printf "Running check for class %s\n" c.class_name
+  | S.IECInterface (_, i) -> Printf.printf "Running check for interafece %s\n" i.interface_name
   | S.IECConfiguration (_, c) ->
       Printf.printf "Running check for configuration %s\n" c.name
   | S.IECType _ ->

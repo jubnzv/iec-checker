@@ -568,7 +568,7 @@ type program_decl = {
 
 type class_decl = {
   specifier : class_specifier option;
-  name : string;
+  class_name : string;
   parent_name : string option; (** Name of the parent class. *)
   interfaces : string list; (** Names of the implemented interfaces. *)
   variables : VarDecl.t list; (** Variables declared in this class. *)
@@ -576,7 +576,7 @@ type class_decl = {
 }
 [@@deriving to_yojson]
 and interface_decl = {
-  name : string;
+  interface_name : string;
   parents : string list; (** Names of the parent interfaces. *)
   method_prototypes : MethodPrototype.t list; (** Prototypes of the methods provided by this interface. *)
 }
