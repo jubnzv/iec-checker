@@ -12,8 +12,6 @@ from python.dump import DumpManager  # noqa
 def test_sel_rtac():
     f = 'selxml/SEL_RTAC/'
     rc, out = run_checker_full_out(f, binary_default, "-v", "-i", "selxml")
-    print(out)
-    import pdb; pdb.set_trace()
     assert rc == 0
     assert("Parsing selxml/SEL_RTAC/ProjSpace_MAIN_POU.xml" in out)
     assert("Parsing selxml/SEL_RTAC/Tag Processor.xml" in out)
