@@ -85,8 +85,16 @@ let get_files_to_check paths in_fmt =
           Caml.Sys.readdir f
           |> Array.to_list
           |> List.map ~f:(Filename.concat f)
-          |> List.filter ~f:(fun n -> endswith n suffix)
-          |> List.append fs
+          |> List.fold_left
+            ~init:[]
+            ~f:(fun acc p -> begin
+                  if Sys.is_directory p then
+                    acc @ (aux result [p])
+                  else if endswith p suffix then
+                    acc @ [p]
+                  else
+                    acc
+                end)
           |> aux result
         end
       | f::fs -> aux (f::result) fs
@@ -255,8 +263,8 @@ let () =
       begin
         prepare_paths paths input_format
         |> List.fold_left
-            ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
-            ~init:[]
+          ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
+          ~init:[]
         |> List.filter ~f:(fun rc -> not (phys_equal rc 0))
         |> List.length
       end
