@@ -103,6 +103,14 @@ let get_files_to_check paths in_fmt =
     ~init:[]
     ~f:(fun acc p -> acc @ walkthrough_directory p suffix)
 
+(** Determines which files need to will be checked or how does iec-checker
+    should be run. *)
+let prepare_paths paths in_fmt =
+  if List.exists paths ~f:(fun p -> String.equal p "-") then
+    ["-"]
+  else
+    get_files_to_check paths in_fmt
+
 (** Starts the iec-checker REPL. *)
 let start_repl interactive =
   if interactive then Printf.printf "> ";
@@ -245,7 +253,7 @@ let () =
 
   else if phys_equal 0
       begin
-        get_files_to_check paths input_format
+        prepare_paths paths input_format
         |> List.fold_left
             ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
             ~init:[]
