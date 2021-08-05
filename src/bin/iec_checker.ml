@@ -81,7 +81,7 @@ let get_files_to_check paths in_fmt =
       the given [suffix]. *)
   let walkthrough_directory path suffix =
     let rec aux result = function
-      | f::fs when Sys.is_directory f -> begin
+      | f::fs when (Sys.file_exists f && Sys.is_directory f) -> begin
           Caml.Sys.readdir f
           |> Array.to_list
           |> List.map ~f:(Filename.concat f)
