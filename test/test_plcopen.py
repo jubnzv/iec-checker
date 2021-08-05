@@ -108,7 +108,7 @@ def test_n3():
     checker_warnings, rc = run_checker(f)
     assert rc == 0
     assert len(checker_warnings) >= 1
-    cv = checker_warnings[0]
+    cv = checker_warnings[5]
     assert cv.id == 'PLCOPEN-N3'
     assert cv.linenr == 6
     assert cv.column == 7
