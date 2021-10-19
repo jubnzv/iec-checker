@@ -61,7 +61,7 @@ let rec parse_source i d acc =
         acc.implementation <- (pull_data i);
         parse_source i d acc
       end
-    |`El_start ((_, tag), _) when (String.equal tag "POUKind") -> begin
+    |`El_start ((_, tag), _) when (String.equal tag "POUKind" || String.equal tag "Type") -> begin
         acc.pou_type <- (pull_pou_type i);
         parse_source i d acc
       end
