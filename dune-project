@@ -12,4 +12,19 @@
 
 (package
   (name iec_checker)
-  (synopsis "Static analysis of IEC 61131-3 programs"))
+  (synopsis "Static analysis of IEC 61131-3 programs")
+  (depends
+        (ocaml (>= 4.08))
+        (core_kernel :build)
+        (clap :build)
+        (menhir :build)
+        (menhirLib :build)
+        (ppx_deriving :build)
+        (ppx_deriving_yojson :build)
+        (ppx_fields_conv :build)
+        (ppx_jane :build)
+        (ppx_variants_conv :build)
+        (ppxllib :build)
+        (re :build)
+        (xmlm :build)
+        (yojson :build)))
