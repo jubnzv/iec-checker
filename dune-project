@@ -24,7 +24,7 @@
         (ppx_fields_conv :build)
         (ppx_jane :build)
         (ppx_variants_conv :build)
-        (ppxllib :build)
+        (ppxlib :build)
         (re :build)
         (xmlm :build)
         (yojson :build)))
