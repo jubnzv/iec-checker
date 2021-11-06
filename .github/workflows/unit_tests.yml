@@ -27,7 +27,7 @@ jobs:
         ocaml-version: ${{ matrix.ocaml-version }}
     - name: Build OCaml core
       run: |
-        opam install -y dune core_kernel clap menhir menhirLib ppx_deriving ppx_deriving_yojson ppx_fields_conv ppx_jane ppx_variants_conv ppxlib re yojson xmlm
+        opam install --deps-only .
         eval $(opam env)
         dune build @install
         mkdir -p output
@@ -35,14 +35,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        # if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
         cd test
