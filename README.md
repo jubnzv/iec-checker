@@ -9,7 +9,7 @@ You can try [Online Demo](https://idie.ru/bin/iec-checker).
 
 ## Supported languages
 
-This tool currently supports [Structured Text](https://en.wikipedia.org/wiki/Structured_text) programming language and [PLCOpen XML](https://plcopen.org/technical-activities/xml-exchange) format.
+This tool currently supports [Structured Text](https://en.wikipedia.org/wiki/Structured_text) programming language, [PLCOpen XML](https://plcopen.org/technical-activities/xml-exchange) and [SEL XML](https://selinc.com/products/3530/) formats.
 It works with extended Structured Text dialect that is completely compatible with [matiec](https://github.com/sm1820/matiec) transpiler.
 
 If you find, that `iec-checker` doesn't work with Structured Text extensions provided by your PLC vendor, please [let me know](https://github.com/jubnzv/iec-checker/issues). This can probably be easily implemented with some tweaks in the parser.
