@@ -20,7 +20,7 @@ class CFGPlotter:
                 if bb.type == 'BBEntry':
                     style = dict(style='filled', color='#458588')
                 graph.add_node(
-                    n=bb.id, label=f'bb={bb.id} stmt={bb.stmt_id}', **style)
+                    n=bb.id, label=f'bb={bb.id} stmt={bb.stmt_ids}', **style)
 
                 for succ in bb.succs:
                     graph.add_edge(bb.id, succ)
