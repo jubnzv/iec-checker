@@ -1,3 +1,7 @@
+"""Object model
+The Object model represents IR data from the iec-checker core.
+"""
+
 from dataclasses import dataclass
 from typing import List, Dict, Set
 
@@ -99,6 +103,30 @@ class Function:
 @dataclass
 class FunctionBlock:
     name: str
+    ti: Tok_info
+    is_std: bool
+    variables: List[VarDecl]
+    statements: List[Statement]
+
+    @classmethod
+    def from_dict(cls, values):
+        args = {}
+
+        id_ = values.get('id')
+        if id_:
+            args['name'] = id_.get('name', '')
+            args['ti'] = Tok_info.from_dict(id_.get('ti'))
+            args['is_std'] = id_.get('is_std', False)
+        else:
+            args['name'] = ''
+            args['ti'] = None
+            args['is_std'] = False
+
+        args['variables'] = [Variable.from_dict(
+            i) for i in values.get('variables', [])]
+        args['statements'] = [Statement.from_dict(
+            i) for i in values.get('statements', [])]
+        return FunctionBlock(**args)
 
 
 @dataclass
@@ -199,9 +227,8 @@ class Scheme:
         args['version'] = values.get('version', '0')
         args['functions'] = [Function.from_dict(
             i) for i in values.get('functions', [])]
-        # args['function_blocks'] = [FunctionBlock.from_dict(
-        #     i) for i in values.get('function_blocks', [])]
-        args['function_blocks'] = []
+        args['function_blocks'] = [FunctionBlock.from_dict(
+            i) for i in values.get('function_blocks', [])]
         args['programs'] = [Program.from_dict(
             i) for i in values.get('programs', [])]
         # args['configurations'] = [Configuration.from_dict(
