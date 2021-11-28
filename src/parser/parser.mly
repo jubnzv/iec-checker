@@ -369,32 +369,32 @@ let hex_int :=
     Syntax.CInteger(ti, v)
   }
 
-real_literal:
+let real_literal :=
   (* With exponent *)
-  | real_type_name T_SHARP vr = T_REAL_VALUE
+  | real_type_name; T_SHARP; vr = T_REAL_VALUE;
   { creal_mk vr }
-  | real_type_name T_SHARP T_PLUS vr = T_REAL_VALUE
+  | real_type_name; T_SHARP; T_PLUS; vr = T_REAL_VALUE;
   { creal_mk vr }
-  | real_type_name T_SHARP T_MINUS vr = T_REAL_VALUE
+  | real_type_name; T_SHARP; T_MINUS; vr = T_REAL_VALUE;
   { creal_mk (creal_inv vr) }
-  | vr = T_REAL_VALUE
+  | vr = T_REAL_VALUE;
   { creal_mk vr }
-  | T_PLUS vr = T_REAL_VALUE
+  | T_PLUS; vr = T_REAL_VALUE;
   { creal_mk vr }
-  | T_MINUS vr = T_REAL_VALUE
+  | T_MINUS; vr = T_REAL_VALUE;
   { creal_mk (creal_inv vr) }
   (* Conversion from fixed-point token *)
-  | real_type_name T_SHARP vr = T_FIX_POINT_VALUE
+  | real_type_name; T_SHARP; vr = T_FIX_POINT_VALUE;
   { creal_mk (creal_conv_fp vr) }
-  | real_type_name T_SHARP T_PLUS vr = T_FIX_POINT_VALUE
+  | real_type_name; T_SHARP; T_PLUS; vr = T_FIX_POINT_VALUE;
   { creal_mk (creal_conv_fp vr) }
-  | real_type_name T_SHARP T_MINUS vr = T_FIX_POINT_VALUE
+  | real_type_name; T_SHARP; T_MINUS; vr = T_FIX_POINT_VALUE;
   { creal_mk (creal_inv (creal_conv_fp vr)) }
-  | vr = T_FIX_POINT_VALUE
+  | vr = T_FIX_POINT_VALUE;
   { creal_mk (creal_conv_fp vr) }
-  | T_PLUS vr = T_FIX_POINT_VALUE
+  | T_PLUS; vr = T_FIX_POINT_VALUE;
   { creal_mk (creal_conv_fp vr) }
-  | T_MINUS vr = T_FIX_POINT_VALUE
+  | T_MINUS; vr = T_FIX_POINT_VALUE;
   { creal_mk (creal_inv (creal_conv_fp vr)) }
 
 (* bit_str_literal: *)
@@ -417,15 +417,15 @@ let char_str :=
   | ~ = s_byte_char_str; <>
   | ~ = d_byte_char_str; <>
 
-s_byte_char_str:
-  | str = T_SSTRING_LITERAL
+let s_byte_char_str :=
+  | str = T_SSTRING_LITERAL;
   {
     let(v, ti) = str in
     Syntax.CString(ti, v)
   }
 
-d_byte_char_str:
-  | str = T_DSTRING_LITERAL
+let d_byte_char_str :=
+  | str = T_DSTRING_LITERAL;
   {
     let(v, ti) = str in
     Syntax.CString(ti, v)
@@ -444,12 +444,12 @@ let time_literal :=
   | ~ = date; <>
   | ~ = date_and_time; <>
 
-duration:
-  | time_type_helper v = interval
+let duration :=
+  | time_type_helper; v = interval;
   { v }
-  | time_type_helper T_PLUS v = interval
+  | time_type_helper; T_PLUS; v = interval;
   { v }
-  | time_type_helper T_MINUS v = interval
+  | time_type_helper; T_MINUS; v = interval;
   {
     match v with
     | Syntax.CTimeValue(ti, tv) ->
@@ -458,19 +458,18 @@ duration:
   }
 
 (* Helper rule for duration. *)
-time_type_helper:
-  | v = time_type_name T_SHARP
+let time_type_helper :=
+  | v = time_type_name; T_SHARP;
   { v }
-  | v = T_TSHARP
+  | v = T_TSHARP;
   { Syntax.TIME }
-  | v = T_LTSHARP
+  | v = T_LTSHARP;
   { Syntax.LTIME }
 
 (* Return string * TI.t *)
-fix_point:
-  | fp = T_FIX_POINT_VALUE
-  { fp }
-  | fp = T_INTEGER
+let fix_point :=
+  | fp = T_FIX_POINT_VALUE; { fp }
+  | fp = T_INTEGER;
   {
     let (vi, ti) = fp in
     let vs = string_of_int vi in
@@ -486,54 +485,52 @@ let interval :=
   | ~ = microseconds; <>
   | ~ = nanoseconds; <>
 
-days:
-  | vt = T_TIME_INTERVAL_D
+let days :=
+  | vt = T_TIME_INTERVAL_D;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~d:v ()) vt }
-  | vt = T_TIME_INTERVAL_D; v = hours
+  | vt = T_TIME_INTERVAL_D; v = hours;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~d:v ()) vt |> Syntax.c_add v }
 
-hours:
-  | vt = T_TIME_INTERVAL_H
+let hours :=
+  | vt = T_TIME_INTERVAL_H;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~h:v ()) vt }
-  | vt = T_TIME_INTERVAL_H; v = minutes
+  | vt = T_TIME_INTERVAL_H; v = minutes;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~h:v ()) vt |> Syntax.c_add v }
 
-minutes:
-  | vt = T_TIME_INTERVAL_M
+let minutes :=
+  | vt = T_TIME_INTERVAL_M;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~m:v ()) vt }
-  | vt = T_TIME_INTERVAL_M; v = seconds
+  | vt = T_TIME_INTERVAL_M; v = seconds;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~m:v ()) vt |> Syntax.c_add v }
 
-seconds:
-  | vt = T_TIME_INTERVAL_S
+let seconds :=
+  | vt = T_TIME_INTERVAL_S;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~s:v ()) vt }
-  | vt = T_TIME_INTERVAL_S; v = milliseconds
+  | vt = T_TIME_INTERVAL_S; v = milliseconds;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~s:v ()) vt |> Syntax.c_add v }
 
-milliseconds:
-  | vt = T_TIME_INTERVAL_MS
+let milliseconds :=
+  | vt = T_TIME_INTERVAL_MS;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~ms:v ()) vt }
-  | vt = T_TIME_INTERVAL_MS; v = microseconds
+  | vt = T_TIME_INTERVAL_MS; v = microseconds;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~ms:v ()) vt |> Syntax.c_add v }
 
-microseconds:
-  | vt = T_TIME_INTERVAL_US
+let microseconds :=
+  | vt = T_TIME_INTERVAL_US;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~us:v ()) vt }
   | vt = T_TIME_INTERVAL_US; v = nanoseconds;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~us:v ()) vt |> Syntax.c_add v }
 
-nanoseconds:
-  | vt = T_TIME_INTERVAL_NS
+let nanoseconds :=
+  | vt = T_TIME_INTERVAL_NS;
   { ctime_mk (fun v -> Syntax.TimeValue.mk ~ns:v ()) vt }
 
-time_of_day:
-  | tod_type_name; T_SHARP vt = daytime
-  { vt }
-  | T_LTIME_OF_DAY; T_SHARP vt = daytime
-  { vt }
+let time_of_day :=
+  | tod_type_name; T_SHARP; vt = daytime;  { vt }
+  | T_LTIME_OF_DAY; T_SHARP; vt = daytime; { vt }
 
-daytime:
-  | hi = day_hour T_COLON mi = day_minute T_COLON ss = day_second
+let daytime :=
+  | hi = day_hour; T_COLON; mi = day_minute; T_COLON; ss = day_second;
   {
     let ctime_of_timevals ch cm ss =
       let ti = Syntax.c_get_ti ch in
@@ -552,20 +549,16 @@ let day_hour :=
 let day_minute :=
   | ~ = unsigned_int; <>
 
-day_second:
-  | fp = fix_point
-  { let (fps, _) = fp in fps }
+let day_second :=
+  | fp = fix_point; { let (fps, _) = fp in fps }
 
-date:
-  | date_type_name; T_SHARP dt = date_literal
-  { dt }
-  | T_DSHARP dt = date_literal
-  { dt }
-  | T_LDSHARP dt = date_literal
-  { dt }
+let date :=
+  | date_type_name; T_SHARP; dt = date_literal; { dt }
+  | T_DSHARP; dt = date_literal;                { dt }
+  | T_LDSHARP; dt = date_literal;               { dt }
 
-date_literal:
-  | cy = year T_MINUS cmo = month T_MINUS cd = day
+let date_literal :=
+  | cy = year; T_MINUS; cmo = month; T_MINUS; cd = day;
   {
     let cdate_of_timevals cy cmo cd =
       let ti = Syntax.c_get_ti cy in
@@ -587,11 +580,9 @@ let month :=
 let day :=
   | ~ = unsigned_int; <>
 
-date_and_time:
-  | dt_type_name; T_SHARP; d = date_literal; T_MINUS dt = daytime
-  { Syntax.c_add d dt }
-  | T_LDATE_AND_TIME T_SHARP; d = date_literal; T_MINUS dt = daytime
-  { Syntax.c_add d dt }
+let date_and_time :=
+  | dt_type_name; T_SHARP; d = date_literal; T_MINUS; dt = daytime;     { Syntax.c_add d dt }
+  | T_LDATE_AND_TIME; T_SHARP; d = date_literal; T_MINUS; dt = daytime; { Syntax.c_add d dt }
 (* }}} *)
 
 (* {{{ Table 10 -- Elementary data types *)
@@ -625,31 +616,21 @@ let int_type_name :=
   | ~ = sign_int_type_name; <>
   | ~ = unsign_int_type_name; <>
 
-sign_int_type_name:
-  | T_SINT
-  { Syntax.SINT }
-  | T_INT
-  { Syntax.INT }
-  | T_DINT
-  { Syntax.DINT }
-  | T_LINT
-  { Syntax.LINT }
+let sign_int_type_name :=
+  | T_SINT; { Syntax.SINT }
+  | T_INT;  { Syntax.INT }
+  | T_DINT; { Syntax.DINT }
+  | T_LINT; { Syntax.LINT }
 
-unsign_int_type_name:
-  | T_USINT
-  { Syntax.USINT }
-  | T_UINT
-  { Syntax.UINT }
-  | T_UDINT
-  { Syntax.UDINT }
-  | T_ULINT
-  { Syntax.ULINT }
+let unsign_int_type_name :=
+  | T_USINT; { Syntax.USINT }
+  | T_UINT;  { Syntax.UINT }
+  | T_UDINT; { Syntax.UDINT }
+  | T_ULINT; { Syntax.ULINT }
 
-real_type_name:
-  | T_REAL
-  { Syntax.REAL }
-  | T_LREAL
-  { Syntax.LREAL }
+let real_type_name :=
+  | T_REAL;  { Syntax.REAL }
+  | T_LREAL; { Syntax.LREAL }
 
 let string_type_name :=
   | T_STRING; l = string_type_length; { Syntax.STRING(l) }
@@ -664,53 +645,37 @@ let string_type_length :=
   | T_LBRACK; c = unsigned_int; T_RBRACK;
   { match c with | CInteger(_, v) -> v | _ -> assert false }
 
-time_type_name:
-  | T_TIME
-  { Syntax.TIME }
-  | T_LTIME
-  { Syntax.LTIME }
+let time_type_name :=
+  | T_TIME;  { Syntax.TIME }
+  | T_LTIME; { Syntax.LTIME }
 
-date_type_name:
-  | T_DATE
-  { Syntax.DATE }
-  | T_LDATE
-  { Syntax.LDATE }
+let date_type_name :=
+  | T_DATE;  { Syntax.DATE }
+  | T_LDATE; { Syntax.LDATE }
 
-tod_type_name:
-  | T_TIME_OF_DAY
-  { Syntax.TIME_OF_DAY }
-  | T_TOD
-  { Syntax.TOD }
-  | T_LTOD
-  { Syntax.LTOD }
+let tod_type_name :=
+  | T_TIME_OF_DAY; { Syntax.TIME_OF_DAY }
+  | T_TOD;         { Syntax.TOD }
+  | T_LTOD;        { Syntax.LTOD }
 
-dt_type_name:
-  | T_DATE_AND_TIME
-  { Syntax.DATE_AND_TIME }
-  | T_LDATE_AND_TIME
-  { Syntax.LDATE_AND_TIME }
-  | T_DT
-  { Syntax.DT }
-  | T_LDT
-  { Syntax.LDT }
+let dt_type_name :=
+  | T_DATE_AND_TIME;  { Syntax.DATE_AND_TIME }
+  | T_LDATE_AND_TIME; { Syntax.LDATE_AND_TIME }
+  | T_DT;             { Syntax.DT }
+  | T_LDT;            { Syntax.LDT }
 
 let bit_str_type_name :=
   | ~ = bool_type_name; <>
   | ~ = multibits_type_name; <>
 
-bool_type_name:
-  | T_BOOL
-  { Syntax.BOOL }
+let bool_type_name :=
+  | T_BOOL; { Syntax.BOOL }
 
-multibits_type_name:
-  | T_BYTE
-  { Syntax.BYTE }
-  | T_WORD
-  { Syntax.WORD }
-  | T_DWORD
-  { Syntax.DWORD }
-  | T_LWORD
-  { Syntax.LWORD }
+let multibits_type_name :=
+  | T_BYTE;  { Syntax.BYTE }
+  | T_WORD;  { Syntax.WORD }
+  | T_DWORD; { Syntax.DWORD }
+  | T_LWORD; { Syntax.LWORD }
 (* }}} *)
 
 (* {{{ Table 11 -- Derived data types *)
