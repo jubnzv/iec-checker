@@ -2323,20 +2323,6 @@ let generic_type_name :=
   | T_ANY_DATE;
   { Syntax.ANY_DATE }
 
-(* let dir_var_location_prefix := *)
-(*   | id = T_IDENTIFIER;         *)
-(*   {                            *)
-(*     let (id_str, _) = id in    *)
-(*     get_dir_var_loc_exn id_str *)
-(*   }                            *)
-
-(* let dir_var_size_prefix :=      *)
-(*   | id = T_IDENTIFIER;          *)
-(*   {                             *)
-(*     let (id_str, _) = id in     *)
-(*     get_dir_var_size_exn id_str *)
-(*   }                             *)
-
 let compare_expr_operator :=
   | T_GT;
   { Syntax.GT }
