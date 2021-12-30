@@ -55,7 +55,6 @@ def run_checker_full_out(file_path: str, binary: str = binary_default,
                 *args) -> Tuple[int, str]:
     """Run iec-checker core for a given file and capture the whole output.
     No extra options will be set by default."""
-    print([binary, *args, file_path])
     p = subprocess.Popen([binary, *args, file_path],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
