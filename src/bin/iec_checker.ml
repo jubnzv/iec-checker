@@ -135,20 +135,29 @@ let parse_file path in_fmt verbose : parse_results option =
       parse_sel_xml_file path
     end
 
+module ReturnCode = struct
+  let ok        = 0
+  let fail      = 1
+  let not_found = 127
+end
+
 (** Runs the checker on the file with [path] and returns the error code. *)
-let run_checker path in_fmt out_fmt create_dumps verbose interactive =
+let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in
-  if (not (Sys.file_exists path) && not read_stdin) then
-    let err = W.mk_internal ~id:"FileNotFoundError" (Printf.sprintf "File %s doesn't exists" path) in
+  if (not read_stdin && not (Sys.file_exists path)) then
+    let err =
+      W.mk_internal ~id:"FileNotFoundError"
+        (Printf.sprintf "File %s doesn't exists" path)
+    in
     WO.print_report [err] out_fmt;
-    127
+    ReturnCode.not_found
   else
     let results_opt =
       if read_stdin then start_repl interactive
       else parse_file path in_fmt verbose
     in
     match results_opt with
-    | None -> 0
+    | None -> ReturnCode.ok
     | Some(elements, parser_warns) -> begin
         let envs = Ast_util.create_envs elements in
         let cfgs = Cfg.create_cfgs elements in
@@ -166,7 +175,7 @@ let run_checker path in_fmt out_fmt create_dumps verbose interactive =
           ud_warns @
           lib_warns)
           out_fmt;
-        if not (List.is_empty parser_warns) then 1 else 0
+        if List.is_empty parser_warns then ReturnCode.ok else ReturnCode.fail
       end
 
 let () =
@@ -191,7 +200,7 @@ let () =
     | s -> begin
         Printf.eprintf "Unknown input format '%s'.\n" s;
         Printf.eprintf "Avaialble formats: 'st', 'xml' and 'selxml'\n";
-        exit 1
+        exit ReturnCode.fail
       end
   in
 
@@ -209,7 +218,7 @@ let () =
     | s when String.equal "json" s -> WO.Json
     | s -> begin
         Printf.eprintf "Unknown output format '%s'. Supported: 'plain' and 'json'.\n" s;
-        exit 1
+        exit ReturnCode.fail
       end
   in
 
@@ -256,16 +265,16 @@ let () =
   if List.is_empty paths then begin
     Printf.eprintf "No input files!\n\n";
     Clap.help ();
-    exit 1
+    exit ReturnCode.fail
   end
 
-  else if phys_equal 0
-      begin
-        prepare_paths paths input_format
-        |> List.fold_left
-          ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
-          ~init:[]
-        |> List.filter ~f:(fun rc -> not (phys_equal rc 0))
-        |> List.length
-      end
-  then exit 0 else exit 1
+  else if
+    begin
+      prepare_paths paths input_format
+      |> List.fold_left
+        ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
+        ~init:[]
+      |> List.filter ~f:(fun rc -> not (phys_equal rc ReturnCode.ok))
+      |> List.is_empty
+    end
+  then exit ReturnCode.ok else exit ReturnCode.fail
