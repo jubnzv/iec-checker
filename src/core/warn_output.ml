@@ -9,16 +9,17 @@ let print_report warnings fmt =
   match fmt with
   | Plain -> begin
       List.fold_left warnings
-        ~f:(fun out w -> out ^ (W.to_string w) ^ "\n")
-        ~init:""
+        ~f:(fun acc w -> acc @ [W.to_string w])
+        ~init:[]
+      |> String.concat ~sep:"\n"
       |> Printf.printf "%s"
     end
   | Json -> begin
-      let json_list = List.fold_left warnings
-          ~f:(fun out w ->
-              let j = W.to_yojson w in
-              j :: out)
-          ~init:[] in
+      let json_list =
+        List.fold_left warnings
+          ~f:(fun out w -> (W.to_yojson w) :: out)
+          ~init:[]
+      in
       Yojson.Safe.to_string (`List json_list)
       |> Printf.printf "%s\n"
     end
