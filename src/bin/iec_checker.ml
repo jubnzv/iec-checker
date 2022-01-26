@@ -13,7 +13,7 @@ module WO = Warn_output
 type input_format_ty =
   | InputST     (** Structured Text source code *)
   | InputXML    (** PLCOpen schemas *)
-  | InputSELXML (** Schweitzer Engineering Laboratories XML Format*)
+  | InputSELXML (** Schweitzer Engineering Laboratories XML Format *)
 
 type parse_results = S.iec_library_element list * Warn.t list
 
@@ -29,7 +29,7 @@ let parse_with_error (lexbuf: Lexing.lexbuf) : parse_results =
     [], [(W.mk_from_lexbuf lexbuf "UnknownError" (Exn.to_string e))]
 
 let parse_stdin () : parse_results option =
-  match In_channel.input_line stdin with
+  match In_channel.input_line In_channel.stdin with
   | None -> None
   | Some code -> begin
       let lexbuf = Lexing.from_string code in
@@ -54,7 +54,7 @@ let parse_xml_file (filename : string) : parse_results =
   let (elements, warns) = parse_with_error lexbuf in
   (elements, warns)
 
-(** Parses an XML file located on [filepath]. If the
+(** [parse_sel_xml_file] parses an SEL XML file located on [filepath]. If the
     file contains the valid XML, it returns parse results, otherwise None. *)
 let parse_sel_xml_file (filepath : string) : parse_results option =
   let inx = In_channel.create filepath in
@@ -75,33 +75,33 @@ let endswith s1 s2 =
     let sub = String.sub s1 ~pos:(len1 - len2) ~len:(len2) in
     String.equal sub s2
 
-(** Returns a list of the files to be checked. *)
-let get_files_to_check paths in_fmt =
-  (** Recursively traverses [path] and returns absolute paths to the files with
-      the given [suffix]. *)
-  let walkthrough_directory path suffix =
-    let rec aux result = function
-      | f::fs when (Sys.file_exists f && Sys.is_directory f) -> begin
-          Caml.Sys.readdir f
-          |> Array.to_list
-          |> List.map ~f:(Filename.concat f)
-          |> List.fold_left
-            ~init:[]
-            ~f:(fun acc p -> begin
-                  if Sys.is_directory p then
-                    acc @ (aux result [p])
-                  else if endswith p suffix then
-                    acc @ [p]
-                  else
-                    acc
-                end)
-          |> aux result
-        end
-      | f::fs -> aux (f::result) fs
-      | []    -> result
-    in
-    aux [] [path]
+(** [walkthrough_directory] recursively traverses [path] and returns absolute
+    paths to the files with the given [suffix]. *)
+let walkthrough_directory path suffix =
+  let rec aux result = function
+    | f::_ when (Sys.file_exists f && Sys.is_directory f) -> begin
+        Caml.Sys.readdir f
+        |> Array.to_list
+        |> List.map ~f:(Filename.concat f)
+        |> List.fold_left
+          ~init:[]
+          ~f:(fun acc p -> begin
+                if Sys.is_directory p then
+                  acc @ (aux result [p])
+                else if endswith p suffix then
+                  acc @ [p]
+                else
+                  acc
+              end)
+        |> aux result
+      end
+    | f::fs -> aux (f::result) fs
+    | []    -> result
   in
+  aux [] [path]
+
+(** [get_files_to_check] returns a list of the files to be checked. *)
+let get_files_to_check paths in_fmt =
   let suffix = match in_fmt with
     | InputST                -> ".st"
     | InputXML | InputSELXML -> ".xml"
@@ -111,21 +111,20 @@ let get_files_to_check paths in_fmt =
     ~init:[]
     ~f:(fun acc p -> acc @ walkthrough_directory p suffix)
 
-(** Determines which files need to will be checked or how does iec-checker
-    should be run. *)
+(** [prepare_paths] determines which files will be parsed. *)
 let prepare_paths paths in_fmt =
   if List.exists paths ~f:(fun p -> String.equal p "-") then
     ["-"]
   else
     get_files_to_check paths in_fmt
 
-(** Starts the iec-checker REPL. *)
+(** [start_repl] starts the iec-checker REPL. *)
 let start_repl interactive =
   if interactive then Printf.printf "> ";
-  flush stdout;
+  Out_channel.flush stdout;
   parse_stdin ()
 
-(** Parse the file with the given path. *)
+(** [parse_file] parses file with the given path. *)
 let parse_file path in_fmt verbose : parse_results option =
   if verbose then Printf.printf "Parsing %s ...\n" path;
   match in_fmt with
@@ -141,7 +140,8 @@ module ReturnCode = struct
   let not_found = 127
 end
 
-(** Runs the checker on the file with [path] and returns the error code. *)
+(** [run_checker] runs program on the file with [path] and returns the
+    error code. *)
 let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in
   if (not read_stdin && not (Sys.file_exists path)) then
