@@ -23,15 +23,15 @@ type bb =
     mutable preds : int list; (** Ids of predecessor nodes *)
     mutable succs : int list; (** Ids of successor nodes *)
     (* TODO: This should be replaced with ids of statements. But it will
-     require additional symbol tables and a lot of refactoring in the parser. *)
+       require additional symbol tables and a lot of refactoring in the parser. *)
     mutable stmts : S.statement list [@opaque]; (** Statements that makes up this BB *)
   }
 
 val mk : S.iec_library_element -> t
-(** Create a new CFG instance for a given iec_library_element *)
+(** [mk] Create a new CFG instance for a given iec_library_element. *)
 
 val get_pou_id : t -> int
-(** Get the id of the POU that this CFG belongs to *)
+(** [get_pou_id] Get the id of the POU that this CFG belongs to. *)
 
 val get_bb_by_id_exn : t -> int -> bb
 (** [get_bb_by_id_exn id cfg] Return basic block stored in [cfg] by given ID.
@@ -49,13 +49,13 @@ val get_number_of_edges : t -> int
 (** [get_number_of_edges cfg] Return number of edges in [cfg]. *)
 
 val bb_by_id : t -> int -> bb option
-(** Get basic block entry from a given id. *)
+(** [bb_by_id] Get basic block entry from a given id. *)
 
 val bb_get_ti : bb -> TI.t
-(** Get token info for the basic block. *)
+(** [bb_get_ti] Get token info for the basic block. *)
 
 val create_cfgs : S.iec_library_element list -> t list
-(** Create list of CFGs for a given iec_library_element objects. *)
+(** [create_cfgs] Create list of CFGs for a given iec_library_element objects. *)
 
 val to_string : t -> string
 

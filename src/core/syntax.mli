@@ -629,10 +629,10 @@ val mk_pou : [< `Function of function_decl
              | `Type of derived_ty_decl ] -> iec_library_element
 
 val get_pou_id : iec_library_element -> int
-(** Get unique identifier of the given library element. *)
+(** [get_pou_id] Get unique identifier of the given library element. *)
 
 val get_pou_vars_decl : iec_library_element -> VarDecl.t list
-(** Return variables declared for the given POU. *)
+(** [get_pou_vars_decl] Return variables declared for the given POU. *)
 
 (* {{{ Yojson helpers *)
 val derived_ty_decl_to_yojson : derived_ty_decl -> Yojson.Safe.t

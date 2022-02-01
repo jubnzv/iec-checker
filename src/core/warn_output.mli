@@ -6,4 +6,4 @@ type output_format =
   | Json
 
 val print_report : W.t list -> output_format -> unit
-(** Print warnings in selected format to stdout. *)
+(** [print_report] Print warnings in selected format to stdout. *)

@@ -13,4 +13,4 @@ type dump_scheme = {
 } [@@deriving to_yojson]
 
 val create_dump : S.iec_library_element list -> Env.t list -> Cfg.t list -> string (** source filename *) -> unit
-(** Save input AST in a JSON file.  *)
+(** [create_dump] Save input AST in a JSON file.  *)

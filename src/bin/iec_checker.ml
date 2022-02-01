@@ -54,7 +54,7 @@ let parse_xml_file (filename : string) : parse_results =
   let (elements, warns) = parse_with_error lexbuf in
   (elements, warns)
 
-(** [parse_sel_xml_file] parses an SEL XML file located on [filepath]. If the
+(** [parse_sel_xml_file] Parse an SEL XML file located on [filepath]. If the
     file contains the valid XML, it returns parse results, otherwise None. *)
 let parse_sel_xml_file (filepath : string) : parse_results option =
   let inx = In_channel.create filepath in
@@ -75,7 +75,7 @@ let endswith s1 s2 =
     let sub = String.sub s1 ~pos:(len1 - len2) ~len:(len2) in
     String.equal sub s2
 
-(** [walkthrough_directory] recursively traverses [path] and returns absolute
+(** [walkthrough_directory] Recursively traverse [path] and return absolute
     paths to the files with the given [suffix]. *)
 let walkthrough_directory path suffix =
   let rec aux result = function
@@ -100,7 +100,7 @@ let walkthrough_directory path suffix =
   in
   aux [] [path]
 
-(** [get_files_to_check] returns a list of the files to be checked. *)
+(** [get_files_to_check] Return a list of the files to be checked. *)
 let get_files_to_check paths in_fmt =
   let suffix = match in_fmt with
     | InputST                -> ".st"
@@ -111,20 +111,20 @@ let get_files_to_check paths in_fmt =
     ~init:[]
     ~f:(fun acc p -> acc @ walkthrough_directory p suffix)
 
-(** [prepare_paths] determines which files will be parsed. *)
+(** [prepare_paths] Determine which files will be parsed. *)
 let prepare_paths paths in_fmt =
   if List.exists paths ~f:(fun p -> String.equal p "-") then
     ["-"]
   else
     get_files_to_check paths in_fmt
 
-(** [start_repl] starts the iec-checker REPL. *)
+(** [start_repl] Start the iec-checker REPL. *)
 let start_repl interactive =
   if interactive then Printf.printf "> ";
   Out_channel.flush stdout;
   parse_stdin ()
 
-(** [parse_file] parses file with the given path. *)
+(** [parse_file] Parse file with the given path. *)
 let parse_file path in_fmt verbose : parse_results option =
   if verbose then Printf.printf "Parsing %s ...\n" path;
   match in_fmt with
@@ -140,7 +140,7 @@ module ReturnCode = struct
   let not_found = 127
 end
 
-(** [run_checker] runs program on the file with [path] and returns the
+(** [run_checker] Run program on the file with [path] and returns the
     error code. *)
 let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in

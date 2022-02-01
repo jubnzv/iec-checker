@@ -18,4 +18,3 @@ val mk_internal : ?id:(string) -> string -> t
 val mk_from_lexbuf : Lexing.lexbuf -> string -> string -> t
 
 val to_string : t -> string
-(** Converts warning to string *)

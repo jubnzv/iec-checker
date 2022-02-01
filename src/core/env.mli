@@ -14,24 +14,24 @@ module S = Syntax
 type t
 
 val get_id : t -> int
-(** Get the unique ID of the POU that this env belongs to. *)
+(** [get_id] Get the unique ID of the POU that this env belongs to. *)
 
 val empty : t
-(** Create an empty environment *)
+(** [empty] Create an empty environment *)
 
 val mk_global : unit -> t
-(** Make a new global environment. *)
+(** [mk_global] Make a new global environment. *)
 
 val mk : t (** parent environment *) -> int (** POU id *) -> t
-(** Add a new child environment *)
+(** [mk] Add a new child environment *)
 
 val add_vdecl : t -> S.VarDecl.t -> t
-(** Insert variable declaration in [t] *)
+(** [add_vdecl] Insert variable declaration in [t]. *)
 
 val get_vdecls : t -> S.VarDecl.t list
-(** Return variables declared in [t] *)
+(** [get_vdecls] Return variables declared in [t]. *)
 
 val lookup_vdecl : t -> string -> S.VarDecl.t option
-(** Search for a given identifier name in the given environment *)
+(** [lookup_vdecl] Search for a given identifier name in the given environment. *)
 
 val to_yojson : t -> Yojson.Safe.t
