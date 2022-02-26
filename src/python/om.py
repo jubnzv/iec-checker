@@ -1,7 +1,6 @@
 """Object model
 The Object model represents IR data from the iec-checker core.
 """
-
 from dataclasses import dataclass
 from typing import List, Dict, Set
 
