@@ -9,8 +9,6 @@ module TI = Tok_info
 module W = Warn
 module WO = Warn_output
 
-let sys_true = function `Yes -> true | _ -> false
-
 (** Format of files given to checker *)
 type input_format_ty =
   | InputST     (** Structured Text source code *)
@@ -81,15 +79,15 @@ let endswith s1 s2 =
     paths to the files with the given [suffix]. *)
 let walkthrough_directory path suffix =
   let rec aux result = function
-    | f::_ when (sys_true @@ Sys.file_exists f &&
-                 sys_true @@ Sys.is_directory f) -> begin
+    | f::_ when (Caml.Sys.file_exists f &&
+                 Caml.Sys.is_directory f) -> begin
         Caml.Sys.readdir f
         |> Array.to_list
         |> List.map ~f:(Filename.concat f)
         |> List.fold_left
           ~init:[]
           ~f:(fun acc p -> begin
-                if sys_true @@ Sys.is_directory p then
+                if Caml.Sys.is_directory p then
                   acc @ (aux result [p])
                 else if endswith p suffix then
                   acc @ [p]
@@ -147,7 +145,7 @@ end
     error code. *)
 let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in
-  if (not read_stdin && not (sys_true @@ Sys.file_exists path)) then
+  if (not read_stdin && not (Caml.Sys.file_exists path)) then
     let err =
       W.mk_internal ~id:"FileNotFoundError"
         (Printf.sprintf "File %s doesn't exists" path)
