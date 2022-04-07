@@ -2,7 +2,7 @@
  (name IECCheckerParser)
  (public_name iec_checker.parser)
  (synopsis "Provides an interface for processing the IEC61131-3 source code")
- (libraries core_kernel menhirLib iec_checker.core))
+ (libraries core menhirLib iec_checker.core))
 
 (menhir
  (modules parser)

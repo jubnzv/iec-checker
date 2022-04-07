@@ -1,4 +1,4 @@
-open Core_kernel
+open Core
 module W = Warn
 
 type output_format =

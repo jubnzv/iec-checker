@@ -1,4 +1,4 @@
-open Core_kernel
+open Core
 module S = IECCheckerCore.Syntax
 module Env = IECCheckerCore.Env
 module TI = IECCheckerCore.Tok_info

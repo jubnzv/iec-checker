@@ -1,4 +1,4 @@
-open Core_kernel
+open Core
 
 type t = { id : int; linenr : int; col : int } [@@deriving yojson, show]
 

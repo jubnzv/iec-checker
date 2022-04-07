@@ -2,7 +2,7 @@
 {
   open Parser
   open Lexing
-  open Core_kernel
+  open Core
 
   open IECCheckerCore
 

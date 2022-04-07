@@ -15,7 +15,7 @@
   (synopsis "Static analysis of IEC 61131-3 programs")
   (depends
         (ocaml (>= 4.08))
-        (core_kernel :build)
+        (core :build)
         (clap :build)
         (menhir (and :build (= 20210929)))
         (menhirLib (and :build (= 20210929)))

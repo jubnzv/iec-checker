@@ -1,4 +1,4 @@
-open Core_kernel
+open Core
 module AU = IECCheckerCore.Ast_util
 module S = IECCheckerCore.Syntax
 module Warn = IECCheckerCore.Warn

@@ -1,6 +1,6 @@
 (** This module describes all common elements that which make up programming
     model of Structured Text language. See Annex B of IEC61131-3 for reference. *)
-open Core_kernel
+open Core
 module TI = Tok_info
 
 exception InternalError of string

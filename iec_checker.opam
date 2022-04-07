@@ -10,7 +10,7 @@ bug-reports: "https://github.com/jubnzv/iec-checker/issues"
 depends: [
   "dune" {>= "2.0"}
   "ocaml" {>= "4.08"}
-  "core_kernel" {build}
+  "core" {build}
   "clap" {build}
   "menhir" {build & = "20210929"}
   "menhirLib" {build & = "20210929"}

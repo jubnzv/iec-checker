@@ -1,4 +1,4 @@
-open Core_kernel
+open Core
 module S = Syntax
 
 type pou_ty =

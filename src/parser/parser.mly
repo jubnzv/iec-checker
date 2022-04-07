@@ -1,5 +1,5 @@
 %{
-  open Core_kernel
+  open Core
   open IECCheckerCore
 
   module TI = Tok_info

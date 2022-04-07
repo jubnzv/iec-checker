@@ -1,6 +1,6 @@
 (* Demo check: Find division to a zero constant. *)
 
-open Core_kernel
+open Core
 open IECCheckerCore.Common
 module S = IECCheckerCore.Syntax
 module TI = IECCheckerCore.Tok_info

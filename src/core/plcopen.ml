@@ -1,6 +1,6 @@
 (** PLCOpen XML reference: https://www.plcopen.org/system/files/downloads/tc6_xml_v201_technical_doc.pdf
     See also test/plcopen directory. *)
-open Core_kernel
+open Core
 module S = Syntax
 
 exception XMLError of string
