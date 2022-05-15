@@ -5,8 +5,6 @@
 
 This project aims to implement an open source tool for static code analysis of [IEC 61131-3](https://en.wikipedia.org/wiki/IEC_61131-3) programs.
 
-You can try [Online Demo](https://idie.ru/bin/iec-checker).
-
 ## Supported languages
 
 This tool currently supports [Structured Text](https://en.wikipedia.org/wiki/Structured_text) programming language, [PLCOpen XML](https://plcopen.org/technical-activities/xml-exchange) and [SEL XML](https://selinc.com/products/3530/) formats.
