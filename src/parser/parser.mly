@@ -643,7 +643,7 @@ let string_type_name :=
 (* Helper rule for [string_type_name] *)
 let string_type_length :=
   | T_LBRACK; c = unsigned_int; T_RBRACK;
-  { match c with | CInteger(_, v) -> v | _ -> assert false }
+  { match c with | Syntax.CInteger(_, v) -> v | _ -> assert false }
 
 let time_type_name :=
   | T_TIME;  { Syntax.TIME }
@@ -1537,9 +1537,9 @@ let resource_decls :=
 (* Return Syntax.resource_decl *)
 let resource_decl :=
   | T_RESOURCE; n = resource_name; T_ON; resource_type_name; rc = single_resource_decl; T_END_RESOURCE;
-  { { Syntax.name = Some n; Syntax.tasks = rc.tasks; Syntax.variables = []; Syntax.programs = rc.programs } }
+  { Syntax.{ name = Some n; tasks = rc.tasks; variables = []; programs = rc.programs } }
   | T_RESOURCE; n = resource_name; T_ON; resource_type_name; vs = var_global_decl; rc = single_resource_decl; T_END_RESOURCE;
-  { { Syntax.name = Some n; Syntax.tasks = rc.tasks; Syntax.variables = vs; Syntax.programs = rc.programs } }
+  { Syntax.{ name = Some n; tasks = rc.tasks; variables = vs; programs = rc.programs } }
 
 (* Return Syntax.resource_decl *)
 let single_resource_decl :=
