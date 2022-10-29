@@ -12,7 +12,7 @@ let print_report warnings fmt =
         ~f:(fun acc w -> acc @ [W.to_string w])
         ~init:[]
       |> String.concat ~sep:"\n"
-      |> Printf.printf "%s"
+      |> Printf.printf "%s\n"
     end
   | Json -> begin
       let json_list =
