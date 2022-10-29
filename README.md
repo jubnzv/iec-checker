@@ -71,6 +71,7 @@ Get [Python 3](https://www.python.org/downloads/) and install dependencies in th
 virtualenv venv --python=/usr/bin/python3
 source venv/bin/activate
 pip3 install -r requirements.txt
+pip3 install -r requirements-dev.txt
 ```
 
 Then run unit tests:
