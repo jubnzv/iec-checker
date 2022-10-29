@@ -51,12 +51,10 @@ Then install the required dependencies:
 opam install --deps-only .    # first time only
 ```
 
-Build and install `iec_checker` binary to the `output` directory:
+Build and install the `bin/iec_checker` binary:
 
 ```bash
-dune build @install
-mkdir output
-dune install --prefix ./output
+make build
 ```
 
 #### Windows
@@ -77,9 +75,7 @@ pip3 install -r requirements.txt
 
 Then run unit tests:
 ```bash
-pip3 install -r requirements-dev.txt
-cd test
-pytest
+make test
 ```
 
 ## Usage examples
@@ -87,7 +83,7 @@ pytest
 Check some demo programs written in Structured Text:
 
 ```
-output/bin/iec_checker test/st/*.st
+bin/iec_checker test/st/*.st
 ```
 
 You can also use `--help` argument to display help.
