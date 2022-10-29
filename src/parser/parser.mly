@@ -867,7 +867,7 @@ let enum_spec_init :=
     let specs = List.fold_left
       values
       ~init:[]
-      ~f:(fun acc (name, _) -> acc @ [{ Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = None }])
+      ~f:(fun acc (elem_name, _) -> acc @ [Syntax.{ enum_type_name = None; elem_name; initial_value = None }])
     in
     (specs, default_value_opt)
   }
@@ -879,26 +879,26 @@ let enum_spec_init :=
 let enum_value_spec :=
   | id = T_IDENTIFIER;
   {
-    let name, _ = id in
-    { Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = None; }
+    let elem_name, _ = id in
+    Syntax.{ enum_type_name = None; elem_name; initial_value = None; }
   }
   | id = T_IDENTIFIER; T_ASSIGN; initial_value = int_literal;
   {
-    let name, _ = id in
-    { Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = Some(initial_value); }
+    let elem_name, _ = id in
+    Syntax.{ enum_type_name = None; elem_name; initial_value = Some(initial_value); }
   }
   | id = T_IDENTIFIER; T_ASSIGN; initial_value = constant_expr;
   {
-    let name, _ = id in
+    let elem_name, _ = id in
     let initial_const = match initial_value with Syntax.ExprConstant (_, c) -> c | _ -> assert false in
-    { Syntax.enum_type_name = None; Syntax.elem_name = name; Syntax.initial_value = Some(initial_const); }
+    Syntax.{ enum_type_name = None; elem_name; initial_value = Some(initial_const); }
   }
 
 let enum_value :=
   | ty_opt = option(enum_value_opt); id = T_IDENTIFIER;
   {
-    let name, _ = id in
-    { Syntax.enum_type_name = ty_opt; Syntax.elem_name = name; Syntax.initial_value = None; }
+    let elem_name, _ = id in
+    Syntax.{ enum_type_name = ty_opt; elem_name; initial_value = None; }
   }
 
 (* Helper rule for enum_value and enum_value_use  *)
@@ -926,7 +926,7 @@ let array_spec :=
   let subranges = List.fold_left
     ranges
     ~init:[]
-    ~f:(fun acc (_,l,u) -> acc @ [{Syntax.arr_lower = l; Syntax.arr_upper = u; }])
+    ~f:(fun acc (_, arr_lower, arr_upper) -> acc @ [Syntax.{ arr_lower; arr_upper; }])
   in
   (subranges, ty)
   }
@@ -1004,14 +1004,15 @@ let struct_decl :=
 let struct_elem_decl :=
   | name = struct_elem_name; loc = option(struct_elem_loc); T_COLON; ty = struct_elem_ty; inval = optional_assign(struct_elem_init); T_SEMICOLON;
   {
-    let opt_inval = match inval with
+    let struct_elem_init_value  = match inval with
       | Some (_, v) -> Some(v)
       | None -> None
     in
-    { Syntax.struct_elem_name = name;
-      Syntax.struct_elem_loc = loc;
-      Syntax.struct_elem_ty = ty;
-      Syntax.struct_elem_init_value = opt_inval; }
+    Syntax.
+    { struct_elem_name = name;
+      struct_elem_loc = loc;
+      struct_elem_ty = ty;
+      struct_elem_init_value; }
   }
 
 (* Helper rule for [struct_elem_decl] *)
@@ -1362,13 +1363,13 @@ let derived_fb_name :=
 
 let fb_decl :=
   | T_FUNCTION_BLOCK; id = derived_fb_name; T_END_FUNCTION_BLOCK;
-  { { Syntax.id = id; Syntax.variables = []; Syntax.statements = [] } }
+  { Syntax.{ id; variables = []; statements = [] } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; vds = var_decls; T_END_FUNCTION_BLOCK;
-  { { Syntax.id = id; Syntax.variables = vds; Syntax.statements = [] } }
+  { Syntax.{ id; variables = vds; statements = [] } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; ss = fb_body; T_END_FUNCTION_BLOCK;
-  { { Syntax.id = id; Syntax.variables = []; Syntax.statements = ss } }
+  { Syntax.{ id; variables = []; statements = ss } }
   | T_FUNCTION_BLOCK; id = derived_fb_name; vds = var_decls; ss = fb_body; T_END_FUNCTION_BLOCK;
-  { { Syntax.id = id; Syntax.variables = vds; Syntax.statements = ss } }
+  { Syntax.{ id; variables = vds; statements = ss } }
 
 let fb_body :=
   | ~ = stmt_list; <>
@@ -1404,28 +1405,21 @@ let data_type_access_helper :=
 (* {{{ Table 48 -- Class / Table 50 -- Class method calls *)
 let class_decl :=
   | T_CLASS;
-      spec = option(class_specifier); id = T_IDENTIFIER; (* TODO: using_directive *; *)
-      parent_name_opt = option(class_type_access_helper);
+      specifier = option(class_specifier); id = T_IDENTIFIER; (* TODO: using_directive *; *)
+      parent_name = option(class_type_access_helper);
       ilist_opt = option(interface_name_list_helper);
       variables = var_decls;
       methods = method_decl *;
     T_END_CLASS;
   {
-    let (name, _) = id
-    and inames = match ilist_opt with Some(ilist) -> ilist | None -> []
+    let (class_name, _) = id
+    and interfaces = match ilist_opt with Some(ilist) -> ilist | None -> []
     in
-    {
-      Syntax.specifier = spec;
-      Syntax.class_name = name;
-      Syntax.parent_name = parent_name_opt;
-      Syntax.interfaces = inames;
-      Syntax.variables = variables;
-      Syntax.methods = methods;
-    }
+    Syntax.{ specifier; class_name; parent_name; interfaces; variables; methods; }
   }
 let class_specifier :=
-  | T_FINAL; {Syntax.CFinal}
-  | T_ABSTRACT; {Syntax.CAbstract}
+  | T_FINAL; { Syntax.CFinal }
+  | T_ABSTRACT; { Syntax.CAbstract }
 let class_type_access_helper := T_EXTENDS; id = T_IDENTIFIER; { let (name, _) = id in name }
 let interface_name_list_helper := T_IMPLEMENTS; ~ = interface_name_list; <>
 
@@ -1475,10 +1469,10 @@ let method_prototype :=
 (* interface_type_access: *)
 
 let access_spec :=
- | T_PUBLIC; {Syntax.ASPublic}
- | T_PROTECTED; {Syntax.ASProtected}
- | T_PRIVATE; {Syntax.ASPrivate}
- | T_INTERNAL; {Syntax.ASInternal}
+ | T_PUBLIC; { Syntax.ASPublic }
+ | T_PROTECTED; { Syntax.ASProtected }
+ | T_PRIVATE; { Syntax.ASPrivate }
+ | T_INTERNAL; { Syntax.ASInternal }
 (* }}} *)
 
 (* {{{ Table 47 -- Program definition *)
@@ -1489,10 +1483,10 @@ let prog_decl :=
       | Some v -> v
       | None -> []
     in
-    { Syntax.is_retain = false;
-      Syntax.name = n;
-      Syntax.variables = vds;
-      Syntax.statements = ss }
+    Syntax.{ is_retain = false;
+      name = n;
+      variables = vds;
+      statements = ss }
   }
 
 let prog_type_name :=
@@ -1518,16 +1512,16 @@ let resource_type_name :=
 let config_decl :=
   (* Without global variables *)
   | T_CONFIGURATION; name = config_name; rd = resource_decls; T_END_CONFIGURATION;
-  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = []; Syntax.access_paths = [] } }
+  { Syntax.{ name; resources = rd; variables = []; access_paths = [] } }
   (* With global variables *)
   | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; T_END_CONFIGURATION;
-  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
+  { Syntax.{ name; resources = rd; variables = vds; access_paths = [] } }
   | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; var_decls; T_END_CONFIGURATION;
-  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
+  { Syntax.{ name; resources = rd; variables = vds; access_paths = [] } }
   | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; access_decls; T_END_CONFIGURATION;
-  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
+  { Syntax.{ name; resources = rd; variables = vds; access_paths = [] } }
   | T_CONFIGURATION; name = config_name; vds = var_global_decl; rd = resource_decls; access_decls; var_decls; T_END_CONFIGURATION;
-  { { Syntax.name = name; Syntax.resources = rd; Syntax.variables = vds; Syntax.access_paths = [] } }
+  { Syntax.{ name; resources = rd; variables = vds; access_paths = [] } }
 
 (* Helper rule for config_decl *)
 let resource_decls :=
@@ -1543,10 +1537,10 @@ let resource_decl :=
 
 (* Return Syntax.resource_decl *)
 let single_resource_decl :=
-  | ts = list(task_config); pis = prog_config_list;
-  { { Syntax.name = None; Syntax.tasks = ts; Syntax.variables = []; Syntax.programs = pis } }
-  | pis = prog_config_list;
-  { { Syntax.name = None; Syntax.tasks = []; Syntax.variables = []; Syntax.programs = pis } }
+  | ts = list(task_config); programs = prog_config_list;
+  { Syntax.{ name = None; tasks = ts; variables = []; programs } }
+  | programs = prog_config_list;
+  { Syntax.{ name = None; tasks = []; variables = []; programs } }
 
 let resource_name :=
   | id = T_IDENTIFIER;
@@ -1936,12 +1930,12 @@ let param_assign :=
     let expr_var_src = Syntax.ExprVariable(ti, src_var) in
 
     let assign_expr = Syntax.ExprBin(ti, expr_var_src, Syntax.ASSIGN, expr) in
-    { Syntax.name = Some(name); Syntax.stmt = Syntax.StmExpr(ti, assign_expr); Syntax.inverted = false }
+    Syntax.{ name = Some(name); stmt = Syntax.StmExpr(ti, assign_expr); inverted = false }
   }
   | expr = expression;
   {
     let eti = Syntax.expr_get_ti expr in
-    { Syntax.name = None; Syntax.stmt = Syntax.StmExpr(eti, expr); Syntax.inverted = false }
+    Syntax.{ name = None; stmt = StmExpr(eti, expr); inverted = false }
   }
   (* | ref_assign
   {  } *)
@@ -1959,7 +1953,7 @@ let param_assign :=
     let expr_var_dest = Syntax.ExprVariable(ti_dest, v) in
 
     let sendto_expr = Syntax.ExprBin(ti, expr_var_src, Syntax.SENDTO, expr_var_dest) in
-    { Syntax.name = Some(name); Syntax.stmt = Syntax.StmExpr(ti, sendto_expr); Syntax.inverted = true }
+    Syntax.{ name = Some(name); stmt = Syntax.StmExpr(ti, sendto_expr); inverted = true }
   }
   | vn = variable_name; T_SENDTO; v = variable;
   {
@@ -1973,7 +1967,7 @@ let param_assign :=
     let expr_var_dest = Syntax.ExprVariable(ti_dest, v) in
 
     let sendto_expr = Syntax.ExprBin(ti, expr_var_src, Syntax.SENDTO, expr_var_dest) in
-    { Syntax.name = Some(name); Syntax.stmt = Syntax.StmExpr(ti, sendto_expr); Syntax.inverted = false }
+    Syntax.{ name = Some(name); stmt = Syntax.StmExpr(ti, sendto_expr); inverted = false }
   }
 
 let selection_stmt :=
@@ -2029,8 +2023,7 @@ let case_stmt :=
   }
 
 let case_selection :=
-  | cl = case_list; T_COLON; sl = stmt_list;
-  { { Syntax.case = cl; Syntax.body = sl } }
+  | case = case_list; T_COLON; body = stmt_list; { Syntax.{ case; body } }
 
 let case_list :=
   | ~ = separated_list(T_COMMA, case_list_elem); <>
