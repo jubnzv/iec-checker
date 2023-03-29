@@ -1,5 +1,5 @@
 """
-Module to communicate with OCaml core.
+Module to communicate with the compiled OCaml binary.
 """
 from typing import List, Tuple
 import io
@@ -23,8 +23,9 @@ def process_output(json_out: bytes) -> List[Warning]:
 
 def check_program(program: str,
                   binary: str = binary_default) -> Tuple[List[Warning], int]:
-    """Run iec-checker core and send given program source in stdin.
-    This will create 'stdin.dump.json' dump file in a current directory.
+    """Runs ``iec-checker`` and sends the given program source in stdin.
+    This will create 'stdin.dump.json' dump file in the current directory.
+    Returns the list of warnings and the return code.
     """
     p = subprocess.Popen([binary, "-o", "json", "-q", "-d", "-"],
                          stdout=subprocess.PIPE,
@@ -39,9 +40,8 @@ def check_program(program: str,
 
 def run_checker(file_path: str, binary: str = binary_default,
                 *args) -> Tuple[List[Warning], int]:
-    """Run iec-checker core for a given file.
-    This will execute core inspections and generate JSON dump processed with
-    plugins."""
+    """Runs ``iec-checker`` for the given file.
+    This will execute analyses and generate JSON dump processed by plugins."""
     p = subprocess.Popen([binary, "-o", "json", "-q", "-d", *args, file_path],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
@@ -53,7 +53,7 @@ def run_checker(file_path: str, binary: str = binary_default,
 
 def run_checker_full_out(file_path: str, binary: str = binary_default,
                          *args) -> Tuple[int, str]:
-    """Run iec-checker core for a given file and capture the whole output.
+    """Runs ``iec-checker`` for the given file and captures its output.
     No extra options will be set by default."""
     p = subprocess.Popen([binary, *args, file_path],
                          stdout=subprocess.PIPE,
