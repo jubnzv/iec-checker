@@ -6,7 +6,7 @@ build:
 	dune build @install
 	@test -L bin || ln -s _build/install/default/bin .
 
-test:
+test: build
 	@/bin/bash -c "source venv/bin/activate; \
 				   pushd test >/dev/null; \
 				   pytest; \
