@@ -38,11 +38,11 @@ def check_program(program: str,
     return (warnings, p.returncode)
 
 
-def run_checker(file_path: str, binary: str = binary_default,
-                *args) -> Tuple[List[Warning], int]:
-    """Runs ``iec-checker`` for the given file.
+def run_checker(paths: str, binary: str = binary_default,
+                args: List[str] = []) -> Tuple[List[Warning], int]:
+    """Runs ``iec-checker`` for the given input files.
     This will execute analyses and generate JSON dump processed by plugins."""
-    p = subprocess.Popen([binary, "-o", "json", "-q", "-d", *args, file_path],
+    p = subprocess.Popen([binary, "-o", "json", "-q", "-d", *args, *paths],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     p.wait()
@@ -51,11 +51,11 @@ def run_checker(file_path: str, binary: str = binary_default,
     return (warnings, p.returncode)
 
 
-def run_checker_full_out(file_path: str, binary: str = binary_default,
+def run_checker_full_out(paths: str, binary: str = binary_default,
                          *args) -> Tuple[int, str]:
-    """Runs ``iec-checker`` for the given file and captures its output.
+    """Runs ``iec-checker`` for the given input files and captures its output.
     No extra options will be set by default."""
-    p = subprocess.Popen([binary, *args, file_path],
+    p = subprocess.Popen([binary, *args, *paths],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT)
     p.wait()

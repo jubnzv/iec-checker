@@ -12,5 +12,5 @@ type dump_scheme = {
   cfgs: Cfg.t list;
 } [@@deriving to_yojson]
 
-val create_dump : S.iec_library_element list -> Env.t list -> Cfg.t list -> string (** source filename *) -> unit
+val create_dump : dst_file:string -> S.iec_library_element list -> Env.t list -> Cfg.t list -> unit
 (** [create_dump] Save input AST in a JSON file.  *)

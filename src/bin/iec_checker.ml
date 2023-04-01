@@ -9,13 +9,16 @@ module TI = Tok_info
 module W = Warn
 module WO = Warn_output
 
-(** Format of files given to checker *)
+(** Format of files given to the checker *)
 type input_format_ty =
   | InputST     (** Structured Text source code *)
-  | InputXML    (** PLCOpen schemas *)
+  | InputXML    (** PLCOpen schemes *)
   | InputSELXML (** Schweitzer Engineering Laboratories XML Format *)
 
 type parse_results = S.iec_library_element list * Warn.t list
+
+(** The path of the temporary file created when the `-m` option is set. *)
+let merged_file_path = "merged-input.st"
 
 let parse_with_error (lexbuf: Lexing.lexbuf) : parse_results =
   let tokinfo lexbuf = TI.create lexbuf in
@@ -112,8 +115,10 @@ let get_files_to_check paths in_fmt =
     ~init:[]
     ~f:(fun acc p -> acc @ walkthrough_directory p suffix)
 
-(** [prepare_paths] Determine which files will be parsed. *)
-let prepare_paths paths in_fmt =
+(** Collects paths to files that should be parsed.
+    If there are directories among [paths], this functions recursively
+    traverses them and collects nested files there. *)
+let collect_paths paths in_fmt =
   if List.exists paths ~f:(fun p -> String.equal p "-") then
     ["-"]
   else
@@ -141,9 +146,23 @@ module ReturnCode = struct
   let not_found = 127
 end
 
+let remove_file path =
+  if Caml.Sys.file_exists path then
+    Caml.Sys.remove path
+
+let cleanup out_path = remove_file out_path
+
+(** Merges contents of files [paths] creating a temporary file [out_path]. *)
+let merge_files paths out_path =
+  remove_file out_path;
+  let oc = Out_channel.create ~append:true ~fail_if_exists:true ~perm:0o755 out_path in
+  List.iter paths ~f:(fun path ->
+    Out_channel.output_string oc (In_channel.read_all path));
+  Out_channel.close_no_err oc
+
 (** [run_checker] Run program on the file with [path] and returns the
     error code. *)
-let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : int =
+let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : bool) : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in
   if (not read_stdin && not (Caml.Sys.file_exists path)) then
     let err =
@@ -162,9 +181,13 @@ let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : 
     | Some(elements, parser_warns) -> begin
         let envs = Ast_util.create_envs elements in
         let cfgs = Cfg.create_cfgs elements in
-        if create_dumps then
-          Dump.create_dump elements envs cfgs
-            (if read_stdin then "stdin" else path);
+        if create_dumps then (
+          let src_file = (if read_stdin then "stdin"
+                          else if merged then Filename.basename path
+                               else path)
+          in
+          let dst_file = Printf.sprintf "%s.dump.json" src_file in
+          Dump.create_dump ~dst_file elements envs cfgs);
         let decl_warns = Declaration_analysis.run elements envs in
         let unused_warns = Unused_variable.run elements in
         let ud_warns = Use_define.run elements in
@@ -178,6 +201,9 @@ let run_checker path in_fmt out_fmt create_dumps verbose (interactive : bool) : 
           out_fmt;
         if List.is_empty parser_warns then ReturnCode.ok else ReturnCode.fail
       end
+
+let create_file path =
+  Out_channel.create ~perm:0o755 path |> Out_channel.close_no_err
 
 let () =
   Clap.description "Static analysis of IEC 61131-3 programs ";
@@ -228,9 +254,24 @@ let () =
       ~set_short: 'd'
       ~set_long: "dump"
       ~description:
-        "Create dump files of the processed files in json format.\
+        (Printf.sprintf
+        "Create dump files of the processed files in the JSON format. \
          These files will contain the structure of the processed source files and \
-         can be used from plugins and external tools."
+         can be used from plugins and external tools. \
+         Note: The dump file path will always be `%s` if the `-m` option is enabled."
+         merged_file_path)
+      false
+  in
+
+  let m =
+    Clap.flag
+      ~set_short: 'm'
+      ~set_long: "merge"
+      ~description:
+        "Merge input files in the single file before running the checker. \
+         This option is useful if the project is split into several files that \
+         represent the same program. \
+         Note: name collisions in the input files are forbidden."
       false
   in
 
@@ -269,13 +310,25 @@ let () =
     exit ReturnCode.fail
   end
 
-  else if
-    begin
-      prepare_paths paths input_format
-      |> List.fold_left
-        ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d v i])
-        ~init:[]
-      |> List.filter ~f:(fun rc -> not (phys_equal rc ReturnCode.ok))
-      |> List.is_empty
-    end
-  then exit ReturnCode.ok else exit ReturnCode.fail
+  else
+      let paths' = collect_paths paths input_format in
+      (* Disable the merge option if there is only one input file. *)
+      let m = if m && phys_equal 1 (List.length paths') then false else m in
+      let success =
+        if m then (
+          (* Merge all the input files to the single file and analyze it. *)
+          remove_file merged_file_path;
+          create_file merged_file_path;
+          merge_files paths merged_file_path;
+          let rc = run_checker merged_file_path input_format output_format d m v i in
+          remove_file merged_file_path;
+          phys_equal rc ReturnCode.ok)
+        else (
+          (* Run the checker for each file and collect all the warnings. *)
+          List.fold_left paths'
+            ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d m v i])
+            ~init:[]
+          |> List.for_all ~f:(phys_equal ReturnCode.ok))
+      in
+      if success
+      then exit ReturnCode.ok else exit ReturnCode.fail

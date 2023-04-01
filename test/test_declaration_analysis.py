@@ -10,7 +10,7 @@ from python.dump import DumpManager  # noqa
 def test_initialization_literal():
     f = 'st/declaration-analysis.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     assert len(checker_warnings) == 3
     cv = checker_warnings[0]

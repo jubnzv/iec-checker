@@ -10,7 +10,7 @@ from python.dump import DumpManager  # noqa
 def test_zerodiv():
     f = 'st/zero-division.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('ZeroDivision') == 2
     with DumpManager(fdump):

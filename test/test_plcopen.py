@@ -11,7 +11,7 @@ from python.dump import DumpManager  # noqa
 def test_cp1():
     f = 'st/plcopen-cp1.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP1') == 1
     with DumpManager(fdump):
@@ -21,7 +21,7 @@ def test_cp1():
 def test_cp3():
     f = 'st/plcopen-cp3.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP3') == 8
     with DumpManager(fdump):
@@ -31,7 +31,7 @@ def test_cp3():
 def test_cp6():
     f = 'st/plcopen-cp6.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP6') == 2
     with DumpManager(fdump):
@@ -41,7 +41,7 @@ def test_cp6():
 def test_cp8():
     f = 'st/plcopen-cp8.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP8') == 4
     with DumpManager(fdump):
@@ -51,7 +51,7 @@ def test_cp8():
 def test_cp28():
     f = 'st/plcopen-cp28.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP28') == 4
     with DumpManager(fdump):
@@ -61,7 +61,7 @@ def test_cp28():
 def test_cp13():
     f = 'st/plcopen-cp13.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP13') == 3
     with DumpManager(fdump):
@@ -71,7 +71,7 @@ def test_cp13():
 def test_cp25():
     f = 'st/plcopen-cp25.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-CP25') == 2
     with DumpManager(fdump):
@@ -81,7 +81,7 @@ def test_cp25():
 def test_l10():
     f = 'st/plcopen-l10.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     checker_warnings.count('PLCOPEN-L10') == 3
     with DumpManager(fdump):
@@ -91,7 +91,7 @@ def test_l10():
 def test_l17():
     f = 'st/plcopen-l17.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     assert len(checker_warnings) >= 1
     cv = checker_warnings[1]
@@ -105,7 +105,7 @@ def test_l17():
 def test_n3():
     f = 'st/plcopen-n3.st'
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 0
     assert len(checker_warnings) >= 1
     cv = checker_warnings[5]
@@ -119,7 +119,7 @@ def test_n3():
 def test_cp9():
     f = 'st/plcopen-cp9.st'
     fdump = f'{f}.dump.json'
-    warns, rc = run_checker(f)
+    warns, rc = run_checker([f])
     assert rc == 0
     assert len(filter_warns(warns, 'PLCOPEN-CP9')) == 2
     with DumpManager(fdump):
