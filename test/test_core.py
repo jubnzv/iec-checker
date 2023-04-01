@@ -9,7 +9,7 @@ from python.core import run_checker  # noqa
 
 def test_missing_file():
     f = 'st/foo.bar'
-    checker_warnings, rc = run_checker(f)
+    checker_warnings, rc = run_checker([f])
     assert rc == 1
     assert len(checker_warnings) == 1
     cv = checker_warnings[0]
@@ -32,5 +32,5 @@ def test_large_file():
         i := 0;
         END_PROGRAM
         """)
-    checker_warnings, rc = run_checker(fname)
+    checker_warnings, rc = run_checker([fname])
     os.remove(fname)

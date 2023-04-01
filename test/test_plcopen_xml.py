@@ -13,7 +13,7 @@ from python.dump import DumpManager  # noqa
 def test_no_parser_errors():
     f = os.path.join('./test/plcopen/example.xml')
     fdump = f'{f}.dump.json'
-    checker_warnings, rc = run_checker(f, '-i', 'xml')
+    checker_warnings, rc = run_checker([f], '-i', 'xml')
     assert rc == 0, f"Incorrect exit code for {f}"
     with DumpManager(fdump):
         pass

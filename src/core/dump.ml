@@ -12,8 +12,7 @@ type dump_scheme = {
   cfgs: Cfg.t list;
 } [@@deriving to_yojson]
 
-let create_dump elements environments cfgs src_filename =
-  let dest_filename = Printf.sprintf "%s.dump.json" src_filename in
+let create_dump ~dst_file elements environments cfgs =
   let version = "0.1" in
   let functions =
     List.fold_left elements
@@ -50,4 +49,4 @@ let create_dump elements environments cfgs src_filename =
     environments;
     cfgs;
   } in
-  Yojson.Safe.to_file dest_filename (dump_scheme_to_yojson scheme)
+  Yojson.Safe.to_file dst_file (dump_scheme_to_yojson scheme)
