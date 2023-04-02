@@ -32,4 +32,5 @@ jobs:
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
     - name: Test with pytest
       run: |
+        eval $(opam env)
         make test
