@@ -226,7 +226,7 @@ let () =
     | s when String.equal "selxml" s -> InputSELXML
     | s -> begin
         Printf.eprintf "Unknown input format '%s'.\n" s;
-        Printf.eprintf "Avaialble formats: 'st', 'xml' and 'selxml'\n";
+        Printf.eprintf "Available formats: 'st', 'xml' and 'selxml'\n";
         exit ReturnCode.fail
       end
   in
