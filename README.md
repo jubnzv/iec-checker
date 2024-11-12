@@ -1,7 +1,8 @@
 # IEC Checker
 
-![](https://github.com/jubnzv/iec-checker/workflows/Unit%20tests/badge.svg)
-[![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0)
+> ⚠️ **Note:** Currently inactive. Further development available if funded.
+>
+>📩 **Contact:** [jubnzv@gmail.com](mailto:jubnzv@gmail.com)
 
 This project aims to implement an open source tool for static code analysis of [IEC 61131-3](https://en.wikipedia.org/wiki/IEC_61131-3) programs.
 
