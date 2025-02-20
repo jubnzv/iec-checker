@@ -1,6 +1,6 @@
 # IEC Checker
 
-> ⚠️ **Note:** Development is on hold. More advanced analysis techniques are needed to cover real-world issues. Some companies are using the analyzer as it is, which is fine if they comply with the LGPL. But for serious results, consider collaborating with a skilled team dedicated to security tooling.
+> ⚠️ **Note:** Development is on hold. More advanced analysis techniques are needed to cover real-world issues. Some companies are using the analyzer as it is, which is fine if they comply with the LGPL. But for serious results, consider collaborating with a skilled team dedicated to security tooling for safety-critical systems.
 >
 >📩 **Contact:** [oi@nowarp.io](mailto:oi@nowarp.io)
 
