@@ -28,9 +28,9 @@
   (* Keyword tables are necessary to get rid of transition table overflow errors.
      See: http://caml.inria.fr/pub/docs/manual-ocaml-4.00/manual026.html#toc111 *)
   (* This keyword table is also required to handle case-insensitive syntax of IEC 61131-3. *)
-  let keywords_table = Caml.Hashtbl.create 97
+  let keywords_table = Stdlib.Hashtbl.create 97
   let () =
-    Caml.List.iter (fun (x,y) -> Caml.Hashtbl.add keywords_table x y)
+    Stdlib.List.iter (fun (x,y) -> Stdlib.Hashtbl.add keywords_table x y)
       [
   (* {{{ Generic data types *)
       "any",                T_ANY;
@@ -281,7 +281,7 @@ rule initial tokinfo =
   | label as v
   {
     try
-      let keyword = Caml.Hashtbl.find keywords_table (String.lowercase v) in
+      let keyword = Stdlib.Hashtbl.find keywords_table (String.lowercase v) in
       (* Printf.printf "KEYWORD: %s\n" v; *)
       keyword
       with Not_found -> begin

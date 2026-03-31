@@ -82,15 +82,15 @@ let endswith s1 s2 =
     paths to the files with the given [suffix]. *)
 let walkthrough_directory path suffix =
   let rec aux result = function
-    | f::_ when (Caml.Sys.file_exists f &&
-                 Caml.Sys.is_directory f) -> begin
-        Caml.Sys.readdir f
+    | f::_ when (Stdlib.Sys.file_exists f &&
+                 Stdlib.Sys.is_directory f) -> begin
+        Stdlib.Sys.readdir f
         |> Array.to_list
         |> List.map ~f:(Filename.concat f)
         |> List.fold_left
           ~init:[]
           ~f:(fun acc p -> begin
-                if Caml.Sys.is_directory p then
+                if Stdlib.Sys.is_directory p then
                   acc @ (aux result [p])
                 else if endswith p suffix then
                   acc @ [p]
@@ -147,8 +147,8 @@ module ReturnCode = struct
 end
 
 let remove_file path =
-  if Caml.Sys.file_exists path then
-    Caml.Sys.remove path
+  if Stdlib.Sys.file_exists path then
+    Stdlib.Sys.remove path
 
 let cleanup out_path = remove_file out_path
 
@@ -164,7 +164,7 @@ let merge_files paths out_path =
     error code. *)
 let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : bool) : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in
-  if (not read_stdin && not (Caml.Sys.file_exists path)) then
+  if (not read_stdin && not (Stdlib.Sys.file_exists path)) then
     let err =
       W.mk_internal ~id:"FileNotFoundError"
         (Printf.sprintf "File %s doesn't exists" path)
