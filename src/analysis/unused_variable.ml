@@ -30,7 +30,7 @@ let check_pou elem =
   let decl_set = StringSet.of_list (get_decl_var_names ())
   and use_set = StringSet.of_list (get_use_var_names ()) in
 
-  StringSet.diff decl_set use_set
+  Set.diff decl_set use_set
   |> Set.fold ~init:[]
     ~f:(fun acc var_name -> begin
           let ti = AU.get_ti_by_name_exn elem var_name in

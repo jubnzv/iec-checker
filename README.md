@@ -44,7 +44,7 @@ You can download the latest binary release for Linux and Windows x86_64 from [Gi
 
 #### Linux
 
-Install the latest OCaml compiler and opam. Consider installation instructions at [ocaml.org](https://ocaml.org/docs/install.html) and [opam.ocaml.org](https://opam.ocaml.org/doc/Install.html).
+Install [OCaml](https://ocaml.org/docs/install.html) 5.1 or later and [opam](https://opam.ocaml.org/doc/Install.html).
 
 Then install the required dependencies:
 

@@ -48,7 +48,7 @@ let upgrade_binary op x y =
   op a b
 
 let sum_maybe_list values =
-  let ( + ) = upgrade_binary (return_binary Caml.( + )) in
+  let ( + ) = upgrade_binary (return_binary Stdlib.( + )) in
   let rec aux acc values =
     match acc with
     | Some _ -> begin

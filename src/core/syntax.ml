@@ -106,7 +106,7 @@ module SymVar = struct
     name : string;
     ti : TI.t;
     array_indexes: int option list;
-  } [@@deriving to_yojson]
+  } [@@deriving to_yojson, show]
 
   let create name ti =
     let array_indexes = [] in
@@ -126,7 +126,7 @@ end
 
 module DirVar = struct
   type location = LocI | LocQ | LocM
-  [@@deriving to_yojson]
+  [@@deriving to_yojson, show]
 
   type size =
     | SizeX    (** single bit *)
@@ -135,7 +135,7 @@ module DirVar = struct
     | SizeW    (** word (16 bits) *)
     | SizeD    (** double word (32 bits) *)
     | SizeL    (** quad word (64 bits) *)
-  [@@deriving to_yojson]
+  [@@deriving to_yojson, show]
 
   let path_to_string path =
     List.fold_left path
@@ -148,7 +148,7 @@ module DirVar = struct
     sz: size option;
     is_partly_located: bool; (** ExprVariable is defined using '*' symbol *)
     path: int list;
-  } [@@deriving to_yojson]
+  } [@@deriving to_yojson, show]
 
   let create ti =
     let loc = None in
@@ -296,12 +296,12 @@ module VarUse = struct
   type loc_type =
     | SymVar of SymVar.t
     | DirVar of DirVar.t
-  [@@deriving to_yojson]
+  [@@deriving to_yojson, show]
 
   type t = {
     loc: loc_type;
     ty: var_type;
-  } [@@deriving to_yojson]
+  } [@@deriving to_yojson, show]
 
   let create_sym sym_var ty =
     let loc = SymVar(sym_var) in

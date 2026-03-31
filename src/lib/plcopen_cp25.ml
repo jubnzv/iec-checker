@@ -41,7 +41,7 @@ let check_pou pou env =
           match expr with
           | S.ExprBin (ti,(S.ExprVariable (_, lhs)),(S.EQ|S.NEQ|S.ASSIGN|S.ASSIGN_REF|S.GT|S.LT|S.GE|S.LE|S.SENDTO),(S.ExprVariable (_, rhs))) -> begin
               check_assign_expr ti lhs rhs env
-              |> Caml.Option.fold ~none:[] ~some:(fun w -> [w])
+              |> Option.to_list
               |> List.append acc
             end
           | _ -> acc

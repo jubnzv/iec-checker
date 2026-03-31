@@ -18,7 +18,7 @@ let find_unreachable_blocks (cfgs : Cfg.t list) : (Warn.t list) =
 
     let reachable_set = IntSet.of_list (Cfg.get_reachable_ids cfg)
     and all_set = IntSet.of_list (Cfg.get_all_ids cfg) in
-    let unreachable_set = IntSet.diff all_set reachable_set in
+    let unreachable_set = Set.diff all_set reachable_set in
 
     Set.fold
       unreachable_set

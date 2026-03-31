@@ -591,15 +591,15 @@ let get_reachable_ids cfg =
     let visited = ref IntSet.empty in
     let rec dfs (bb_id : int) =
       let handle_node id =
-        if not (IntSet.mem !visited id) then dfs id
+        if not (Set.mem !visited id) then dfs id
       in
       let bb = (BBMap.find_exn cfg.bbs_map bb_id) in
-      visited := IntSet.add !visited bb_id;
+      visited := Set.add !visited bb_id;
       List.iter bb.succs ~f:(fun id -> handle_node id);
       ()
     in
     dfs cfg.entry_bb_id;
-    IntSet.to_list !visited
+    Set.to_list !visited
 
 let get_number_of_edges cfg =
   List.fold_left
