@@ -5,20 +5,20 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: [ '3.8' ]
-        ocaml-compiler: [ '4.12.x' ]
+        python-version: [ '3.12' ]
+        ocaml-compiler: [ '5.2.x' ]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Setup OCaml ${{ matrix.ocaml-compiler }}
-      uses: avsm/setup-ocaml@v2
+      uses: ocaml/setup-ocaml@v3
       with:
         ocaml-compiler: ${{ matrix.ocaml-compiler }}
     - name: Build OCaml core
