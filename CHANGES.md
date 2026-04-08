@@ -13,6 +13,7 @@
 - CI: fix `dune not found` error when running `make test`
 - Deps: bump `pytest` version to support Python 3.10
 - Add `make doc` target and odoc package landing page (#24)
+- Integrate `codespell` to the CI and fix errors found (#29)
 
 ## 0.4.0 (2022-02-26)
 
