@@ -1,2 +1,3 @@
+codespell==2.4.*
 ijson==3.0.3
 pytest==7.2.*

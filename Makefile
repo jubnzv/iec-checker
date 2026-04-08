@@ -1,4 +1,4 @@
-.PHONY: build test doc clean
+.PHONY: build test doc spell clean
 
 default: build
 
@@ -15,6 +15,9 @@ test: build
 doc:
 	dune build @doc
 	@echo "Docs: _build/default/_doc/_html/index.html"
+
+spell:
+	codespell
 
 clean:
 	dune clean

@@ -22,7 +22,7 @@ let check_elem elem =
               match operator with
               | NEG | EQ -> begin
                   if (is_time_or_phys lhs) || (is_time_or_phys rhs) then begin
-                    let msg = "Time and physical measures comparissons shall not be equality or inequality" in
+                    let msg = "Time and physical measures comparisons shall not be equality or inequality" in
                     acc @ [(Warn.mk ti.linenr ti.col "PLCOPEN-CP28" msg)]
                   end
                   else acc

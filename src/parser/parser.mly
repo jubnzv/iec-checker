@@ -796,7 +796,7 @@ let simple_spec :=
   | ~ = elem_type_name; <Syntax.DTySpecElementary>
   | ~ = simple_type_access; <Syntax.DTySpecSimple>
   (* NOTE: This is not presented in 3rd edition, search my comment
-     for generic_type_name bellow. *)
+     for generic_type_name below. *)
   | ~ = generic_type_name; <Syntax.DTySpecGeneric>
 
 (* Implementation is modified to avoid shift/reduce conflicts *)
@@ -930,7 +930,7 @@ let array_spec :=
   in
   (subranges, ty)
   }
-  (* FIXME: Not sure how this should work. See same comment for [enum_spec_init] bellow. *)
+  (* FIXME: Not sure how this should work. See same comment for [enum_spec_init] below. *)
   (* | ~ = array_type_access; <> *)
 
 (* Initializer list in the following format: [3, 2, 3(4), 5].
@@ -990,7 +990,7 @@ let struct_type_decl :=
 
 let struct_spec :=
   | ~ = struct_decl; <>
-  (* FIXME: Not sure how this should work. See same comment for [enum_spec_init] bellow. *)
+  (* FIXME: Not sure how this should work. See same comment for [enum_spec_init] below. *)
   (* | ~ = struct_spec_init; <> *)
 
 (* let struct_spec_init :=                                                               *)
@@ -1833,7 +1833,7 @@ let enum_value_use :=
 let variable_access :=
   | ~ = variable_expr; <>
   | ~ = variable_expr; multibit_part_access; <>
-  (* Non-standard extenstion to handle IF ARR1[i] < 10 THEN *)
+  (* Non-standard extension to handle IF ARR1[i] < 10 THEN *)
   | ~ = variable_expr; array_access; <>
 
 let array_access :=

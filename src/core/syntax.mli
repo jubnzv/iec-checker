@@ -98,7 +98,7 @@ module DirVar : sig
   include ID
 
   (** Location prefixes for directly represented variables.
-      See 6.5.5.2 for explainations. *)
+      See 6.5.5.2 for explanations. *)
   type location = LocI | LocQ | LocM
   [@@deriving to_yojson]
 
@@ -244,7 +244,7 @@ and generic_ty =
   | ANY_DATE
 [@@deriving to_yojson]
 
-(** "Use" occurence of the derived type. *)
+(** "Use" occurrence of the derived type. *)
 and derived_ty =
   | DTyUseSingleElement of single_element_ty_spec [@name "UseSingleElement"]
   | DTyUseStructType of string                    [@name "UseStructElement"]
