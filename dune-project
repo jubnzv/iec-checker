@@ -4,10 +4,11 @@
 (generate_opam_files true)
 
 (name iec_checker)
-(version 0.0.4)
+(version 0.5.0)
 (authors "Georgiy Komarov")
 (license  LGPL-3.0-or-later)
 (source (github jubnzv/iec-checker))
+(documentation "https://jubnzv.github.io/iec-checker")
 (maintainers "Georgiy Komarov <jubnzv@gmail.com>")
 
 (package
