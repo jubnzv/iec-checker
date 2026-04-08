@@ -2,5 +2,5 @@
 module S = Syntax
 
 val reconstruct_from_channel : in_channel -> string
-(** [reconstruct_from_channel channel] Reconstruct source code from the the
+(** [reconstruct_from_channel channel] Reconstruct source code from the
     input [channel]. Return complete source code listing from parsed schema. *)

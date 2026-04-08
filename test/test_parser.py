@@ -73,7 +73,7 @@ def test_statements_order():
         assert len(scheme.programs) == 1
         # TODO: need recursive traverse in om
         # p = scheme.programs[0]
-        # assert len(p.statemets) == 3
+        # assert len(p.statements) == 3
 
 
 def test_enum_types():

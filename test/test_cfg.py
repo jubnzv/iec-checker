@@ -545,7 +545,7 @@ def test_cfg_func_call_statement():
         bbs = cfg.basic_blocks
         assert len(bbs) == 1
         # NOTE: I'm not sure about evaluation order for expressions in function
-        # paramters. Need check how does it implemented in the modern IDEs.
+        # parameters. Need check how does it implemented in the modern IDEs.
         # Need revisit Mario de Sousa's paper for this topic.
         # j := fn0(INVAL := 19)
         #   INVAL := 19
