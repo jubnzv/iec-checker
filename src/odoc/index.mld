@@ -1,0 +1,56 @@
+{0 iec_checker}
+
+Static analysis for {{:https://en.wikipedia.org/wiki/IEC_61131-3} IEC 61131-3}
+programs. Currently supports
+{{:https://en.wikipedia.org/wiki/Structured_text} Structured Text},
+{{:https://plcopen.org/technical-activities/xml-exchange} PLCOpen XML} and
+{{:https://selinc.com/products/3530/} SEL XML} input formats.
+
+The Structured Text dialect accepted by the parser is compatible with the
+{{:https://github.com/sm1820/matiec} matiec} transpiler.
+
+{1 Libraries}
+
+The codebase is split into four public libraries. Each library has a single
+top-level module that re-exports its public API.
+
+{2 {!module-IECCheckerCore} — [iec_checker.core]}
+
+Core data structures shared by every other component: the AST
+({!module-IECCheckerCore.Syntax}), control-flow graph
+({!module-IECCheckerCore.Cfg}), warning representation
+({!module-IECCheckerCore.Warn}), JSON dump format
+({!module-IECCheckerCore.Dump}), PLCOpen XML reader
+({!module-IECCheckerCore.Plcopen}) and SEL XML reader
+({!module-IECCheckerCore.Sel}).
+
+{2 {!module-IECCheckerParser} — [iec_checker.parser]}
+
+The lexer, Menhir grammar and source-location tracking. Turns Structured Text
+text into the AST defined in {!module-IECCheckerCore.Syntax}.
+
+{2 {!module-IECCheckerAnalysis} — [iec_checker.analysis]}
+
+Generic semantic analyses that the rule library builds on top of:
+declaration analysis ({!module-IECCheckerAnalysis.Declaration_analysis}),
+use-define chains ({!module-IECCheckerAnalysis.Use_define}),
+unused-variable detection ({!module-IECCheckerAnalysis.Unused_variable})
+and cyclomatic-complexity scoring
+({!module-IECCheckerAnalysis.Cyclomatic_complexity}).
+
+{2 {!module-IECCheckerLib} — [iec_checker.lib]}
+
+The actual checks. Implements the
+{{:https://plcopen.org/software-construction-guidelines} PLCOpen Software
+Construction Guidelines} (modules [Plcopen_cp1] … [Plcopen_cp28],
+[Plcopen_l10], [Plcopen_l17], [Plcopen_n3]) plus the division-by-zero check
+({!module-IECCheckerLib.Zerodiv}). {!module-IECCheckerLib.CheckerLib} is the
+entry point invoked by the [iec_checker] binary.
+
+{1 Entry points}
+
+- The command-line driver lives in [src/bin/iec_checker.ml] (not part of the
+  documented API).
+- Programmatic users should start at {!module-IECCheckerLib.CheckerLib}.
+- Tools that consume the JSON IR should look at
+  {!module-IECCheckerCore.Dump}.

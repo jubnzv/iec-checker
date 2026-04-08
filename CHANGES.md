@@ -12,7 +12,7 @@
 - CI: update GitHub Actions to the latest packages
 - CI: fix `dune not found` error when running `make test`
 - Deps: bump `pytest` version to support Python 3.10
-- Add `make doc` target and odoc package landing page
+- Add `make doc` target and odoc package landing page (#24)
 
 ## 0.4.0 (2022-02-26)
 

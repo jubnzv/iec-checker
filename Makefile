@@ -1,4 +1,4 @@
-.PHONY: build test clean
+.PHONY: build test doc clean
 
 default: build
 
@@ -11,6 +11,10 @@ test: build
 				   pushd test >/dev/null; \
 				   pytest; \
 				   popd >/dev/null; "
+
+doc:
+	dune build @doc
+	@echo "Docs: _build/default/_doc/_html/index.html"
 
 clean:
 	dune clean
