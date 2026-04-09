@@ -1,102 +1,52 @@
 # IEC Checker
 
-> 💡 **Note:** `iec-checker` is an open-source project that can be extended for your needs. I take on funded work to add things like:
->
-> - **New language support** — Structured Text extensions used by your specific PLC vendor, or other IEC 61131-3 languages (IL, FBD, LD, SFC)
-> - **Additional safety standards** — checks beyond the PLCOpen Guidelines
-> - **Custom detectors and checks** — adding new custom analyses for a specific project
->
-> 📩 **Contact:** [jubnzv@gmail.com](mailto:jubnzv@gmail.com)
+**⚡ [Try it online](https://iec-checker.github.io/playground)** | **📚 [Documentation](https://iec-checker.github.io/docs/intro)** | **🛡️ [Detectors reference](https://iec-checker.github.io/docs/detectors)** | **🔧 [Sponsor Custom Features](https://iec-checker.github.io/docs/sponsor-development)**
 
-IEC Checker is an open source static analyzer for [IEC 61131-3](https://en.wikipedia.org/wiki/IEC_61131-3) programs.
+IEC Checker is an open source static analyzer for [IEC 61131-3](https://en.wikipedia.org/wiki/IEC_61131-3) programs. It catches bugs and enforces [PLCOpen coding guidelines](https://plcopen.org/software-construction-guidelines) before code reaches the PLC.
 
-## Supported languages and formats
+## What it looks like
 
-`iec-checker` analyzes [Structured Text](https://en.wikipedia.org/wiki/Structured_text) with the language extensions accepted by the [matiec](https://github.com/sm1820/matiec) compiler.
+```
+$ iec_checker program.st
+PLCOPEN-CP3: Variable X shall be initialized before being used
+  --> program.st:4:9
+  See: https://iec-checker.github.io/docs/detectors/PLCOPEN-CP3
 
-Supported input formats:
-* Plain ST source code
-* [PLCOpen XML](https://plcopen.org/technical-activities/xml-exchange)
-* [SEL XML](https://selinc.com/products/3530/) (vendor-specific)
-
-If `iec-checker` chokes on Structured Text extensions from your PLC vendor, please [open an issue](https://github.com/jubnzv/iec-checker/issues/new). Adding new dialects is usually a small parser change.
+PLCOPEN-CP13: POUs shall not call themselves directly or indirectly
+  --> program.st:8:30
+  See: https://iec-checker.github.io/docs/detectors/PLCOPEN-CP13
+```
 
 ## Features
 
-### PLCOpen Guidelines coverage
+- 13 [PLCOpen Software Construction Guidelines](https://iec-checker.github.io/docs/detectors/plcopen-overview) checks
+- Declaration analysis, unreachable code detection, unused variable detection
+- Structured Text, [PLCOpen XML](https://plcopen.org/technical-activities/xml-exchange), and [SEL XML](https://selinc.com/products/3530/) input formats
+- JSON output for [CI/CD integration](https://iec-checker.github.io/docs/ci-cd) and [Python tooling](https://iec-checker.github.io/docs/python)
 
-The following [PLCOpen Guidelines](https://plcopen.org/software-construction-guidelines) checks are supported:
-- CP1: Access to a member shall be by name
-- CP2: All code shall be used in the application
-- CP3: All variables shall be initialized before being used
-- CP4: Direct addressing should not overlap
-- CP6: Avoid external variables in functions, function blocks and classes
-- CP8: Floating point comparison shall not be equality or inequality
-- CP9: Limit the complexity of POU code
-- CP13: POUs shall not call themselves directly or indirectly
-- CP25: Data type conversion should be explicit
-- CP28: Time and physical measures comparisons shall not be equality or inequality
-- L10: Usage of `CONTINUE` and `EXIT` instruction should be avoided
-- L17: Each IF instruction should have an `ELSE` clause
-- N3: Define the names to avoid
-
-### Additional features
-- Declaration analysis for derived types
-- Intraprocedural control flow analysis: detection of unreachable code blocks inside [POUs](https://en.wikipedia.org/wiki/IEC_61131-3#Program_organization_unit_(POU))
-- Detection of unused variables
-- JSON output for tool integration: dump the IR with `--dump` and emit warnings via `--output-format json`
-- Python plugin support — see [cfg_plotter.py](./src/python/plugins/cfg_plotter.py), which plots the control flow graph
+The ST dialect is compatible with the [matiec](https://github.com/sm1820/matiec) compiler. If `iec-checker` chokes on extensions from your PLC vendor, please [open an issue](https://github.com/jubnzv/iec-checker/issues/new).
 
 ## Installation
 
-You can download the latest binary release for Linux and Windows x86_64 from [GitHub releases](https://github.com/jubnzv/iec-checker/releases).
+Download a prebuilt binary for Linux or Windows x86_64 from [GitHub releases](https://github.com/jubnzv/iec-checker/releases).
 
-### Build from sources
+### Build from source
 
-#### Linux
-
-Install [OCaml](https://ocaml.org/docs/install.html) 5.1 or later and [opam](https://opam.ocaml.org/doc/Install.html).
-
-Then install the required dependencies:
+Requires [OCaml](https://ocaml.org/docs/install.html) 5.1+ and [opam](https://opam.ocaml.org/doc/Install.html).
 
 ```bash
-opam install --deps-only .    # first time only
+opam install --deps-only .
+make
 ```
 
-Build and install the `bin/iec_checker` binary:
+See the [installation guide](https://iec-checker.github.io/docs/installation) for Windows instructions and optional Python setup.
+
+## Usage
 
 ```bash
-make build
+iec_checker test/st/*.st          # check ST files
+iec_checker -i xml schemes/*.xml  # check PLCOpen XML
+iec_checker --help                # all options
 ```
 
-#### Windows
-
-Install [OCaml for Windows](https://fdopen.github.io/opam-repository-mingw/) according to the [installation guide](https://fdopen.github.io/opam-repository-mingw/installation/). The graphical installer works well out of the box.
-
-Then open the Cygwin shell, clone the repository, and follow the Linux instructions above.
-
-### Optional: Python scripts and test suite
-The [checker.py](./checker.py) script wraps the OCaml binary and adds extras like extended formatting and Python plugin support. The test suite is also written in Python and needs a few extra packages.
-
-Get [Python 3](https://www.python.org/downloads/) and install dependencies into a [virtual environment](https://docs.python.org/3/library/venv.html):
-```bash
-virtualenv venv --python=/usr/bin/python3
-source venv/bin/activate
-pip3 install -r requirements.txt
-pip3 install -r requirements-dev.txt
-```
-
-Then run unit tests:
-```bash
-make test
-```
-
-## Usage examples
-
-Check the demo programs:
-
-```
-bin/iec_checker test/st/*.st
-```
-
-Pass `--help` for the full list of options.
+See the [CLI reference](https://iec-checker.github.io/docs/cli) for the full option list, output formats, and exit codes.
