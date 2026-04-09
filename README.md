@@ -3,7 +3,7 @@
 > 💡 **Note:** `iec-checker` is an open-source project that can be extended for your needs. I take on funded work to add things like:
 >
 > - **New language support** — Structured Text extensions used by your specific PLC vendor, or other IEC 61131-3 languages (IL, FBD, LD, SFC)
-> - **Additional safety standards** — checks beyond the PLCOpen Guidelines already implemented
+> - **Additional safety standards** — checks beyond the PLCOpen Guidelines
 > - **Custom detectors and checks** — adding new custom analyses for a specific project
 >
 > 📩 **Contact:** [jubnzv@gmail.com](mailto:jubnzv@gmail.com)
