@@ -30,7 +30,6 @@ let registered_detectors : Detector.t list = [
   Plcopen_l10.detector;
   Plcopen_l17.detector;
   Plcopen_n3.detector;
-  Zerodiv.detector;
 ]
 
 let run_all_checks elements envs cfgs quiet =

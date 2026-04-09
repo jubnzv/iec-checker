@@ -16,6 +16,7 @@
 - Integrate `codespell` to the CI and fix errors found (#29)
 - Uniform `Detector` API (#27)
 - CLI option `--list-checks` (#28)
+- Nuke `ZeroDiv` check
 
 ## 0.4.0 (2022-02-26)
 
