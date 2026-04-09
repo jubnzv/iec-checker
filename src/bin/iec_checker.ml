@@ -162,14 +162,22 @@ let merge_files paths out_path =
 
 (** [run_checker] Run program on the file with [path] and returns the
     error code. *)
-let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : bool) : int =
+let doc_urls =
+  List.map Lib.registered_detectors ~f:(fun d ->
+    (d.Detector.id, d.Detector.doc_url))
+
+let stamp_file path ws =
+  List.map ws ~f:(fun w ->
+    if String.is_empty w.W.file then { w with W.file = path } else w)
+
+let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : bool) use_color : int =
   let (read_stdin : bool) = (String.equal "-" path) || (String.is_empty path) in
   if (not read_stdin && not (Stdlib.Sys.file_exists path)) then
     let err =
       W.mk_internal ~id:"FileNotFoundError"
         (Printf.sprintf "File %s doesn't exists" path)
     in
-    WO.print_report [err] out_fmt;
+    WO.print_report ~use_color [err] out_fmt;
     ReturnCode.not_found
   else
     let results_opt =
@@ -192,12 +200,12 @@ let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : b
         let unused_warns = Unused_variable.run elements in
         let ud_warns = Use_define.run elements in
         let lib_warns = Lib.run_all_checks elements envs cfgs (not verbose) in
-        WO.print_report (
-          parser_warns @
-          decl_warns @
-          unused_warns @
-          ud_warns @
-          lib_warns)
+        WO.print_report ~doc_urls ~use_color (
+          stamp_file path parser_warns @
+          stamp_file path decl_warns @
+          stamp_file path unused_warns @
+          stamp_file path ud_warns @
+          stamp_file path lib_warns)
           out_fmt;
         if List.is_empty parser_warns then ReturnCode.ok else ReturnCode.fail
       end
@@ -307,6 +315,13 @@ let () =
       false
   in
 
+  let no_color =
+    Clap.flag
+      ~set_long: "no-color"
+      ~description: "Disable colored output."
+      false
+  in
+
   let list_checks =
     Clap.flag
       ~set_long: "list-checks"
@@ -338,6 +353,7 @@ let () =
   end
 
   else
+      let use_color = not no_color in
       let paths' = collect_paths paths input_format in
       (* Disable the merge option if there is only one input file. *)
       let m = if m && phys_equal 1 (List.length paths') then false else m in
@@ -347,13 +363,13 @@ let () =
           remove_file merged_file_path;
           create_file merged_file_path;
           merge_files paths merged_file_path;
-          let rc = run_checker merged_file_path input_format output_format d m v i in
+          let rc = run_checker merged_file_path input_format output_format d m v i use_color in
           remove_file merged_file_path;
           phys_equal rc ReturnCode.ok)
         else (
           (* Run the checker for each file and collect all the warnings. *)
           List.fold_left paths'
-            ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d m v i])
+            ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d m v i use_color])
             ~init:[]
           |> List.for_all ~f:(phys_equal ReturnCode.ok))
       in

@@ -17,6 +17,8 @@
 - Uniform `Detector` API (#27)
 - CLI option `--list-checks` (#28)
 - Nuke `ZeroDiv` check
+- Improve warnings output format (#30)
+- Add `--no-color` CLI option (#30)
 
 ## 0.4.0 (2022-02-26)
 
