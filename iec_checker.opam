@@ -6,7 +6,7 @@ maintainer: ["Georgiy Komarov <jubnzv@gmail.com>"]
 authors: ["Georgiy Komarov"]
 license: "LGPL-3.0-or-later"
 homepage: "https://github.com/jubnzv/iec-checker"
-doc: "https://jubnzv.github.io/iec-checker"
+doc: "https://iec-checker.github.io/"
 bug-reports: "https://github.com/jubnzv/iec-checker/issues"
 depends: [
   "dune" {>= "2.0"}
