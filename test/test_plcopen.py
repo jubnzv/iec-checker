@@ -93,11 +93,8 @@ def test_l17():
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker([f])
     assert rc == 0
-    assert len(checker_warnings) >= 1
-    cv = checker_warnings[1]
-    assert cv.id == 'PLCOPEN-L17'
-    assert cv.linenr == 10
-    assert cv.column == 4
+    l17_warns = filter_warns(checker_warnings, 'PLCOPEN-L17')
+    assert any(w.linenr == 10 and w.column == 4 for w in l17_warns)
     with DumpManager(fdump):
         pass
 
@@ -107,11 +104,8 @@ def test_n3():
     fdump = f'{f}.dump.json'
     checker_warnings, rc = run_checker([f])
     assert rc == 0
-    assert len(checker_warnings) >= 1
-    cv = checker_warnings[5]
-    assert cv.id == 'PLCOPEN-N3'
-    assert cv.linenr == 6
-    assert cv.column == 7
+    n3_warns = filter_warns(checker_warnings, 'PLCOPEN-N3')
+    assert any(w.linenr == 6 and w.column == 7 for w in n3_warns)
     with DumpManager(fdump):
         pass
 

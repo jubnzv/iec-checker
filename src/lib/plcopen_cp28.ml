@@ -37,3 +37,12 @@ let do_check elems =
     ~init:[]
     elems
     ~f:(fun acc elem -> acc @ (check_elem elem))
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP28";
+  name = "Time and physical measures comparisons shall not be equality or inequality";
+  summary =
+    "Use range comparisons instead of [=] / [<>] when comparing [TIME] values.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP28";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

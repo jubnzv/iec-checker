@@ -20,3 +20,11 @@ let do_check elems =
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
       match w with Some w -> w | None -> assert false)
+
+let detector : Detector.t = {
+  id = "PLCOPEN-L17";
+  name = "Each IF instruction should have an ELSE clause";
+  summary = "Every [IF] should explicitly handle the [ELSE] case.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-L17";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

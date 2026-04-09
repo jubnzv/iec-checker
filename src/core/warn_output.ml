@@ -7,19 +7,11 @@ type output_format =
 
 let print_report warnings fmt =
   match fmt with
-  | Plain -> begin
-      List.fold_left warnings
-        ~f:(fun acc w -> acc @ [W.to_string w])
-        ~init:[]
-      |> String.concat ~sep:"\n"
-      |> Printf.printf "%s\n"
-    end
-  | Json -> begin
-      let json_list =
-        List.fold_left warnings
-          ~f:(fun out w -> (W.to_yojson w) :: out)
-          ~init:[]
-      in
-      Yojson.Safe.to_string (`List json_list)
-      |> Printf.printf "%s\n"
-    end
+  | Plain ->
+    List.map warnings ~f:W.to_string
+    |> String.concat ~sep:"\n"
+    |> Printf.printf "%s\n"
+  | Json ->
+    let json_list = List.map warnings ~f:W.to_yojson in
+    Yojson.Safe.to_string (`List json_list)
+    |> Printf.printf "%s\n"

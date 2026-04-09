@@ -38,3 +38,11 @@ let do_check elems =
   List.fold_left elems ~init:[] ~f:(fun acc elem -> acc @ (AU.get_pou_exprs elem))
   |> List.map ~f:(fun exprs -> collect_warnings exprs)
   |> list_flatten
+
+let detector : Detector.t = {
+  id = "ZeroDivision";
+  name = "Division by zero";
+  summary = "Reject expressions that divide by a literal zero.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/ZeroDivision";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

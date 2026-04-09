@@ -36,3 +36,12 @@ let do_check elems =
     ~init:[]
     elems
     ~f:(fun acc elem -> acc @ (check_elem elem))
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP8";
+  name = "Floating point comparison shall not be equality or inequality";
+  summary =
+    "Use a tolerance instead of [=] or [<>] when comparing [REAL] values.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP8";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

@@ -39,3 +39,11 @@ let find_unreachable_blocks (cfgs : Cfg.t list) : (Warn.t list) =
 let do_check (cfgs : Cfg.t list) : Warn.t list =
   (* List.iter cfgs ~f:(fun c -> Printf.printf "%s\n" (Cfg.to_string c)); *)
   (find_unreachable_blocks cfgs)
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP2";
+  name = "All code shall be used in the application";
+  summary = "Unreachable code reflects a logic mistake and should be removed.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP2";
+  check = (fun (i : Detector.inputs) -> do_check i.cfgs);
+}

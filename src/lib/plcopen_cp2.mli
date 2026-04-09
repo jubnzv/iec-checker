@@ -2,3 +2,4 @@
 open IECCheckerCore
 module S = Syntax
 val do_check : Cfg.t list -> Warn.t list
+val detector : Detector.t

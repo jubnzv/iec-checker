@@ -26,9 +26,10 @@ def test_use_define_array():
     assert len(warns) >= 3
     ws = filter_warns(warns, 'OutOfBounds')
     assert len(ws) == 3
-    assert "index 0 is out" in ws[0].msg
-    assert "index 3 is out" in ws[1].msg
-    assert "addressed to 2 dimension" in ws[2].msg
+    msgs = [w.msg for w in ws]
+    assert any("index 0 is out" in m for m in msgs)
+    assert any("index 3 is out" in m for m in msgs)
+    assert any("addressed to 2 dimension" in m for m in msgs)
     with DumpManager(fdump) as dm:
         scheme = dm.scheme
         assert scheme

@@ -57,3 +57,12 @@ let do_check elems envs =
           in
           acc @ check_pou pou env
         end)
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP25";
+  name = "Data type conversion should be explicit";
+  summary =
+    "Implicit casts between integer and floating-point types are forbidden.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP25";
+  check = (fun (i : Detector.inputs) -> do_check i.elements i.envs);
+}

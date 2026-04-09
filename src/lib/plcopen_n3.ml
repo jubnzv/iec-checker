@@ -194,3 +194,13 @@ let do_check elems =
   |> List.filter ~f:(fun w -> match w with Some _ -> true | None -> false)
   |> List.map ~f:(fun w ->
       match w with Some w -> w | None -> assert false)
+
+let detector : Detector.t = {
+  id = "PLCOPEN-N3";
+  name = "Define the names to avoid";
+  summary =
+    "Variable names must not collide with IEC 61131-3 keywords or standard \
+     library identifiers.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-N3";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

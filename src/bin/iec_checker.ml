@@ -205,6 +205,19 @@ let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : b
 let create_file path =
   Out_channel.create ~perm:0o755 path |> Out_channel.close_no_err
 
+(** Print every registered detector to stdout, one per line, padded for
+    readability. Used by [--list-checks]. *)
+let print_list_checks () =
+  let detectors = Lib.registered_detectors in
+  let id_width =
+    List.fold_left detectors ~init:0 ~f:(fun acc d ->
+      Int.max acc (String.length d.Detector.id))
+  in
+  List.iter detectors ~f:(fun d ->
+    Printf.printf "%-*s  %s\n" id_width d.Detector.id d.Detector.name);
+  Printf.printf "\n%d detector(s). See <https://iec-checker.github.io/docs/detectors/> for details.\n"
+    (List.length detectors)
+
 let () =
   Clap.description "Static analysis of IEC 61131-3 programs ";
 
@@ -294,6 +307,15 @@ let () =
       false
   in
 
+  let list_checks =
+    Clap.flag
+      ~set_long: "list-checks"
+      ~description:
+        "List every registered detector (id and human-readable name) and exit. \
+         No input files are required."
+      false
+  in
+
   let paths =
     Clap.list_string
       ~description:
@@ -303,6 +325,11 @@ let () =
   in
 
   Clap.close ();
+
+  if list_checks then begin
+    print_list_checks ();
+    exit ReturnCode.ok
+  end;
 
   if List.is_empty paths then begin
     Printf.eprintf "No input files!\n\n";

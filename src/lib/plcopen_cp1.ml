@@ -60,3 +60,12 @@ let do_check elems =
     elems
     ~init:[]
     ~f:(fun acc elem -> acc @ (check_elem elem))
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP1";
+  name = "Access to a member shall be by name";
+  summary =
+    "Direct addressing should not be used when a symbolic name exists.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP1";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

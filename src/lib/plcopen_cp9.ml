@@ -33,3 +33,12 @@ let do_check elems cfgs =
     ~init:[]
     ~f:(fun acc elem -> acc @ (get_statements_num_violations elem))
 
+let detector : Detector.t = {
+  id = "PLCOPEN-CP9";
+  name = "Limit the complexity of POU code";
+  summary =
+    "POUs that exceed McCabe or statement-count thresholds should be split.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP9";
+  check = (fun (i : Detector.inputs) -> do_check i.elements i.cfgs);
+}
+

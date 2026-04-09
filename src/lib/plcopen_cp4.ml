@@ -115,3 +115,12 @@ let check_elem elem =
 
 let do_check elems =
   List.fold_left elems ~init:[] ~f:(fun acc elem -> acc @ (check_elem elem))
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP4";
+  name = "Direct addressing should not overlap";
+  summary =
+    "Two directly-addressed variables must not occupy overlapping memory.";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP4";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}

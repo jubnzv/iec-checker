@@ -26,3 +26,13 @@ let check_elem elem =
 
 let do_check elems =
   List.fold_left elems ~init:[] ~f:(fun acc elem -> acc @ (check_elem elem))
+
+let detector : Detector.t = {
+  id = "PLCOPEN-CP6";
+  name = "Avoid external variables in functions, function blocks and classes";
+  summary =
+    "Functions, function blocks and classes should not depend on global state \
+     via [VAR_EXTERNAL].";
+  doc_url = "https://iec-checker.github.io/docs/detectors/PLCOPEN-CP6";
+  check = (fun (i : Detector.inputs) -> do_check i.elements);
+}
