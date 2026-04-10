@@ -635,8 +635,8 @@ let real_type_name :=
 let string_type_name :=
   | T_STRING; l = string_type_length; { Syntax.STRING(l) }
   | T_WSTRING; l = string_type_length; { Syntax.WSTRING(l) }
-  | T_STRING; { Syntax.STRING(Config.max_string_len) }
-  | T_WSTRING; { Syntax.WSTRING(Config.max_string_len) }
+  | T_STRING; { Syntax.STRING(Config.max_string_len ()) }
+  | T_WSTRING; { Syntax.WSTRING(Config.max_string_len ()) }
   | T_CHAR; { Syntax.CHAR(1) }
   | T_WCHAR; { Syntax.WCHAR(1) }
 

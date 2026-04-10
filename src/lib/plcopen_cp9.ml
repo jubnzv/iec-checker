@@ -8,7 +8,7 @@ module CC = Cyclomatic_complexity
 
 let get_mccabe_violations cfg =
   let cc = CC.eval_mccabe cfg in
-  if cc > Config.mccabe_complexity_threshold then
+  if cc > Config.mccabe_complexity_threshold () then
     let msg = Printf.sprintf "Code is too complex (%d McCabe complexity)" cc in
     let w = Warn.mk 0 0 "PLCOPEN-CP9" msg in
     [w]
@@ -16,7 +16,7 @@ let get_mccabe_violations cfg =
 
 let get_statements_num_violations elem =
   let stmts_num = AU.get_stmts_num elem in
-  if stmts_num > Config.statements_num_threshold then
+  if stmts_num > Config.statements_num_threshold () then
     let msg = Printf.sprintf "Code is too complex (%d statements)" stmts_num  in
     let w = Warn.mk 0 0 "PLCOPEN-CP9" msg in
     [w]

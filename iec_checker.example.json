@@ -1,0 +1,11 @@
+{
+  "detectors": { "disabled": [], "enabled": [] },
+  "thresholds": {
+    "mccabe_complexity": 15,
+    "statements_count": 25,
+    "max_string_length": 4096
+  },
+  "output": { "format": "plain", "color": true },
+  "input": { "format": "st", "merge": false, "exclude_paths": [] },
+  "analysis": { "dump": false, "verbose": false }
+}

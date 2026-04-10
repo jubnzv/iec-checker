@@ -32,8 +32,15 @@ let registered_detectors : Detector.t list = [
   Plcopen_n3.detector;
 ]
 
+let detector_enabled (cfg : IECCheckerCore.Config.t) (d : Detector.t) =
+  match cfg.enabled_detectors with
+  | _ :: _ as ids -> List.mem ids d.id ~equal:String.equal
+  | [] -> not (List.mem cfg.disabled_detectors d.id ~equal:String.equal)
+
 let run_all_checks elements envs cfgs quiet =
+  let cfg = IECCheckerCore.Config.get () in
+  let detectors = List.filter registered_detectors ~f:(detector_enabled cfg) in
   if not quiet then
     List.iter elements ~f:(fun e -> print_element e);
   let inputs = Detector.{ elements; envs; cfgs } in
-  List.concat_map registered_detectors ~f:(fun d -> d.check inputs)
+  List.concat_map detectors ~f:(fun d -> d.check inputs)

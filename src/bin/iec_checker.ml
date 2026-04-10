@@ -115,6 +115,17 @@ let get_files_to_check paths in_fmt =
     ~init:[]
     ~f:(fun acc p -> acc @ walkthrough_directory p suffix)
 
+(** Apply [exclude_paths] globs from the configuration to filter out files. *)
+let apply_exclude_paths paths =
+  let cfg = Config.get () in
+  match cfg.exclude_paths with
+  | [] -> paths
+  | pats ->
+    let exclude_res = List.map pats ~f:(fun pat ->
+      Re.compile (Re.Glob.glob pat)) in
+    List.filter paths ~f:(fun p ->
+      not (List.exists exclude_res ~f:(fun re -> Re.execp re p)))
+
 (** Collects paths to files that should be parsed.
     If there are directories among [paths], this functions recursively
     traverses them and collects nested files there. *)
@@ -122,7 +133,7 @@ let collect_paths paths in_fmt =
   if List.exists paths ~f:(fun p -> String.equal p "-") then
     ["-"]
   else
-    get_files_to_check paths in_fmt
+    get_files_to_check paths in_fmt |> apply_exclude_paths
 
 (** [start_repl] Start the iec-checker REPL. *)
 let start_repl interactive =
@@ -160,6 +171,13 @@ let merge_files paths out_path =
     Out_channel.output_string oc (In_channel.read_all path));
   Out_channel.close_no_err oc
 
+(** Check whether an analysis pass is enabled in the current configuration. *)
+let pass_enabled id =
+  let cfg = Config.get () in
+  match cfg.enabled_detectors with
+  | _ :: _ as ids -> List.mem ids id ~equal:String.equal
+  | [] -> not (List.mem cfg.disabled_detectors id ~equal:String.equal)
+
 (** [run_checker] Run program on the file with [path] and returns the
     error code. *)
 let doc_urls =
@@ -196,9 +214,15 @@ let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : b
           in
           let dst_file = Printf.sprintf "%s.dump.json" src_file in
           Dump.create_dump ~dst_file elements envs cfgs);
-        let decl_warns = Declaration_analysis.run elements envs in
-        let unused_warns = Unused_variable.run elements in
-        let ud_warns = Use_define.run elements in
+        let decl_warns =
+          if pass_enabled "DeclarationAnalysis"
+          then Declaration_analysis.run elements envs else [] in
+        let unused_warns =
+          if pass_enabled "UnusedVariable"
+          then Unused_variable.run elements else [] in
+        let ud_warns =
+          if pass_enabled "UseDefine"
+          then Use_define.run elements else [] in
         let lib_warns = Lib.run_all_checks elements envs cfgs (not verbose) in
         WO.print_report ~doc_urls ~use_color (
           stamp_file path parser_warns @
@@ -213,24 +237,95 @@ let run_checker path in_fmt out_fmt create_dumps merged verbose (interactive : b
 let create_file path =
   Out_channel.create ~perm:0o755 path |> Out_channel.close_no_err
 
+(** Built-in analysis passes (not in the detector registry). *)
+let builtin_passes = [
+  ("DeclarationAnalysis", "Check variable declarations");
+  ("UnusedVariable",      "Detect unused local variables");
+  ("UseDefine",           "Use-define chain analysis (array bounds)");
+]
+
 (** Print every registered detector to stdout, one per line, padded for
     readability. Used by [--list-checks]. *)
 let print_list_checks () =
   let detectors = Lib.registered_detectors in
-  let id_width =
-    List.fold_left detectors ~init:0 ~f:(fun acc d ->
-      Int.max acc (String.length d.Detector.id))
+  let all_ids =
+    List.map detectors ~f:(fun d -> (d.Detector.id, d.Detector.name))
+    @ builtin_passes
   in
-  List.iter detectors ~f:(fun d ->
-    Printf.printf "%-*s  %s\n" id_width d.Detector.id d.Detector.name);
-  Printf.printf "\n%d detector(s). See <https://iec-checker.github.io/docs/detectors/> for details.\n"
-    (List.length detectors)
+  let id_width =
+    List.fold_left all_ids ~init:0 ~f:(fun acc (id, _) ->
+      Int.max acc (String.length id))
+  in
+  List.iter all_ids ~f:(fun (id, name) ->
+    Printf.printf "%-*s  %s\n" id_width id name);
+  Printf.printf "\n%d check(s). See <https://iec-checker.github.io/docs/detectors/> for details.\n"
+    (List.length all_ids)
+
+(** Parse the input format string into [input_format_ty]. *)
+let parse_input_format s =
+  match s with
+  | s when String.equal "st" s -> InputST
+  | s when String.equal "xml" s -> InputXML
+  | s when String.equal "selxml" s -> InputSELXML
+  | s ->
+    Printf.eprintf "Unknown input format '%s'.\n" s;
+    Printf.eprintf "Available formats: 'st', 'xml' and 'selxml'\n";
+    exit ReturnCode.fail
+
+(** Parse the output format string into [WO.output_format]. *)
+let parse_output_format s =
+  match s with
+  | s when String.equal "plain" s -> WO.Plain
+  | s when String.equal "json" s -> WO.Json
+  | s ->
+    Printf.eprintf "Unknown output format '%s'. Supported: 'plain' and 'json'.\n" s;
+    exit ReturnCode.fail
+
+(** Load configuration from file (explicit path or auto-discovery) and merge
+    with CLI overrides.  Returns the final [Config.t]. *)
+let load_and_merge_config ~config_path ~cli_input_format ~cli_output_format
+    ~cli_dump ~cli_merge ~cli_verbose ~cli_no_color =
+  (* 1. Load base config *)
+  let base = match config_path with
+    | Some path -> begin
+        match Config.load_file path with
+        | Ok c -> c
+        | Error msg ->
+          Printf.eprintf "Error: %s\n" msg;
+          exit ReturnCode.fail
+      end
+    | None -> begin
+        match Config.find_config_file (Stdlib.Sys.getcwd ()) with
+        | Some path -> begin
+            match Config.load_file path with
+            | Ok c -> c
+            | Error msg ->
+              Printf.eprintf "Error: %s\n" msg;
+              exit ReturnCode.fail
+          end
+        | None -> Config.default
+      end
+  in
+  (* 2. Override with explicitly-provided CLI args *)
+  let c = match cli_input_format with
+    | Some s -> { base with input_format = s }
+    | None -> base
+  in
+  let c = match cli_output_format with
+    | Some s -> { c with output_format = s }
+    | None -> c
+  in
+  let c = if cli_dump then { c with dump = true } else c in
+  let c = if cli_merge then { c with merge = true } else c in
+  let c = if cli_verbose then { c with verbose = true } else c in
+  let c = if cli_no_color then { c with use_color = false } else c in
+  c
 
 let () =
   Clap.description "Static analysis of IEC 61131-3 programs ";
 
-  let in_str =
-    Clap.default_string
+  let cli_input_format =
+    Clap.optional_string
       ~short: 'i'
       ~long: "input-format"
       ~description:
@@ -239,35 +334,29 @@ let () =
           + xml - PLCOpen XML
           + selxml - Schweitzer Engineering Laboratories XML"
       ~placeholder: "INPUT_FORMAT"
-      "st"
-  in
-  let input_format = match in_str with
-    | s when String.equal "st" s -> InputST
-    | s when String.equal "xml" s -> InputXML
-    | s when String.equal "selxml" s -> InputSELXML
-    | s -> begin
-        Printf.eprintf "Unknown input format '%s'.\n" s;
-        Printf.eprintf "Available formats: 'st', 'xml' and 'selxml'\n";
-        exit ReturnCode.fail
-      end
+      ()
   in
 
-  let of_str =
-    Clap.default_string
+  let cli_output_format =
+    Clap.optional_string
       ~short: 'o'
       ~long: "output-format"
       ~description:
         "Output format for the checker messages. Supported formats: 'plain' and 'json'."
       ~placeholder: "OUTPUT_FORMAT"
-      "plain"
+      ()
   in
-  let output_format = match of_str with
-    | s when String.equal "plain" s -> WO.Plain
-    | s when String.equal "json" s -> WO.Json
-    | s -> begin
-        Printf.eprintf "Unknown output format '%s'. Supported: 'plain' and 'json'.\n" s;
-        exit ReturnCode.fail
-      end
+
+  let config_path =
+    Clap.optional_string
+      ~short: 'c'
+      ~long: "config"
+      ~description:
+        "Path to configuration file (iec_checker.json). \
+         If not specified, iec-checker looks for iec_checker.json in the current \
+         directory and its parents."
+      ~placeholder: "CONFIG_FILE"
+      ()
   in
 
   let d =
@@ -331,6 +420,22 @@ let () =
       false
   in
 
+  let dump_config =
+    Clap.flag
+      ~set_long: "dump-config"
+      ~description:
+        "Print the effective configuration as JSON and exit."
+      false
+  in
+
+  let generate_config =
+    Clap.flag
+      ~set_long: "generate-config"
+      ~description:
+        "Write a default iec_checker.json to the current directory and exit."
+      false
+  in
+
   let paths =
     Clap.list_string
       ~description:
@@ -341,10 +446,49 @@ let () =
 
   Clap.close ();
 
+  (* --generate-config: write defaults and exit *)
+  if generate_config then begin
+    let oc = Out_channel.create "iec_checker.json" in
+    let json = Config.to_yojson Config.default in
+    Yojson.Safe.pretty_to_channel oc json;
+    Out_channel.output_char oc '\n';
+    Out_channel.close oc;
+    exit ReturnCode.ok
+  end;
+
+  (* --list-checks: print detectors and exit *)
   if list_checks then begin
     print_list_checks ();
     exit ReturnCode.ok
   end;
+
+  (* Load and merge configuration *)
+  let cfg = load_and_merge_config
+    ~config_path
+    ~cli_input_format
+    ~cli_output_format
+    ~cli_dump:d
+    ~cli_merge:m
+    ~cli_verbose:v
+    ~cli_no_color:no_color
+  in
+  Config.set cfg;
+
+  (* --dump-config: print effective config and exit *)
+  if dump_config then begin
+    Config.to_yojson (Config.get ())
+    |> Yojson.Safe.pretty_to_string
+    |> print_endline;
+    exit ReturnCode.ok
+  end;
+
+  (* Resolve effective values from merged config *)
+  let input_format = parse_input_format cfg.input_format in
+  let output_format = parse_output_format cfg.output_format in
+  let use_color = cfg.use_color in
+  let create_dumps = cfg.dump in
+  let verbose = cfg.verbose in
+  let do_merge = cfg.merge in
 
   if List.is_empty paths then begin
     Printf.eprintf "No input files!\n\n";
@@ -353,23 +497,22 @@ let () =
   end
 
   else
-      let use_color = not no_color in
       let paths' = collect_paths paths input_format in
       (* Disable the merge option if there is only one input file. *)
-      let m = if m && phys_equal 1 (List.length paths') then false else m in
+      let do_merge = if do_merge && phys_equal 1 (List.length paths') then false else do_merge in
       let success =
-        if m then (
+        if do_merge then (
           (* Merge all the input files to the single file and analyze it. *)
           remove_file merged_file_path;
           create_file merged_file_path;
           merge_files paths merged_file_path;
-          let rc = run_checker merged_file_path input_format output_format d m v i use_color in
+          let rc = run_checker merged_file_path input_format output_format create_dumps do_merge verbose i use_color in
           remove_file merged_file_path;
           phys_equal rc ReturnCode.ok)
         else (
           (* Run the checker for each file and collect all the warnings. *)
           List.fold_left paths'
-            ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format d m v i use_color])
+            ~f:(fun return_codes f -> return_codes @ [run_checker f input_format output_format create_dumps do_merge verbose i use_color])
             ~init:[]
           |> List.for_all ~f:(phys_equal ReturnCode.ok))
       in
