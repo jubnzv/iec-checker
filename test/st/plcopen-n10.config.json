@@ -1,0 +1,10 @@
+{
+  "detectors": { "enabled": ["PLCOPEN-N10"] },
+  "naming_conventions": {
+    "udt_prefixes": {
+      "ENUM": "E_",
+      "STRUCT": "ST_",
+      "FUNCTION_BLOCK": "FB_"
+    }
+  }
+}

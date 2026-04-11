@@ -18,6 +18,14 @@ type t = {
   exclude_paths      : string list;
   dump               : bool;
   verbose            : bool;
+  naming_type_prefixes : (string * string) list;
+  naming_case_variable : string option;
+  naming_case_constant : string option;
+  naming_case_pou      : string option;
+  naming_case_type     : string option;
+  naming_min_length    : int;
+  naming_max_length    : int;
+  naming_udt_prefixes  : (string * string) list;
 }
 
 let default = {
@@ -33,6 +41,14 @@ let default = {
   exclude_paths      = [];
   dump               = false;
   verbose            = false;
+  naming_type_prefixes = [];
+  naming_case_variable = None;
+  naming_case_constant = None;
+  naming_case_pou      = None;
+  naming_case_type     = None;
+  naming_min_length    = 0;
+  naming_max_length    = 0;
+  naming_udt_prefixes  = [];
 }
 
 (* Mutable global — set once in the binary entry point before analysis. *)
@@ -79,6 +95,17 @@ let string_list_field json key ~default:d =
   | Some v -> (match string_list_of_yojson v with Ok l -> l | Error _ -> d)
   | None -> d
 
+let string_map_field json key ~default:d =
+  match member key json with
+  | Some (`Assoc fs) ->
+    List.filter_map fs ~f:(function (k, `String v) -> Some (k, v) | _ -> None)
+  | _ -> d
+
+let string_opt_field json key =
+  match member key json with
+  | Some (`String s) -> Some s
+  | _ -> None
+
 (* ---------- Deserialization ---------------------------------------------- *)
 
 let of_yojson (json : Yojson.Safe.t) : (t, string) result =
@@ -88,6 +115,8 @@ let of_yojson (json : Yojson.Safe.t) : (t, string) result =
     let output     = Option.value (member "output"     json) ~default:`Null in
     let input      = Option.value (member "input"      json) ~default:`Null in
     let analysis   = Option.value (member "analysis"   json) ~default:`Null in
+    let naming     = Option.value (member "naming_conventions" json) ~default:`Null in
+    let naming_case = Option.value (member "case" naming) ~default:`Null in
     Ok {
       disabled_detectors = string_list_field detectors "disabled"  ~default:default.disabled_detectors;
       enabled_detectors  = string_list_field detectors "enabled"   ~default:default.enabled_detectors;
@@ -101,6 +130,14 @@ let of_yojson (json : Yojson.Safe.t) : (t, string) result =
       exclude_paths      = string_list_field input "exclude_paths" ~default:default.exclude_paths;
       dump               = bool_field analysis "dump"    ~default:default.dump;
       verbose            = bool_field analysis "verbose" ~default:default.verbose;
+      naming_type_prefixes = string_map_field naming "type_prefixes" ~default:default.naming_type_prefixes;
+      naming_case_variable = string_opt_field naming_case "variable";
+      naming_case_constant = string_opt_field naming_case "constant";
+      naming_case_pou      = string_opt_field naming_case "pou";
+      naming_case_type     = string_opt_field naming_case "type";
+      naming_min_length    = int_field naming "min_length" ~default:default.naming_min_length;
+      naming_max_length    = int_field naming "max_length" ~default:default.naming_max_length;
+      naming_udt_prefixes  = string_map_field naming "udt_prefixes" ~default:default.naming_udt_prefixes;
     }
   with exn ->
     Error (Printf.sprintf "Failed to parse configuration: %s" (Exn.to_string exn))
@@ -108,6 +145,10 @@ let of_yojson (json : Yojson.Safe.t) : (t, string) result =
 (* ---------- Serialization ------------------------------------------------ *)
 
 let to_yojson (c : t) : Yojson.Safe.t =
+  let string_map_to_json pairs =
+    `Assoc (List.map pairs ~f:(fun (k, v) -> (k, `String v)))
+  in
+  let opt_string o = match o with Some s -> `String s | None -> `Null in
   `Assoc [
     "detectors", `Assoc [
       "disabled", `List (List.map c.disabled_detectors ~f:(fun s -> `String s));
@@ -130,6 +171,18 @@ let to_yojson (c : t) : Yojson.Safe.t =
     "analysis", `Assoc [
       "dump",    `Bool c.dump;
       "verbose", `Bool c.verbose;
+    ];
+    "naming_conventions", `Assoc [
+      "type_prefixes", string_map_to_json c.naming_type_prefixes;
+      "case", `Assoc [
+        "variable", opt_string c.naming_case_variable;
+        "constant", opt_string c.naming_case_constant;
+        "pou",      opt_string c.naming_case_pou;
+        "type",     opt_string c.naming_case_type;
+      ];
+      "min_length", `Int c.naming_min_length;
+      "max_length", `Int c.naming_max_length;
+      "udt_prefixes", string_map_to_json c.naming_udt_prefixes;
     ];
   ]
 

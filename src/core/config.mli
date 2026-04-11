@@ -17,6 +17,16 @@ type t = {
   exclude_paths      : string list;
   dump               : bool;
   verbose            : bool;
+
+  (* Naming conventions; for PLCOpen-N detectors *)
+  naming_type_prefixes : (string * string) list;
+  naming_case_variable : string option;
+  naming_case_constant : string option;
+  naming_case_pou      : string option;
+  naming_case_type     : string option;
+  naming_min_length    : int;
+  naming_max_length    : int;
+  naming_udt_prefixes  : (string * string) list;
 }
 
 val default : t

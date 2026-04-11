@@ -19,6 +19,16 @@
 - Nuke `ZeroDiv` check
 - Improve warnings output format (#30)
 - Add `--no-color` CLI option (#30)
+- Add configuration file (#44)
+- lexer: Case-sensitive identifiers
+- Add `PLCOpen-N1` (#15)
+- Add `PLCOpen-N2` (#34)
+- Add `PLCOpen-N4` (#35)
+- Add `PLCOpen-N5` (#36)
+- Add `PLCOpen-N6` (#37)
+- Add `PLCOpen-N8` (#38)
+- Add `PLCOpen-N9` (#39)
+- Add `PLCOpen-N10` (#40)
 
 ## 0.4.0 (2022-02-26)
 

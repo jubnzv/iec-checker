@@ -286,7 +286,7 @@ rule initial tokinfo =
       keyword
       with Not_found -> begin
         (* Printf.printf "ID: %s\n" v; *)
-        T_IDENTIFIER(String.uppercase(v), (tokinfo lexbuf))
+        T_IDENTIFIER(String.uppercase(v), Tok_info.create_with_raw lexbuf v)
       end
   }
   (* }}} *)

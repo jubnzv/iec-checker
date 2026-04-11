@@ -1,0 +1,6 @@
+{
+  "detectors": { "enabled": ["PLCOPEN-N2"] },
+  "naming_conventions": {
+    "type_prefixes": { "INT": "i", "BOOL": "x", "REAL": "r" }
+  }
+}

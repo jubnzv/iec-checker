@@ -118,3 +118,83 @@ def test_cp9():
     assert len(filter_warns(warns, 'PLCOPEN-CP9')) == 2
     with DumpManager(fdump):
         pass
+
+
+def test_n1():
+    f = 'st/plcopen-n1.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N1')) == 1
+    with DumpManager(fdump):
+        pass
+
+
+def test_n2():
+    f = 'st/plcopen-n2.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f], args=['-c', 'st/plcopen-n2.config.json'])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N2')) == 2
+    with DumpManager(fdump):
+        pass
+
+
+def test_n4():
+    f = 'st/plcopen-n4.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f], args=['-c', 'st/plcopen-n4.config.json'])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N4')) == 2
+    with DumpManager(fdump):
+        pass
+
+
+def test_n5():
+    f = 'st/plcopen-n5.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N5')) == 1
+    with DumpManager(fdump):
+        pass
+
+
+def test_n6():
+    f = 'st/plcopen-n6.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f], args=['-c', 'st/plcopen-n6.config.json'])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N6')) == 2
+    with DumpManager(fdump):
+        pass
+
+
+def test_n8():
+    f = 'st/plcopen-n8.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N8')) == 0
+    with DumpManager(fdump):
+        pass
+
+
+def test_n9():
+    f = 'st/plcopen-n9.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N9')) == 2
+    with DumpManager(fdump):
+        pass
+
+
+def test_n10():
+    f = 'st/plcopen-n10.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f], args=['-c', 'st/plcopen-n10.config.json'])
+    assert rc == 0
+    assert len(filter_warns(warns, 'PLCOPEN-N10')) == 2
+    with DumpManager(fdump):
+        pass
