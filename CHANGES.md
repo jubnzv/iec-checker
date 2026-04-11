@@ -19,6 +19,8 @@
 - Nuke `ZeroDiv` check
 - Improve warnings output format (#30)
 - Add `--no-color` CLI option (#30)
+- Add configuration file (#44)
+- lexer: Case-sensitive identifiers
 
 ## 0.4.0 (2022-02-26)
 

@@ -1,6 +1,6 @@
 open Core
 
-type t = { id : int; linenr : int; col : int } [@@deriving yojson, show]
+type t = { id : int; linenr : int; col : int; raw : string } [@@deriving yojson, show]
 
 let next_id =
   let n = ref (-1) in
@@ -12,13 +12,17 @@ let create lexbuf =
   let id = next_id () in
   let linenr = lexbuf.Lexing.lex_curr_p.pos_lnum in
   let col = lexbuf.Lexing.lex_curr_p.pos_cnum - lexbuf.Lexing.lex_curr_p.pos_bol in
-  { id; linenr; col }
+  { id; linenr; col; raw = "" }
+
+let create_with_raw lexbuf raw =
+  let ti = create lexbuf in
+  { ti with raw }
 
 let create_dummy () =
   let id = next_id () in
   let linenr = -1 in
   let col = -1 in
-  { id; linenr; col }
+  { id; linenr; col; raw = "" }
 
 let to_string ti =
   Printf.sprintf "%d:%d" ti.linenr ti.col
