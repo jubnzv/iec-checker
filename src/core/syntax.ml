@@ -661,6 +661,47 @@ let ety_is_integer = function
 let ety_is_string = function
   | STRING _ | WSTRING _ | CHAR _ | WCHAR _ -> true
   | _ -> false
+
+let ety_to_string = function
+  | NIL -> "NIL"
+  | STRING _ -> "STRING"
+  | WSTRING _ -> "WSTRING"
+  | CHAR _ -> "CHAR"
+  | WCHAR _ -> "WCHAR"
+  | TIME -> "TIME"
+  | LTIME -> "LTIME"
+  | SINT -> "SINT"
+  | INT -> "INT"
+  | DINT -> "DINT"
+  | LINT -> "LINT"
+  | USINT -> "USINT"
+  | UINT -> "UINT"
+  | UDINT -> "UDINT"
+  | ULINT -> "ULINT"
+  | REAL -> "REAL"
+  | LREAL -> "LREAL"
+  | DATE -> "DATE"
+  | LDATE -> "LDATE"
+  | TIME_OF_DAY -> "TIME_OF_DAY"
+  | TOD -> "TOD"
+  | LTOD -> "LTOD"
+  | DATE_AND_TIME -> "DATE_AND_TIME"
+  | LDATE_AND_TIME -> "LDATE_AND_TIME"
+  | DT -> "DT"
+  | LDT -> "LDT"
+  | BOOL -> "BOOL"
+  | BYTE -> "BYTE"
+  | WORD -> "WORD"
+  | DWORD -> "DWORD"
+  | LWORD -> "LWORD"
+
+let dty_decl_spec_kind_to_string = function
+  | DTyDeclStructType _ -> "STRUCT"
+  | DTyDeclEnumType _ -> "ENUM"
+  | DTyDeclArrayType _ -> "ARRAY"
+  | DTyDeclSubrange _ -> "SUBRANGE"
+  | DTyDeclRefType _ -> "REF"
+  | DTyDeclSingleElement _ -> "ALIAS"
 (* }}} *)
 
 (* {{{ Configuration objects *)

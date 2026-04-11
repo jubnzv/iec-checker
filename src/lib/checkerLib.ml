@@ -29,7 +29,15 @@ let registered_detectors : Detector.t list = [
   Plcopen_cp28.detector;
   Plcopen_l10.detector;
   Plcopen_l17.detector;
+  Plcopen_n1.detector;
+  Plcopen_n2.detector;
   Plcopen_n3.detector;
+  Plcopen_n4.detector;
+  Plcopen_n5.detector;
+  Plcopen_n6.detector;
+  Plcopen_n8.detector;
+  Plcopen_n9.detector;
+  Plcopen_n10.detector;
 ]
 
 let detector_enabled (cfg : IECCheckerCore.Config.t) (d : Detector.t) =

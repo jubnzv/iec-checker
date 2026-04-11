@@ -7,5 +7,25 @@
   },
   "output": { "format": "plain", "color": true },
   "input": { "format": "st", "merge": false, "exclude_paths": [] },
-  "analysis": { "dump": false, "verbose": false }
+  "analysis": { "dump": false, "verbose": false },
+  "naming_conventions": {
+    "type_prefixes": {
+      "INT": "i",
+      "BOOL": "x",
+      "REAL": "r"
+    },
+    "case": {
+      "variable": "lowerCamelCase",
+      "constant": "UPPER_SNAKE_CASE",
+      "pou":      "UpperCamelCase",
+      "type":     "UpperCamelCase"
+    },
+    "min_length": 3,
+    "max_length": 25,
+    "udt_prefixes": {
+      "STRUCT":         "ST_",
+      "ENUM":           "E_",
+      "FUNCTION_BLOCK": "FB_"
+    }
+  }
 }

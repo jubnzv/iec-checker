@@ -440,6 +440,12 @@ val c_from_expr_exn : expr -> constant
 (* {{{ Elementary type helpers *)
 val ety_is_integer : elementary_ty -> bool
 val ety_is_string : elementary_ty -> bool
+val ety_to_string : elementary_ty -> string
+(** Printable IEC 61131-3 name of an elementary type (e.g. [INT -> "INT"]).
+    Length arguments on string-family types are dropped. *)
+
+val dty_decl_spec_kind_to_string : derived_ty_decl_spec -> string
+(** Printable kind of a derived-type declaration. *)
 (* }}} *)
 
 (* {{{ Configuration objects *)
