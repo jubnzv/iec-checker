@@ -1,0 +1,19 @@
+FUNCTION_BLOCK MyFB
+  VAR x : INT; END_VAR
+  x := 0;
+END_FUNCTION_BLOCK
+
+PROGRAM MyProgram
+  VAR y : INT; END_VAR
+  y := 0;
+END_PROGRAM
+
+CONFIGURATION config
+  RESOURCE res1 ON PLC
+    TASK Fast(INTERVAL := T#10ms, PRIORITY := 1);
+    TASK Slow(INTERVAL := T#100ms, PRIORITY := 2);
+    PROGRAM inst1 WITH Fast : MyProgram;
+    PROGRAM inst2 WITH Slow : MyFB;
+    PROGRAM inst3 : MyProgram;
+  END_RESOURCE
+END_CONFIGURATION

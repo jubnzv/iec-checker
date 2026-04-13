@@ -99,6 +99,50 @@ def test_l17():
         pass
 
 
+def test_cp16():
+    f = 'st/plcopen-cp16.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    cp16_warns = filter_warns(warns, 'PLCOPEN-CP16')
+    assert len(cp16_warns) == 1
+    with DumpManager(fdump):
+        pass
+
+
+def test_cp26():
+    f = 'st/plcopen-cp26.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    cp26_warns = filter_warns(warns, 'PLCOPEN-CP26')
+    assert len(cp26_warns) == 2
+    with DumpManager(fdump):
+        pass
+
+
+def test_l13():
+    f = 'st/plcopen-l13.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    l13_warns = filter_warns(warns, 'PLCOPEN-L13')
+    assert len(l13_warns) == 3
+    with DumpManager(fdump):
+        pass
+
+
+def test_l22():
+    f = 'st/plcopen-l22.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    l22_warns = filter_warns(warns, 'PLCOPEN-L22')
+    assert len(l22_warns) == 3
+    with DumpManager(fdump):
+        pass
+
+
 def test_n3():
     f = 'st/plcopen-n3.st'
     fdump = f'{f}.dump.json'

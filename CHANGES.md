@@ -28,6 +28,10 @@
 - Add `PLCOpen-N6` (#37)
 - Add `PLCOpen-N8` (#38)
 - Add `PLCOpen-N9` (#39)
+- Add `PLCOpen-CP16` (#47)
+- Add `PLCOpen-CP26` (#52)
+- Add `PLCOpen-L13` (#55)
+- Add `PLCOpen-L22` (#56)
 - Add `PLCOpen-N10` (#40)
 
 ## 0.4.0 (2022-02-26)

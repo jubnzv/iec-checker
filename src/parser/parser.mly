@@ -1645,16 +1645,17 @@ let data_source :=
   }
 
 let prog_config :=
-  | T_PROGRAM; ~ = prog_name_qual; T_COLON; prog_type_access; <>
-  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; prog_type_name;
-  { (Syntax.ProgramConfig.set_task pc t) }
-  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; prog_type_name; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
+  | T_PROGRAM; pc = prog_name_qual; T_COLON; tn = prog_type_access;
+  { Syntax.ProgramConfig.set_type_name pc tn }
+  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; tn = prog_type_name;
+  { Syntax.ProgramConfig.set_type_name (Syntax.ProgramConfig.set_task pc t) tn }
+  | T_PROGRAM; pc = prog_name_qual; T_WITH; t = task_name; T_COLON; tn = prog_type_name; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
   {
     let pc = Syntax.ProgramConfig.set_conn_vars pc cvs in
-    (Syntax.ProgramConfig.set_task pc t)
+    Syntax.ProgramConfig.set_type_name (Syntax.ProgramConfig.set_task pc t) tn
   }
-  | T_PROGRAM; pc = prog_name_qual; T_COLON; prog_type_access; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
-  { (Syntax.ProgramConfig.set_conn_vars pc cvs) }
+  | T_PROGRAM; pc = prog_name_qual; T_COLON; tn = prog_type_access; T_LBRACE; cvs = separated_list(T_COMMA, prog_conf_elem); T_RBRACE;
+  { Syntax.ProgramConfig.set_type_name (Syntax.ProgramConfig.set_conn_vars pc cvs) tn }
 
 (* Helper rule for prog_config *)
 let prog_config_list :=

@@ -747,13 +747,15 @@ module ProgramConfig = struct
     qual : qualifier option;
     task : Task.t option;
     conn_vars : VarUse.t list; (** Variables connected to program data flow. *)
+    type_name : string option; (** POU type name referenced in configuration. *)
   } [@@deriving to_yojson]
 
   let create name ti =
     let qual = None in
     let task = None in
     let conn_vars = [] in
-    { name; ti; qual; task; conn_vars }
+    let type_name = None in
+    { name; ti; qual; task; conn_vars; type_name }
 
   let set_qualifier pc q = { pc with qual = Some q }
 
@@ -761,7 +763,15 @@ module ProgramConfig = struct
 
   let set_conn_vars pc conn_vars = { pc with conn_vars }
 
+  let set_type_name pc tn = { pc with type_name = Some tn }
+
   let get_name t = t.name
+
+  let get_type_name t = t.type_name
+
+  let get_ti t = t.ti
+
+  let get_task t = t.task
 
   let to_yojson t = to_yojson t
 end

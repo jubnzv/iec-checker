@@ -492,8 +492,20 @@ module ProgramConfig : sig
   val set_conn_vars : t -> VarUse.t list -> t
   (** Set connected variables. *)
 
+  val set_type_name : t -> string -> t
+  (** Set POU type name referenced in configuration. *)
+
   val get_name : t -> string
   (** Get name of a program. *)
+
+  val get_type_name : t -> string option
+  (** Get POU type name referenced in configuration. *)
+
+  val get_ti : t -> TI.t
+  (** Get token info. *)
+
+  val get_task : t -> Task.t option
+  (** Get task configuration. *)
 
   val to_yojson : t -> Yojson.Safe.t
 end
