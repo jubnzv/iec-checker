@@ -20,7 +20,7 @@ PROGRAM l13
     x := j;
   END_FOR;
 
-  (* Case 3: Re-use as control var in subsequent FOR — no violation *)
+  (* Case 3: Reuse as control var in subsequent FOR — no violation *)
   FOR i := 0 TO 10 DO
     x := i;
   END_FOR;
