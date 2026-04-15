@@ -33,6 +33,7 @@
 - Add `PLCOpen-L13` (#55)
 - Add `PLCOpen-L22` (#56)
 - Add `PLCOpen-N10` (#40)
+- Parser/Lexer: show the problematic token and a source snippet for `ParserError`/`LexingError` (#58)
 
 ## 0.4.0 (2022-02-26)
 

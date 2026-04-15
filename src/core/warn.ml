@@ -9,14 +9,16 @@ type t = {
   file: string;
   id: string;
   msg: string;
+  context: string;
   ty: warn_ty [@key "type"];
 } [@@deriving yojson]
 
-let mk ?(ty=Inspection) ?(file="") linenr column id msg = { linenr; column; file; id; msg; ty }
+let mk ?(ty=Inspection) ?(file="") ?(context="") linenr column id msg =
+  { linenr; column; file; id; msg; context; ty }
 let mk_internal ?(id="InternalError") msg = mk ~ty:InternalError 0 0 id msg
-let mk_from_lexbuf (lexbuf : Lexing.lexbuf) id msg =
+let mk_from_lexbuf ?(context="") (lexbuf : Lexing.lexbuf) id msg =
   let pos = lexbuf.lex_curr_p in
-  mk ~file:(pos.pos_fname) pos.pos_lnum (pos.pos_cnum - pos.pos_bol) id msg
+  mk ~file:(pos.pos_fname) ~context pos.pos_lnum (pos.pos_cnum - pos.pos_bol) id msg
 
 let to_string w =
   match w.ty with

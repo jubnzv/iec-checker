@@ -22,6 +22,53 @@ def test_lexing_error():
         pass
 
 
+def test_lexing_error_context_snippet():
+    """LexingError must carry the offending source line and a caret."""
+    f = 'st/bad/lexing-error.st'
+    fdump = f'{f}.dump.json'
+    checker_warnings, _ = run_checker([f])
+    cv = checker_warnings[0]
+    assert cv.id == 'LexingError'
+    assert 'wtf?' in cv.context
+    assert '10 |' in cv.context
+    # Caret must land under column 6 (the '?' char)
+    caret_line = [l for l in cv.context.splitlines() if '^' in l][0]
+    assert caret_line == '     |      ^'
+    with DumpManager(fdump):
+        pass
+
+
+def test_parser_error_context_snippet():
+    """ParserError must name the offending token and show a source snippet."""
+    f = 'st/bad/semantic-error.st'
+    fdump = f'{f}.dump.json'
+    checker_warnings, rc = run_checker([f])
+    assert rc == 1
+    parser_warns = [w for w in checker_warnings if w.id == 'ParserError']
+    assert len(parser_warns) == 1
+    cv = parser_warns[0]
+    assert cv.msg == 'unexpected token `"`'
+    assert 'ANALOG_DATA_BAD' in cv.context
+    assert '3 |' in cv.context
+    assert '^' in cv.context
+    with DumpManager(fdump):
+        pass
+
+
+def test_no_parser_error_no_context():
+    """Valid programs must not emit any parser/lexer warnings with context."""
+    _, rc = check_program(
+        """
+        PROGRAM p
+        VAR a : INT; END_VAR
+        a := 1;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    with DumpManager('stdin.dump.json'):
+        pass
+
+
 def test_parser_errors():
     for fname in os.listdir('st/bad/'):
         f = os.path.join('st/bad/', fname)

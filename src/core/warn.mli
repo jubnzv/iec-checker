@@ -10,11 +10,12 @@ type t = {
   file: string;
   id: string;
   msg: string;
+  context: string;
   ty: warn_ty [@key "type"];
 } [@@deriving yojson]
 
-val mk : ?ty:(warn_ty) -> ?file:(string) -> int -> int -> string -> string -> t
+val mk : ?ty:(warn_ty) -> ?file:(string) -> ?context:(string) -> int -> int -> string -> string -> t
 val mk_internal : ?id:(string) -> string -> t
-val mk_from_lexbuf : Lexing.lexbuf -> string -> string -> t
+val mk_from_lexbuf : ?context:(string) -> Lexing.lexbuf -> string -> string -> t
 
 val to_string : t -> string

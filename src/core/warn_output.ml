@@ -22,13 +22,17 @@ let format_plain_warning doc_urls use_color (w : W.t) =
       else
         Printf.sprintf "  %s %s:%d:%d" (blue "-->" use_color) w.file w.linenr w.column
     in
+    let context_block =
+      if String.is_empty w.context then ""
+      else "\n" ^ w.context
+    in
     let doc_line =
       match List.Assoc.find doc_urls ~equal:String.equal w.id with
       | Some url when not (String.is_empty url) ->
         Printf.sprintf "\n  %s %s" (cyan "See:" use_color) url
       | _ -> ""
     in
-    header ^ "\n" ^ location ^ doc_line
+    header ^ "\n" ^ location ^ context_block ^ doc_line
 
 let print_report ?(doc_urls=[]) ?(use_color=true) warnings fmt =
   match fmt with

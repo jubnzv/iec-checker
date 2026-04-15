@@ -20,14 +20,75 @@ type parse_results = S.iec_library_element list * Warn.t list
 (** The path of the temporary file created when the `-m` option is set. *)
 let merged_file_path = "merged-input.st"
 
-let parse_with_error (lexbuf: Lexing.lexbuf) : parse_results =
+(** Where to fetch the original source text for error snippets. *)
+type source_origin =
+  | SrcFile of string
+  | SrcString of string
+  | SrcNone
+
+(** Fetch a specific 1-indexed line from the parse source for snippet display. *)
+let fetch_source_line origin line =
+  if line <= 0 then None
+  else match origin with
+    | SrcNone -> None
+    | SrcString s ->
+      let lines = String.split_lines s in
+      List.nth lines (line - 1)
+    | SrcFile filename ->
+      try
+        let ic = In_channel.create filename in
+        let rec nth n =
+          match In_channel.input_line ic with
+          | None -> None
+          | Some l -> if n = 1 then Some l else nth (n - 1)
+        in
+        let result = nth line in
+        In_channel.close ic;
+        result
+      with _ -> None
+
+(** Render a source snippet with a caret pointing at [col_start .. col_end]
+    (1-indexed, inclusive/exclusive). *)
+let render_snippet ~line ~col_start ~col_end src =
+  let col_start = Int.max 1 col_start in
+  let col_end = Int.max (col_start + 1) col_end in
+  let gutter = Printf.sprintf "%d" line in
+  let gw = String.length gutter in
+  let pad = String.make gw ' ' in
+  let caret_pad = String.make (col_start - 1) ' ' in
+  let carets = String.make (col_end - col_start) '^' in
+  Printf.sprintf "  %s |\n  %s | %s\n  %s | %s%s"
+    pad gutter src pad caret_pad carets
+
+let snippet_from_lexbuf origin (lexbuf : Lexing.lexbuf) =
+  let start_p = lexbuf.Lexing.lex_start_p in
+  let curr_p = lexbuf.Lexing.lex_curr_p in
+  let line = start_p.pos_lnum in
+  let col_start = start_p.pos_cnum - start_p.pos_bol + 1 in
+  let col_end = curr_p.pos_cnum - curr_p.pos_bol + 1 in
+  match fetch_source_line origin line with
+  | Some src -> render_snippet ~line ~col_start ~col_end src
+  | None -> ""
+
+let parser_error_message (lexbuf : Lexing.lexbuf) =
+  let tok = Lexing.lexeme lexbuf in
+  let tok_desc =
+    if String.is_empty tok then "end of input"
+    else Printf.sprintf "`%s`" tok
+  in
+  Printf.sprintf "unexpected token %s" tok_desc
+
+let parse_with_error ?(origin=SrcNone) (lexbuf: Lexing.lexbuf) : parse_results =
   let tokinfo lexbuf = TI.create lexbuf in
   let l = Lexer.initial tokinfo in
   try (Parser.main l lexbuf), [] with
   | Lexer.LexingError msg ->
-    [], [(W.mk_from_lexbuf lexbuf "LexingError" msg)]
+    let ctx = snippet_from_lexbuf origin lexbuf in
+    [], [(W.mk_from_lexbuf ~context:ctx lexbuf "LexingError" msg)]
   | Parser.Error ->
-    [], [(W.mk_from_lexbuf lexbuf "ParserError" "")]
+    let ctx = snippet_from_lexbuf origin lexbuf in
+    [], [(W.mk_from_lexbuf ~context:ctx lexbuf "ParserError"
+            (parser_error_message lexbuf))]
   | e ->
     [], [(W.mk_from_lexbuf lexbuf "UnknownError" (Exn.to_string e))]
 
@@ -37,14 +98,14 @@ let parse_stdin () : parse_results option =
   | Some code -> begin
       let lexbuf = Lexing.from_string code in
       lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = "stdin" };
-      Some(parse_with_error lexbuf)
+      Some(parse_with_error ~origin:(SrcString code) lexbuf)
     end
 
 let parse_st_file (filename : string) : parse_results =
   let inx = In_channel.create filename in
   let lexbuf = Lexing.from_channel inx in
   lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
-  let (elements, warns) = parse_with_error lexbuf in
+  let (elements, warns) = parse_with_error ~origin:(SrcFile filename) lexbuf in
   In_channel.close inx;
   (elements, warns)
 
@@ -54,7 +115,7 @@ let parse_xml_file (filename : string) : parse_results =
   In_channel.close inx;
   let lexbuf = Lexing.from_string program in
   lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filename };
-  let (elements, warns) = parse_with_error lexbuf in
+  let (elements, warns) = parse_with_error ~origin:(SrcString program) lexbuf in
   (elements, warns)
 
 (** [parse_sel_xml_file] Parse an SEL XML file located on [filepath]. If the
@@ -67,7 +128,7 @@ let parse_sel_xml_file (filepath : string) : parse_results option =
   | Some(program) -> begin
       let lexbuf = Lexing.from_string program in
       lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with pos_fname = filepath };
-      Some(parse_with_error lexbuf)
+      Some(parse_with_error ~origin:(SrcString program) lexbuf)
     end
   | None -> None
 

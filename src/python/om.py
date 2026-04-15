@@ -250,6 +250,7 @@ class Warning:
     id: str
     msg: str
     type: str
+    context: str = ''
 
     @classmethod
     def from_dict(cls, values):
@@ -259,6 +260,7 @@ class Warning:
         args['id'] = values.get('id', -1)
         args['msg'] = values.get('msg', '')
         args['type'] = values.get('type', 'Inspection')
+        args['context'] = values.get('context', '')
         return Warning(**args)
 
     def __str__(self):
