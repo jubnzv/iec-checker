@@ -13,6 +13,11 @@ let check_pou elem =
   in
 
   (* Get names of variables used in POU. *)
+  let base_name name =
+    match String.lsplit2 name ~on:'.' with
+    | Some (hd, _) -> hd
+    | None -> name
+  in
   let get_use_var_names () =
     AU.filter_exprs
       elem
@@ -22,7 +27,7 @@ let check_pou elem =
     |> List.map
       ~f:(fun expr -> begin
             match expr with
-            | S.ExprVariable (_, v) -> (S.VarUse.get_name v)
+            | S.ExprVariable (_, v) -> base_name (S.VarUse.get_name v)
             | _ -> assert false
           end)
   in
