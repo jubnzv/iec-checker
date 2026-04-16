@@ -1,11 +1,52 @@
 """Tests for parser and lexer."""
 import sys
 import os
+import json
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
 from python.core import run_checker, check_program  # noqa
 from python.dump import DumpManager  # noqa
+
+
+def _find_bool_constants(node):
+    if isinstance(node, list):
+        if (len(node) == 3 and node[0] == 'Bool'
+                and isinstance(node[2], bool)):
+            yield node[2]
+        for child in node:
+            yield from _find_bool_constants(child)
+    elif isinstance(node, dict):
+        for child in node.values():
+            yield from _find_bool_constants(child)
+
+
+def test_bool_literals_preserve_value():
+    """`TRUE` must be lexed as the boolean value `true`, not `false`."""
+    dump = 'stdin.dump.json'
+    _, rc = check_program(
+        """
+        PROGRAM p
+        VAR t : BOOL := TRUE; f : BOOL := FALSE; END_VAR
+        t := TRUE;
+        f := FALSE;
+        END_PROGRAM
+        """.replace('\n', ''))
+    assert rc == 0
+    try:
+        with open(dump, 'r') as fp:
+            scheme = json.load(fp)
+        bools = list(_find_bool_constants(scheme))
+        assert len(bools) > 0, 'no Bool constants found in dump'
+        assert bools.count(True) > 0, (
+            f'every Bool literal serialized as `false` — '
+            f'`bool_true` lexer rule is flipped again. All bools: {bools}')
+        assert bools.count(True) == bools.count(False), (
+            f'asymmetric counts — TRUEs={bools.count(True)}, '
+            f'FALSEs={bools.count(False)}, all={bools}')
+    finally:
+        if os.path.exists(dump):
+            os.remove(dump)
 
 
 def test_lexing_error():

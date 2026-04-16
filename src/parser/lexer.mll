@@ -273,7 +273,7 @@ rule initial tokinfo =
   {
       (* Printf.printf "BOOL_VALUE: true\n"; *)
       let ti = tokinfo lexbuf in
-      T_BOOL_VALUE(false, ti)
+      T_BOOL_VALUE(true, ti)
   }
   (* }}} *)
 

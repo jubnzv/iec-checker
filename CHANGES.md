@@ -34,6 +34,7 @@
 - Add `PLCOpen-L22` (#56)
 - Add `PLCOpen-N10` (#40)
 - Parser/Lexer: show the problematic token and a source snippet for `ParserError`/`LexingError` (#58)
+- Lexer: fix a bug where the `TRUE` boolean literal was silently lexed as `false`, corrupting CP2, CP8, CP25, N3 detectors
 
 ## 0.4.0 (2022-02-26)
 
