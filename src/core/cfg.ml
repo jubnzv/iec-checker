@@ -283,6 +283,9 @@ let fill_bbs_map (cfg : t) (stmts : S.statement list) : (unit) =
           link_func_calls_stmts expr |> ignore;
           (bbs_pred_ids, Some(created_bb.id))
         end
+      | S.StmEmpty _ ->
+        (* Empty / no-op statement: nothing to process, keep current BB as previous *)
+        (bbs_pred_ids, Some(created_bb.id))
       | S.StmElsif (_, cond_stmt, body_stmts) ->
         begin
           (* Process [cond_stmt]. *)

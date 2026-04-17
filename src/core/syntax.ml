@@ -505,6 +505,8 @@ and statement =
                  statement list * (** body *)
                  statement (** condition *)
                  [@name "Repeat"]
+  | StmEmpty of TI.t
+               [@name "Empty"]
   | StmExit of TI.t
                [@name "Exit"]
   | StmContinue of TI.t
@@ -546,6 +548,7 @@ let stmt_get_ti = function
   | StmFor (ti,_,_) -> ti
   | StmWhile (ti,_,_) -> ti
   | StmRepeat (ti,_,_) -> ti
+  | StmEmpty (ti) -> ti
   | StmExit (ti) -> ti
   | StmContinue (ti) -> ti
   | StmReturn (ti) -> ti
@@ -563,6 +566,7 @@ let stmt_to_string = function
   | StmFor _ -> "For"
   | StmWhile _ -> "While"
   | StmRepeat _ -> "Repeat"
+  | StmEmpty _ -> "Empty"
   | StmExit _ -> "Exit"
   | StmContinue _ -> "Continue"
   | StmReturn _ -> "Return"

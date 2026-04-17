@@ -73,6 +73,7 @@ let rec stmts_to_list stmt =
       in
       [stmt] @ func_params_stmts
     end
+  | S.StmEmpty _ -> [ stmt ]
 
 let get_pou_stmts = function
   | S.IECFunction (_, f) ->
@@ -152,6 +153,7 @@ let rec get_stmt_exprs stmt =
       (get_nested func_params_stmts)
     end
   | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+  | S.StmEmpty _ -> []
 
 let get_pou_exprs elem =
   get_pou_stmts elem
@@ -261,6 +263,7 @@ let filter_exprs ~f elem =
         |> List.append acc
       end
     | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> acc
+    | S.StmEmpty _ -> acc
   in
   let all_stmts = get_pou_stmts elem in
   List.fold_left
