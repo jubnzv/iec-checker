@@ -373,6 +373,8 @@ and statement =
                  statement list * (** body *)
                  statement (** condition *)
                  [@name "Repeat"]
+  | StmEmpty of TI.t
+               [@name "Empty"]
   | StmExit of TI.t
                [@name "Exit"]
   | StmContinue of TI.t

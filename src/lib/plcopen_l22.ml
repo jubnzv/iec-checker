@@ -39,7 +39,7 @@ and find_in_stmt var_name = function
     find_assignments_to var_name body_ss @ find_in_stmt var_name cond_s
   | S.StmFuncCall (_, _, func_params) ->
     List.concat_map func_params ~f:(fun fp -> find_in_stmt var_name fp.stmt)
-  | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+  | S.StmExit _ | S.StmContinue _ | S.StmReturn _ | S.StmEmpty _ -> []
 
 and find_in_expr var_name = function
   | S.ExprBin (ti, S.ExprVariable (_, vu), S.ASSIGN, _)
@@ -83,7 +83,7 @@ and check_stmt = function
     check_stmts body_ss @ check_stmt cond_s
   | S.StmFuncCall (_, _, func_params) ->
     List.concat_map func_params ~f:(fun fp -> check_stmt fp.stmt)
-  | S.StmExpr _ | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+  | S.StmExpr _ | S.StmExit _ | S.StmContinue _ | S.StmReturn _ | S.StmEmpty _ -> []
 
 let do_check elems =
   List.concat_map elems ~f:(fun elem ->

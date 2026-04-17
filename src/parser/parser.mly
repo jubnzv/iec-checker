@@ -1875,6 +1875,7 @@ let stmt :=
   | ~ = subprog_ctrl_stmt; <>
   | ~ = selection_stmt; <>
   | ~ = iteration_stmt; <>
+  | ~ = T_SEMICOLON; { Syntax.StmEmpty (TI.create_dummy ()) }
 
 let assign_stmt :=
   | v = variable; T_ASSIGN; e = expression;

@@ -53,7 +53,7 @@ and find_var_in_stmt var_name = function
     find_var_in_stmts var_name body @ find_var_in_stmt var_name cond
   | S.StmFuncCall (_, _, fps) ->
     List.concat_map fps ~f:(fun fp -> find_var_in_stmt var_name fp.stmt)
-  | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+  | S.StmExit _ | S.StmContinue _ | S.StmReturn _ | S.StmEmpty _ -> []
 
 (** Scan a statement list for uses of [var_name].
     Stop when we hit a FOR that re-binds the same variable, since that
@@ -128,7 +128,7 @@ and check_nested = function
     check_stmt_list body @ check_nested cond
   | S.StmFuncCall (_, _, fps) ->
     List.concat_map fps ~f:(fun fp -> check_nested fp.stmt)
-  | S.StmExpr _ | S.StmExit _ | S.StmContinue _ | S.StmReturn _ -> []
+  | S.StmExpr _ | S.StmExit _ | S.StmContinue _ | S.StmReturn _ | S.StmEmpty _ -> []
 
 let do_check elems =
   List.concat_map elems ~f:(fun elem ->
