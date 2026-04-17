@@ -64,6 +64,10 @@
   let mk_var_use_dir dv =
     let var_use = Syntax.VarUse.create_dir dv Syntax.VarUse.Elementary in
     var_use
+  
+  let stmt_list_of_option = function
+    | None -> []
+    | Some l -> l
 %}
 
 (* {{{ Tokens *)
@@ -1340,7 +1344,8 @@ let function_ty :=
   | ~ = derived_type_access; <Syntax.TyDerived>
 
 let func_body :=
-  | ~ = stmt_list; <>
+  | sl_opt = option(stmt_list);
+  { stmt_list_of_option sl_opt }
   (* Allow empty body of function with {} *)
   | T_LBRACE; T_RBRACE; { [] }
 (* }}} *)
@@ -1372,7 +1377,8 @@ let fb_decl :=
   { Syntax.{ id; variables = vds; statements = ss } }
 
 let fb_body :=
-  | ~ = stmt_list; <>
+  | sl_opt = option(stmt_list);
+  { stmt_list_of_option sl_opt }
   (* Allow an empty body of the function block with {} *)
   | T_LBRACE; T_RBRACE; { [] }
 
