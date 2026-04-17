@@ -331,9 +331,9 @@ and ref_value =
 [@@deriving to_yojson]
 
 and constant =
-  | CInteger of TI.t * int           [@name "Integer"]
+  | CInteger of TI.t * elementary_ty option * int    [@name "Integer"]
+  | CReal of TI.t * elementary_ty option * float     [@name "Real"]
   | CBool of TI.t * bool             [@name "Bool"]
-  | CReal of TI.t * float            [@name "Real"]
   | CString of TI.t * string         [@name "String"]
   | CPointer of TI.t * ref_value     [@name "Pointer"]
   | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
