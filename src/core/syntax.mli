@@ -333,6 +333,7 @@ and ref_value =
 and constant =
   | CInteger of TI.t * elementary_ty option * int    [@name "Integer"]
   | CReal of TI.t * elementary_ty option * float     [@name "Real"]
+  | CBitString of TI.t * elementary_ty option * int  [@name "BitString"]
   | CBool of TI.t * bool             [@name "Bool"]
   | CString of TI.t * string         [@name "String"]
   | CPointer of TI.t * ref_value     [@name "Pointer"]

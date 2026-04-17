@@ -465,6 +465,7 @@ and ref_value =
 and constant =
   | CInteger of TI.t * elementary_ty option * int    [@name "Integer"]
   | CReal of TI.t * elementary_ty option * float     [@name "Real"]
+  | CBitString of TI.t * elementary_ty option * int  [@name "BitString"]
   | CBool of TI.t * bool             [@name "Bool"]
   | CString of TI.t * string         [@name "String"]
   | CPointer of TI.t * ref_value     [@name "Pointer"]
@@ -590,6 +591,7 @@ let expr_get_id e =
 let c_is_zero c =
   match c with
   | CInteger (_, _, v) -> phys_equal v 0
+  | CBitString (_, _, v) -> phys_equal v 0
   | CBool (_, v) -> phys_equal v false
   | CReal (_, _, v) -> phys_equal v 0.0
   | CString _ -> false
@@ -605,6 +607,7 @@ let c_is_zero c =
 let c_get_str_value c =
   match c with
   | CInteger (_, _, v) -> string_of_int v
+  | CBitString (_, _, v) -> string_of_int v
   | CBool (_, v) -> string_of_bool v
   | CReal (_, _, v) -> string_of_float v
   | CString (_, v) -> v
@@ -621,6 +624,7 @@ let c_get_str_value c =
 let c_get_ti c =
   match c with
   | CInteger (ti, _, _) -> ti
+  | CBitString (ti, _, _) -> ti
   | CBool (ti, _) -> ti
   | CReal (ti, _, _) -> ti
   | CString (ti, _) -> ti
@@ -634,6 +638,9 @@ let c_add c1 c2 =
   | CInteger (ti, _, v1), CInteger (_, _, v2) ->
     let v = v1 + v2 in
     CInteger (ti, None, v)
+  | CBitString (ti, _, v1), CBitString (_, _, v2) ->
+    let v = v1 lor v2 in
+    CBitString (ti, None, v)
   | CBool (ti, v1), CBool (_, v2) ->
     let v = v1 || v2 in
     CBool (ti, v)

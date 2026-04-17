@@ -233,3 +233,139 @@ def test_array_types():
         ty = scheme.types[0]
         assert ty.name == 'BITS'
         assert ty.type == 'Array'
+
+def test_literal_elementary_ty_inference():
+    """Test that CInteger, CReal, CBitString literals carry the correct
+    elementary_ty when a type prefix is used, and carry None otherwise."""
+    fdump = 'stdin.dump.json'
+    _, rc = check_program("""
+        PROGRAM p
+        VAR
+            (* Variable declaration and initialization - type-prefixed literals should infer concrete types *)
+            a : INT := 123;           (* unprefixed integer → CInteger(ty=None) *)
+            b : REAL := 1.23;         (* unprefixed real → CReal(ty=None) *)
+            c : INT := INT#456;       (* INT# prefix → CInteger(ty=Some INT) *)
+            d : REAL := REAL#7.89;    (* REAL# prefix → CReal(ty=Some REAL) *)
+            e : UINT := UINT#789;     (* UINT# prefix → CInteger(ty=Some UINT) *)
+            f : LREAL := LREAL#12.34; (* LREAL# prefix → CReal(ty=Some LREAL) *)
+            g : BYTE := BYTE#16#FF;   (* BYTE# prefix → CBitString(ty=Some BYTE) *)
+            h : WORD := WORD#16#ABCD; (* WORD# prefix → CBitString(ty=Some WORD) *)
+        END_VAR
+
+        (* Literals in assignment statements - also need to be verified *)
+        a := 100;                    (* unprefixed → ty=None *)
+        c := DINT#1000;             (* DINT# prefix → ty=Some DINT *)
+        d := REAL#3.14;             (* REAL# prefix → ty=Some REAL *)
+        END_PROGRAM
+    """.replace('\n', ''))
+    assert rc == 0
+
+    with open(fdump, 'r') as fp:
+        scheme = json.load(fp)
+
+    # ------------------------------------------------------------------
+    # Auxiliary recursive lookup function: extract all constant node 
+    # information from the JSON tree
+    # ------------------------------------------------------------------
+    def find_constants(node):
+        """Traverse the JSON tree recursively, returning a list of all constant nodes.
+        
+        Each element is a (tag, type_str_or_none, value) tuple:
+          - tag: "Integer" / "Real" / "BitString"
+          - type_str_or_none: typename string list or None
+          - value: int or float
+        """
+        results = []
+        if isinstance(node, list):
+            # yojson encoding of variant: ["Tagname", arg0, arg1, arg2, ...]
+            # Three forms of constant:
+            #   ["Integer", ti_dict, type_opt, int_val]
+            #   ["Real",    ti_dict, type_opt, float_val]
+            #   ["BitString", ti_dict, type_opt, int_val]
+            if (len(node) >= 4 and isinstance(node[0], str)
+                    and node[0] in ("Integer", "Real", "BitString")):
+                tag = node[0]
+                # node[1] is Tok_info dict, node[2] is elementary_ty option, node[3] is value
+                ty_opt = node[2]  # Array of strings such as ["INT"] or None
+                val = node[3]
+                results.append((tag, ty_opt, val))
+            for child in node:
+                results.extend(find_constants(child))
+        elif isinstance(node, dict):
+            for child in node.values():
+                results.extend(find_constants(child))
+        return results
+
+    consts = find_constants(scheme)
+    assert len(consts) > 0, 'no constants found in dump'
+
+    # Build index by tag+value to assert
+    by_key = {(tag, val): ty_opt for tag, ty_opt, val in consts}
+
+    # ---- CInteger: no prefix → None -------------------------------------------------
+    assert ("Integer", 123) in by_key
+    assert by_key[("Integer", 123)] is None, \
+        f'bare integer 123 should have ty=None, got {by_key[("Integer", 123)]}'
+
+    assert ("Integer", 100) in by_key
+    assert by_key[("Integer", 100)] is None, \
+        f'bare integer 100 should have ty=None, got {by_key[("Integer", 100)]}'
+
+    print(by_key)
+    # ---- CInteger: type prefix → Some(typename) --------------------------------------
+    assert ("Integer", 456) in by_key
+    assert by_key[("Integer", 456)] == ["INT"], \
+        f'INT#456 should have ty="INT", got {by_key[("Integer", 456)]}'
+
+    assert ("Integer", 789) in by_key
+    assert by_key[("Integer", 789)] == ["UINT"], \
+        f'UINT#789 should have ty="UINT", got {by_key[("Integer", 789)]}'
+
+    assert ("Integer", 1000) in by_key
+    assert by_key[("Integer", 1000)] == ["DINT"], \
+        f'DINT#1000 should have ty="DINT", got {by_key[("Integer", 1000)]}'
+
+    # ---- CReal: no prefix → None ----------------------------------------------------
+    # 找 value≈1.23 的 Real
+    real_123 = [(tag, ty, v) for tag, ty, v in consts
+                if tag == "Real" and abs(v - 1.23) < 1e-9]
+    assert len(real_123) >= 1, 'no Real constant ~1.23 found'
+    _, ty_123, _ = real_123[0]
+    assert ty_123 is None, \
+        f'bare real 1.23 should have ty=None, got {ty_123}'
+
+    # ---- CReal: type prefix → Some(typename) ----------------------------------------
+    real_789 = [(tag, ty, v) for tag, ty, v in consts
+                if tag == "Real" and abs(v - 7.89) < 1e-9]
+    assert len(real_789) >= 1, 'no Real constant ~7.89 found'
+    _, ty_789, _ = real_789[0]
+    assert ty_789 == ["REAL"], \
+        f'REAL#7.89 should have ty="REAL", got {ty_789}'
+
+    real_1234 = [(tag, ty, v) for tag, ty, v in consts
+                 if tag == "Real" and abs(v - 12.34) < 1e-9]
+    assert len(real_1234) >= 1, 'no Real constant ~12.34 found'
+    _, ty_1234, _ = real_1234[0]
+    assert ty_1234 == ["LREAL"], \
+        f'LREAL#12.34 should have ty="LREAL", got {ty_1234}'
+
+    real_314 = [(tag, ty, v) for tag, ty, v in consts
+                if tag == "Real" and abs(v - 3.14) < 1e-9]
+    assert len(real_314) >= 1, 'no Real constant ~3.14 found'
+    _, ty_314, _ = real_314[0]
+    assert ty_314 == ["REAL"], \
+        f'REAL#3.14 should have ty="REAL", got {ty_314}'
+
+    # ---- CBitString: type prefix → Some(typename) -----------------------------------
+    # BYTE#16#FF → value is 255 (0xFF)
+    assert ("BitString", 255) in by_key, \
+        f'BYTE#16#FF (value=255) not found. All BitStrings: {[(t,v) for t,_,v in consts if t=="BitString"]}'
+    assert by_key[("BitString", 255)] == ["BYTE"], \
+        f'BYTE#16#FF should have ty="BYTE", got {by_key[("BitString", 255)]}'
+
+    # WORD#16#ABCD → value is 43981 (0xABCD)
+    assert ("BitString", 43981) in by_key, \
+        f'WORD#16#ABCD (value=43981) not found'
+    assert by_key[("BitString", 43981)] == ["WORD"], \
+        f'WORD#16#ABCD should have ty="WORD", got {by_key[("BitString", 43981)]}'
+    os.remove(fdump)

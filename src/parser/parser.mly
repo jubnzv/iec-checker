@@ -48,6 +48,17 @@
     Printf.eprintf "[PARSER] CReal: value=%s, elementary_ty=%s\n" 
       (string_of_float v) ty_str;*)
     Syntax.CReal(ti, ty, v)
+  
+  let cbitstr_mk ?ty t =
+    let (v, ti) = t in
+    (* Debug Printing *)
+    (*let ty_str = match ty with
+      | Some ty -> Printf.sprintf "Some(%s)" (Syntax.ety_to_string ty)
+      | None -> "None"
+    in
+    Printf.eprintf "[PARSER] CBitString: value=%s, elementary_ty=%s\n"
+      (string_of_int v) ty_str;*)
+    Syntax.CBitString(ti, ty, v)
 
   let ctime_mk fn t =
     let (v, ti) = t in
@@ -333,6 +344,11 @@ let constant :=
     Syntax.ExprConstant(ti, c)
   }
   (* | ~ = bit_str_literal <Syntax.ExprConstant> *)
+  | c = bit_str_literal;
+  {
+    let ti = Syntax.c_get_ti c in
+    Syntax.ExprConstant(ti, c)
+  }
   | c = bool_literal;
   {
     let ti = Syntax.c_get_ti c in
@@ -344,7 +360,7 @@ let numeric_literal :=
   | ~ = real_literal; <>
 
 let int_literal :=
-  // Only constants with type-prefix need to input a specific integer type for later inference
+  (* Only constants with type-prefix need to input a specific integer type for later inference *)
   | ty = int_type_name; T_SHARP; (v, ti) = raw_signed_int;
   { cint_mk ~ty (v, ti) }
   | ty = int_type_name; T_SHARP; (v, ti) = raw_binary_int;
@@ -444,6 +460,16 @@ let real_literal :=
   { creal_mk (creal_inv (creal_conv_fp vr)) }
 
 (* bit_str_literal: *)
+let bit_str_literal :=
+  (* Bit string literals with type-prefix need to input a specific integer type for later inference *)
+  | ty = multibits_type_name; T_SHARP; (v, ti) = raw_unsigned_int;
+    { cbitstr_mk ~ty (v, ti)}
+  | ty = multibits_type_name; T_SHARP; (v, ti) = raw_binary_int;
+    { cbitstr_mk ~ty (v, ti) }
+  | ty = multibits_type_name; T_SHARP; (v, ti) = raw_octal_int;
+    { cbitstr_mk ~ty (v, ti) }
+  | ty = multibits_type_name; T_SHARP; (v, ti) = raw_hex_int;
+    { cbitstr_mk ~ty (v, ti) }
 
 let bool_literal :=
   (* BOOL#<value> rules are implemented in lexer *)
