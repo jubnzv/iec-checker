@@ -9,7 +9,7 @@ build:
 test: build
 	@/bin/bash -c "source venv/bin/activate; \
 				   pushd test >/dev/null; \
-				   pytest; \
+				   python3 -m pytest; \
 				   popd >/dev/null; "
 
 doc:
