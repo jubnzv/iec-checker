@@ -1,27 +1,19 @@
-# Opam Mirrors Based on OCaml 5.5
-FROM ocaml/opam:ubuntu-22.04-ocaml-5.5
+FROM ocaml/opam:ubuntu-22.04-ocaml-5.2
+
+USER root
+
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip graphviz libgraphviz-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/opam/src
 
-COPY dune-project \
-  iec_checker.opam \
-  requirements.txt \
-  requirements-dev.txt \
-  /home/opam/src
+COPY requirements*.txt ./
+RUN pip3 install --no-cache-dir -r requirements-dev.txt -r requirements.txt
 
-# Switch to root to modify apt sources and install 
-USER root
-
-# install python3 and graphviz
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip python3-venv graphviz libgraphviz-dev pkg-config && \
-    rm -rf /var/lib/apt/lists/*
+COPY --chown=opam iec_checker.opam dune-project ./
 
 USER opam
 
-# Install project dependencies (dune-project defines dependencies)
-# Note: opam install . By default installs both dependencies and the project itself.
 RUN opam install . --deps-only -y && \
-    opam clean -a -c -s --logs && \
-    pip install --no-cache-dir -r requirements-dev.txt && \
-    pip install --no-cache-dir -r requirements.txt
+    opam clean -a -c -s --logs
