@@ -463,9 +463,10 @@ and ref_value =
 [@@deriving to_yojson]
 
 and constant =
-  | CInteger of TI.t * int           [@name "Integer"]
+  | CInteger of TI.t * elementary_ty option * int    [@name "Integer"]
+  | CReal of TI.t * elementary_ty option * float     [@name "Real"]
+  | CBitString of TI.t * elementary_ty option * int  [@name "BitString"]
   | CBool of TI.t * bool             [@name "Bool"]
-  | CReal of TI.t * float            [@name "Real"]
   | CString of TI.t * string         [@name "String"]
   | CPointer of TI.t * ref_value     [@name "Pointer"]
   | CTimeValue of TI.t * TimeValue.t [@name "TimeValue"]
@@ -589,9 +590,10 @@ let expr_get_id e =
 (* {{{ Functions to work with constants *)
 let c_is_zero c =
   match c with
-  | CInteger (_, v) -> phys_equal v 0
+  | CInteger (_, _, v) -> phys_equal v 0
+  | CBitString (_, _, v) -> phys_equal v 0
   | CBool (_, v) -> phys_equal v false
-  | CReal (_, v) -> phys_equal v 0.0
+  | CReal (_, _, v) -> phys_equal v 0.0
   | CString _ -> false
   | CPointer (_, v) -> begin
       match v with
@@ -604,9 +606,10 @@ let c_is_zero c =
 
 let c_get_str_value c =
   match c with
-  | CInteger (_, v) -> string_of_int v
+  | CInteger (_, _, v) -> string_of_int v
+  | CBitString (_, _, v) -> string_of_int v
   | CBool (_, v) -> string_of_bool v
-  | CReal (_, v) -> string_of_float v
+  | CReal (_, _, v) -> string_of_float v
   | CString (_, v) -> v
   | CPointer (_, v) -> begin
       match v with
@@ -620,9 +623,10 @@ let c_get_str_value c =
 
 let c_get_ti c =
   match c with
-  | CInteger (ti, _) -> ti
+  | CInteger (ti, _, _) -> ti
+  | CBitString (ti, _, _) -> ti
   | CBool (ti, _) -> ti
-  | CReal (ti, _) -> ti
+  | CReal (ti, _, _) -> ti
   | CString (ti, _) -> ti
   | CPointer (ti, _) -> ti
   | CTimeValue (ti, _) -> ti
@@ -631,15 +635,18 @@ let c_get_ti c =
 
 let c_add c1 c2 =
   match (c1, c2) with
-  | CInteger (ti, v1), CInteger (_, v2) ->
+  | CInteger (ti, _, v1), CInteger (_, _, v2) ->
     let v = v1 + v2 in
-    CInteger (ti, v)
+    CInteger (ti, None, v)
+  | CBitString (ti, _, v1), CBitString (_, _, v2) ->
+    let v = v1 lor v2 in
+    CBitString (ti, None, v)
   | CBool (ti, v1), CBool (_, v2) ->
     let v = v1 || v2 in
     CBool (ti, v)
-  | CReal (ti, v1), CReal (_, v2) ->
+  | CReal (ti, _, v1), CReal (_, _, v2) ->
     let v = v1 +. v2 in
-    CReal (ti, v)
+    CReal (ti, None, v)
   | CString (ti, v1), CString (_, v2) ->
     let v = v1 ^ v2 in
     CString (ti, v)

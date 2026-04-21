@@ -17,6 +17,10 @@ PROGRAM program0
     LD : INT;
 
     s : STRING;
+    x : BYTE;
+    y : WORD;
+    z : DWORD;
+    w : LWORD;
   END_VAR
 
   (* integer *)
@@ -116,6 +120,11 @@ PROGRAM program0
   s := STRING#"FOO";
   s := STRING#"BAR(*";
   s := STRING#'FOO';
+
+  x := BYTE#8#01;
+  y := WORD#16#1234;
+  z := DWORD#12345678;
+  w := LWORD#2#10100101001010101010101010101010;
 
 END_PROGRAM
 (* vim: set foldmethod=marker foldlevel=0 foldenable sw=2 tw=120 : *)
