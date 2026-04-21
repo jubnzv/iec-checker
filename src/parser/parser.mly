@@ -30,12 +30,6 @@
 
   let cint_mk ?ty t =
     let (v, ti) = t in
-    (* Debug Printing *)
-    (*let ty_str = match ty with
-      | Some ty -> Printf.sprintf "Some(%s)" (Syntax.ety_to_string ty)
-      | None -> "None"
-    in
-    Printf.eprintf "[PARSER] CInteger: value=%d, elementary_ty=%s\n" v ty_str;*)
     Syntax.CInteger(ti, ty, v)
 
   let creal_mk ?ty t =
