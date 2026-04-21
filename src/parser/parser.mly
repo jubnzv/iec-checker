@@ -343,7 +343,6 @@ let constant :=
     let ti = Syntax.c_get_ti c in
     Syntax.ExprConstant(ti, c)
   }
-  (* | ~ = bit_str_literal <Syntax.ExprConstant> *)
   | c = bit_str_literal;
   {
     let ti = Syntax.c_get_ti c in
