@@ -30,6 +30,15 @@ The ST dialect is compatible with the [matiec](https://github.com/sm1820/matiec)
 
 Download a prebuilt binary for Linux or Windows x86_64 from [GitHub releases](https://github.com/jubnzv/iec-checker/releases).
 
+### Docker
+
+Nightly builds are published to Docker Hub automatically by a weekly GitHub Actions workflow:
+
+```bash
+docker pull jubnzv1/iec-checker:nightly
+docker run --rm -v "$PWD:/src" -w /src jubnzv1/iec-checker:nightly program.st
+```
+
 ### Build from source
 
 Requires [OCaml](https://ocaml.org/docs/install.html) 5.1+ and [opam](https://opam.ocaml.org/doc/Install.html).
