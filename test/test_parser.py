@@ -326,7 +326,7 @@ def test_literal_elementary_ty_inference():
         f'DINT#1000 should have ty="DINT", got {by_key[("Integer", 1000)]}'
 
     # ---- CReal: no prefix → None ----------------------------------------------------
-    # 找 value≈1.23 的 Real
+    # Find the Real that value≈1.23
     real_123 = [(tag, ty, v) for tag, ty, v in consts
                 if tag == "Real" and abs(v - 1.23) < 1e-9]
     assert len(real_123) >= 1, 'no Real constant ~1.23 found'
