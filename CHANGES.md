@@ -38,7 +38,8 @@
 - `UnusedVariable`: fix a false positive where variables accessed only via struct-member syntax were reported as unused
 - Parser: Allow whitespace only `fb_body`/`fc_body` (#62)
 - Parser: Allow empty statement such as `;` (#64)
-- Add Dockerfile (#67)
+- Add Dockerfile (#69)
+- Parser: Preserve literal types; add bit string literals (#66)
 
 ## 0.4.0 (2022-02-26)
 
