@@ -7,7 +7,7 @@ build:
 	@test -L bin || ln -s _build/install/default/bin .
 
 test: build
-	@/bin/bash -c "source venv/bin/activate; \
+	@/bin/bash -c "[ -f venv/bin/activate ] && source venv/bin/activate; \
 				   pushd test >/dev/null; \
 				   pytest; \
 				   popd >/dev/null; "
