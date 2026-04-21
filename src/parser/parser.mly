@@ -34,13 +34,6 @@
 
   let creal_mk ?ty t =
     let (v, ti) = t in
-    (* Debug Printing *)
-    (*let ty_str = match ty with
-      | Some ty -> Printf.sprintf "Some(%s)" (Syntax.ety_to_string ty)
-      | None -> "None"
-    in
-    Printf.eprintf "[PARSER] CReal: value=%s, elementary_ty=%s\n" 
-      (string_of_float v) ty_str;*)
     Syntax.CReal(ti, ty, v)
   
   let cbitstr_mk ?ty t =
