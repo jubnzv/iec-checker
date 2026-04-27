@@ -1,6 +1,7 @@
 """Tests for PLCOpen inspections."""
 import sys
 import os
+from collections import Counter
 
 sys.path.append(os.path.join(os.path.dirname(
     os.path.abspath(__file__)), "../src"))
@@ -116,19 +117,12 @@ def test_cp17():
     warns, rc = run_checker([f])
     assert rc == 0
     cp17_warns = filter_warns(warns, 'PLCOPEN-CP17')
-    assert len(cp17_warns) == 13
-    expected_warnings = [
+    expected = Counter([
         (4, 21), (5, 25), (5, 25), (6, 25), (8, 17), (9, 26), (9, 26),
-        (10, 23), (12, 22), (12, 22), (17, 22), (18, 25), (25, 21)
-    ]
-    
-    for linenr, column in expected_warnings:
-        assert any(
-            w.linenr == linenr and 
-            w.column == column
-            for w in cp17_warns
-        ), f"Expected warning at line {linenr}, column {column} not found"
-    
+        (10, 23), (12, 22), (12, 22), (17, 22), (18, 25), (25, 21),
+    ])
+    actual = Counter((w.linenr, w.column) for w in cp17_warns)
+    assert actual == expected
     with DumpManager(fdump):
         pass
 
