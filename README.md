@@ -19,7 +19,7 @@ PLCOPEN-CP13: POUs shall not call themselves directly or indirectly
 
 ## Features
 
-- 25 [PLCOpen Software Construction Guidelines](https://iec-checker.github.io/docs/detectors/plcopen-overview) checks
+- 26 [PLCOpen Software Construction Guidelines](https://iec-checker.github.io/docs/detectors/plcopen-overview) checks
 - Declaration analysis, unreachable code detection, unused variable detection
 - Structured Text, [PLCOpen XML](https://plcopen.org/technical-activities/xml-exchange), and [SEL XML](https://selinc.com/products/3530/) input formats
 - JSON output for [CI/CD integration](https://iec-checker.github.io/docs/ci-cd) and [Python tooling](https://iec-checker.github.io/docs/python)

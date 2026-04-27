@@ -36,10 +36,11 @@
 - Parser/Lexer: show the problematic token and a source snippet for `ParserError`/`LexingError` (#58)
 - Lexer: fix a bug where the `TRUE` boolean literal was silently lexed as `false`, corrupting CP2, CP8, CP25, N3 detectors
 - `UnusedVariable`: fix a false positive where variables accessed only via struct-member syntax were reported as unused
-- Parser: Allow whitespace only `fb_body`/`fc_body` (#62)
-- Parser: Allow empty statement such as `;` (#64)
-- Add Dockerfile (#69)
-- Parser: Preserve literal types; add bit string literals (#66)
+- Parser: Allow whitespace only `fb_body`/`fc_body` (#62, @cangkui)
+- Parser: Allow empty statement such as `;` (#64, @cangkui)
+- Add Dockerfile (#69, @cangkui)
+- Parser: Preserve literal types; add bit string literals (#66, @cangkui)
+- Add `PLCOpen-N1` (#68, @cangkui)
 
 ## 0.4.0 (2022-02-26)
 
