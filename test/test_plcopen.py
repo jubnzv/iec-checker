@@ -110,6 +110,29 @@ def test_cp16():
         pass
 
 
+def test_cp17():
+    f = 'st/plcopen-cp17.st'
+    fdump = f'{f}.dump.json'
+    warns, rc = run_checker([f])
+    assert rc == 0
+    cp17_warns = filter_warns(warns, 'PLCOPEN-CP17')
+    assert len(cp17_warns) == 13
+    expected_warnings = [
+        (4, 21), (5, 25), (5, 25), (6, 25), (8, 17), (9, 26), (9, 26),
+        (10, 23), (12, 22), (12, 22), (17, 22), (18, 25), (25, 21)
+    ]
+    
+    for linenr, column in expected_warnings:
+        assert any(
+            w.linenr == linenr and 
+            w.column == column
+            for w in cp17_warns
+        ), f"Expected warning at line {linenr}, column {column} not found"
+    
+    with DumpManager(fdump):
+        pass
+
+
 def test_cp26():
     f = 'st/plcopen-cp26.st'
     fdump = f'{f}.dump.json'
