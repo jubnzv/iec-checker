@@ -22,6 +22,7 @@ module W = IECCheckerCore.Warn
 *)
 
 let rec collect_expr ~in_lhs (reads, writes) e =
+  (* in_lhs: Whether the expression is in the left-hand side of an assignment *)
   match e with
   | S.ExprVariable (_, vu) ->
     let name = S.VarUse.get_name vu in
@@ -34,8 +35,6 @@ let rec collect_expr ~in_lhs (reads, writes) e =
         let (r, w) = collect_expr ~in_lhs:true (reads, writes) lhs in
         collect_expr ~in_lhs:false (r, w) rhs
       | S.SENDTO ->
-        (* only consider output assignment in function call: var => output_var
-           here rhs is the receiver (written) *)
         collect_expr ~in_lhs:true (reads, writes) rhs
       | _ ->
         let (r, w) = collect_expr ~in_lhs:false (reads, writes) lhs in
@@ -76,8 +75,25 @@ and collect_stmt (reads, writes) stmt =
   | S.StmEmpty _ | S.StmExit _ | S.StmContinue _ | S.StmReturn _ ->
     (reads, writes)
   | S.StmFuncCall (_, _, params) ->
-    List.fold_left params ~init:(reads, writes) ~f:(fun acc (p : S.func_param_assign) ->
-        collect_stmt acc p.stmt)
+    List.fold_left params ~init:(reads, writes) ~f:collect_func_param_assign
+
+and collect_func_param_assign acc (p : S.func_param_assign) =
+  match p.stmt with
+  | S.StmExpr (_, S.ExprBin (_, _lhs, op, rhs)) ->
+    begin match op with
+    | S.ASSIGN | S.ASSIGN_REF ->
+      (* Consider input assignment in func call: var := input_var, here rhs is read *)
+      collect_expr ~in_lhs:false acc rhs
+    | S.SENDTO ->
+      (* Consider output assignment in func call: var => output_var, here rhs is written *)
+      collect_expr ~in_lhs:true acc rhs
+    | _ ->
+      (* Abnormal conditions, still treated as a regular statement *)
+      collect_stmt acc p.stmt
+    end
+  | _ ->
+    (* Non-standard parameter form, conservatively treated as a regular statement *)
+    collect_stmt acc p.stmt
 
 
 let get_pou_info elem =

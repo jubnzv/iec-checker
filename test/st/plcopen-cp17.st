@@ -7,6 +7,9 @@ VAR_INPUT
 
     idx_read_only           : INT;   // Compliant: only read as array index
     idx_violate_write_only  : INT;   // Violation: written, not read
+    func_violate_unused     : INT;   // Violation: never use
+    func_read_only          : INT;   // Compliant: only read in func call
+    func_violate_write      : INT;   // Violation: written in func call
 END_VAR
 
 VAR_OUTPUT
@@ -25,6 +28,7 @@ END_VAR
 VAR
     temp : INT;
     arr  : ARRAY[0..9] OF INT;
+    func : MYFUNC;
 END_VAR
 
 
@@ -79,6 +83,9 @@ arr[idx_read_only] := 5;
    idx_violate_write_only is written, but never read. *)
 idx_violate_write_only := 3;
 
+(* Function Call *)
+func(func_violate_unused := func_read_only, func_violate_unused => func_violate_write);
+
 END_FUNCTION_BLOCK
 
 (*
@@ -90,4 +97,6 @@ END_FUNCTION_BLOCK
  * 5. out_violate_read_only => should be written
  * 6. io_violate_unused => should be written/read
  * 7. idx_violate_write_only => should not be written, should be read (2 * warnings reported)
+ * 8. func_violate_unused => never used, should be read
+ * 9. func_violate_write => should not be written, should be read (2 * warnings reported)
 *)
