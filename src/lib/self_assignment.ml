@@ -4,7 +4,7 @@ module Warn = IECCheckerCore.Warn
 let are_var_names_equal v v' =
   S.VarUse.get_name v = S.VarUse.get_name v'
 
-let check_expr = function
+let rec check_expr = function
   | S.ExprBin (ti, S.ExprVariable (_, v), S.ASSIGN, S.ExprVariable (_, v')) 
     when are_var_names_equal v v' ->
       let var_name = S.VarUse.get_name v in
@@ -15,10 +15,20 @@ let check_expr = function
         (Printf.sprintf
           "Variable '%s' is assigned to itself."
           var_name)]
+  
+  | S.ExprBin (_, e, _, e') ->
+    check_expr e @ check_expr e'
+
+  | S.ExprUn (_, _, e) ->
+    check_expr e
+
+  | S.ExprFuncCall (_, stmt) ->
+    check_statement stmt
+
   | _ ->
     []
 
-let rec check_statement = function
+and check_statement = function
   | S.StmExpr (_, e) ->
     check_expr e
 
