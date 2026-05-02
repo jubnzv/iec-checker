@@ -20,8 +20,13 @@ FUNCTION f0_p : INT
     n1 : INT := 0;
   END_VAR
   
-  n1 := n1;
-  f0_p := n0 + n1;
+  VAR
+    x : INT := 0;
+  END_VAR
+
+  x := n1;
+  x := x;
+  f0_p := n0 + x;
 
 END_FUNCTION
 
@@ -37,7 +42,7 @@ END_FUNCTION
 
 (* POSITIVE: three (3) self-assignment warnings expected *)
 FUNCTION f1_p : BOOL
-  VAR_TEMP
+  VAR
     b0, b1, b2, b3 : BOOL := TRUE;
   END_VAR
 
@@ -57,7 +62,7 @@ END_FUNCTION
 
 (* NEGATIVE *)
 FUNCTION f1_n : BOOL
-  VAR_INPUT
+  VAR
     b0, b1 : BOOL := FALSE;
   END_VAR
 
@@ -78,9 +83,8 @@ END_FUNCTION
 
 (* POSITIVE: two (2) self-assignment warnings expected *)
 FUNCTION f2_p : CHAR
-  VAR_INPUT
-    c0 : CHAR := '.';
-    c1 : CHAR := '.';
+  VAR
+    c0, c1 : CHAR := '.';
   END_VAR
 
   CASE c0 OF
@@ -99,9 +103,8 @@ END_FUNCTION
 
 (* NEGATIVE *)
 FUNCTION f2_n : CHAR
-  VAR_INPUT
-    c0 : CHAR := '.';
-    c1 : CHAR := '.';
+  VAR
+    c0, c1 : CHAR := '.';
   END_VAR
 
   IF c1 = 's' THEN
@@ -123,7 +126,7 @@ END_FUNCTION
 
 (* POSITIVE: two (2) self-assignment warnings expected *)
 FUNCTION f3_p : WORD
-  VAR_INPUT
+  VAR
     w0 : WORD := 16#0000;
     n0 : SINT := 0;
   END_VAR
@@ -175,7 +178,7 @@ END_FUNCTION
 
 (* POSITIVE: one (1) self-assignment warning expected *)
 FUNCTION f5_p : LREAL
-  VAR_INPUT
+  VAR
     lr0 : LREAL := 100.0;
     lr1 : LREAL := -100.0;
     lr2 : REAL := 45.50;
@@ -195,7 +198,7 @@ END_FUNCTION
 
 (* NEGATIVE *)
 FUNCTION f5_n : LREAL
-  VAR_INPUT
+  VAR
     lr0 : LREAL := 8192.0;
   END_VAR
 
