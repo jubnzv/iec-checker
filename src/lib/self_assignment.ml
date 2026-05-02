@@ -5,7 +5,7 @@ let are_var_names_equal v v' =
   S.VarUse.(get_name v = get_name v')
 
 let rec check_expr = function
-  | S.ExprBin (ti, S.ExprVariable (_, v), S.ASSIGN, S.ExprVariable (_, v')) 
+  | S.ExprBin (ti, S.ExprVariable (_, v), (S.ASSIGN | S.ASSIGN_REF), S.ExprVariable (_, v'))
     when are_var_names_equal v v' ->
       let var_name = S.VarUse.get_name v in
       [Warn.mk
