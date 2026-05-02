@@ -42,12 +42,17 @@ END_FUNCTION
 
 (* POSITIVE: three (3) self-assignment warnings expected *)
 FUNCTION f1_p : BOOL
+  VAR_INPUT
+    b : BOOL := TRUE;
+  END_VAR
+
   VAR
-    b0, b1, b2, b3 : BOOL := TRUE;
+    b0 : REF_TO BOOL := NULL;
+    b1, b2, b3 : BOOL := TRUE;
   END_VAR
 
   IF b0 THEN
-    b0 := b0;
+    b0 ?= b0;
   ELSIF b1 THEN
     b1 := b1;
   ELSIF b2 THEN
@@ -56,12 +61,16 @@ FUNCTION f1_p : BOOL
     b3 := b3;
   END_IF
 
-  f1_p := FALSE;
+  f1_p := b OR FALSE;
 
 END_FUNCTION
 
 (* NEGATIVE *)
 FUNCTION f1_n : BOOL
+  VAR_INPUT
+    b : BOOL := TRUE;
+  END_VAR
+
   VAR
     b0, b1 : BOOL := FALSE;
   END_VAR
@@ -77,7 +86,7 @@ FUNCTION f1_n : BOOL
     b1 := TRUE;
   END_IF
 
-  f1_n := b0 OR b1;
+  f1_n := b;
 
 END_FUNCTION
 
@@ -256,10 +265,11 @@ END_FUNCTION
 FUNCTION_BLOCK fb0_p
   VAR_TEMP
     k : REAL := 3.14;
+    l : REF_TO REAL := NULL;
   END_VAR
 
+  l ?= l;
   k := k * k;
-  k := k;
 
 END_FUNCTION_BLOCK
 
@@ -283,11 +293,11 @@ END_FUNCTION_BLOCK
 PROGRAM program0_p
   VAR
     x : INT := 0;
-    y : INT := 4;
+    y : REF_TO INT := NULL;
   END_VAR
 
   x := x + 8;
-  y := y;
+  y ?= y;
 
 END_PROGRAM
 
@@ -312,10 +322,11 @@ CLASS class0_p
   VAR
     a : REAL := 1.0120;
     b : REAL := 6.1094;
+    c : REF_TO STRING := NULL;
   END_VAR
 
   METHOD PUBLIC m0
-    a := a;
+    c ?= c;
   END_METHOD
 
   METHOD PUBLIC m1
